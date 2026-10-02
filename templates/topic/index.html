@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Topic Name</title>
+<meta name="description" content="One sentence about what this page teaches.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- the shared interface style: one stylesheet for every topic -->
+<link rel="stylesheet" href="../../shared/ui.css">
+</head>
+<body>
+<div id="app">
+  <main id="world"><canvas id="gl"></canvas></main>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Subject</span><span>Topic</span></div>
+        <h1>Topic <em>name</em></h1>
+        <p>One or two sentences that set up the idea. Keep it short; the explain panel holds the full story.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <p class="why" id="why">One plain sentence about what to try.</p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1"><button class="btn ghost" id="explain" type="button">Explain this step <em>E</em></button></div>
+    <div class="r3"><div class="grp sl"><span class="lab">Speed <span class="v" id="speedV"></span></span><input id="speed" type="range" min="0" max="100" value="40" aria-label="Speed"></div></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" href="../../index.html" title="All topics" aria-label="All topics"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="how" type="button" title="Explain (E)" aria-label="Explain"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+  </div>
+
+<dialog id="exp"><button id="close" type="button" aria-label="Close">×</button><h2>What you are looking at</h2>
+  <p>Write the full explanation here. Two or three short paragraphs: what the scene shows, why it works that way, and what to try.</p>
+  <p style="font-size:12px;color:#8f98b3">Schematic and educational.</p>
+</dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- bloom pieces used by the shared stage -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<!-- shared: the category environment, the stage that renders it, and sound -->
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE, $ = function (id) { return document.getElementById(id); };
+
+/* The stage gives you the renderer, camera, orbit controls, lighting, effects and this CATEGORY's fixed environment.
+   Change `category` to your topic's category (it must match topics.json). Do not create your own renderer. */
+var stage = VLStage.create({ canvas: $('gl'), view: $('world'), category: 'biology', onFirstFrame: function () {} });
+
+/* Your topic: a subject is { group, w, h, base, update(t, dt) }.
+   w and h are the half-width and half-height the camera must keep in view; base is how far below the origin the lowest part reaches. */
+var knot = new T.Mesh(new T.TorusKnotGeometry(1.2, 0.35, 160, 20), new T.MeshStandardMaterial({ color: '#7fe3ff', roughness: 0.7 }));
+var group = new T.Group(); group.add(knot);
+var speed = $('speed');
+var subject = { group: group, w: 3, h: 3, base: 2.2, update: function (t, dt) { knot.rotation.y += dt * (+speed.value / 40); } };
+if (stage.ok) { stage.add(subject); stage.show(subject); }
+
+/* controls and readouts */
+function stats() { var v = +speed.value; $('speedV').textContent = v + ' %'; $('stats').innerHTML = '<div class="stat hot"><i>Speed</i><b>' + v + ' %</b></div><div class="stat"><i>Spin</i><b>' + (v * 0.9).toFixed(0) + ' °/s</b></div>'; }
+speed.addEventListener('input', stats); stats();
+
+var exp = $('exp'); function openExp() { if (exp.showModal) exp.showModal(); }
+$('explain').addEventListener('click', openExp); $('how').addEventListener('click', openExp); $('close').addEventListener('click', function () { exp.close(); });
+window.addEventListener('keydown', function (e) { if (exp.open || e.metaKey || e.ctrlKey) return; if (e.key === 'e' || e.key === 'E' || e.key === '?') openExp(); });
+
+var last = performance.now(), t = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!stage.ok || document.hidden) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+  subject.update(t, dt); stage.frame(dt, t);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

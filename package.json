@@ -1,0 +1,13 @@
+{
+  "name": "visual-learner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive 3D explainers for science and engineering.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "validate": "node scripts/validate.mjs"
+  }
+}

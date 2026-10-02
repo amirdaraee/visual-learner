@@ -1,0 +1,42 @@
+name: Propose a topic
+description: Suggest a new visual explainer.
+title: "Topic: "
+labels: ["topic"]
+body:
+  - type: input
+    id: subject
+    attributes:
+      label: Subject
+      description: Biology, Math, Physics, Electronics, Aerospace, Chemistry, or a new one.
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Working title
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The one idea it teaches
+      description: What should someone understand after playing with it?
+    validations:
+      required: true
+  - type: textarea
+    id: interaction
+    attributes:
+      label: What can the reader change?
+      description: Sliders, buttons, things to drag, and what happens.
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources
+      description: Textbooks, papers or standards you would use.
+  - type: checkboxes
+    id: who
+    attributes:
+      label: Who will build it?
+      options:
+        - label: I plan to build this myself
+        - label: I am only suggesting it

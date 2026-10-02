@@ -1,0 +1,63 @@
+{
+  "categories": [
+    {
+      "id": "biology",
+      "name": "Biology",
+      "blurb": "Genes, cells and living systems.",
+      "accent": "#5eead4",
+      "environment": "lab"
+    },
+    {
+      "id": "math",
+      "name": "Math",
+      "blurb": "Structures and patterns you can see move.",
+      "accent": "#a78bfa",
+      "environment": "studio"
+    },
+    {
+      "id": "physics",
+      "name": "Physics",
+      "blurb": "Forces, waves and fields in motion.",
+      "accent": "#7fb2ff",
+      "environment": "studio"
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics",
+      "blurb": "Circuits, signals and the parts inside them.",
+      "accent": "#ffb454",
+      "environment": "studio"
+    },
+    {
+      "id": "aerospace",
+      "name": "Aerospace",
+      "blurb": "Flight, orbits and the machines that do them.",
+      "accent": "#ff6b86",
+      "environment": "studio"
+    },
+    {
+      "id": "chemistry",
+      "name": "Chemistry",
+      "blurb": "Atoms, bonds and reactions.",
+      "accent": "#9be564",
+      "environment": "studio"
+    }
+  ],
+  "topics": [
+    {
+      "id": "exome-sequencing",
+      "category": "biology",
+      "title": "Exome Lab: Find the Variant",
+      "summary": "Capture the exons, align the reads, filter 25,000 variants down to one, and weigh the evidence.",
+      "path": "biology/exome-sequencing/",
+      "tags": [
+        "genetics",
+        "sequencing",
+        "rare disease"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02"
+    }
+  ]
+}

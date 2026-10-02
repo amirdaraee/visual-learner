@@ -1,0 +1,40 @@
+name: Report a bug or error
+description: Something is broken, or something on a page is wrong.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: biology/exome-sequencing
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem?
+      options:
+        - Broken control or visual
+        - Factual error
+        - Accessibility
+        - Performance
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Browser and device
+      placeholder: Safari 18 on iPhone 15, Chrome 130 on macOS
+  - type: textarea
+    id: source
+    attributes:
+      label: Source for a correction
+      description: For factual errors, a link supporting the right answer.

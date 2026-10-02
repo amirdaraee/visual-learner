@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+npm-debug.log*
+.npm/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs and temp
+*.log
+tmp/
+.tmp/
+.cache/
+
+# Browser-test output
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Assistant local state
+.claude/settings.local.json
