@@ -874,6 +874,7 @@ var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch 
 function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
 paintSnd();
 if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
 $('sndb').addEventListener('click', function () {
   if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
   try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}

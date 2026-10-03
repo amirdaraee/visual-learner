@@ -22,23 +22,43 @@ Node 18 or newer is only needed for `npm run validate`. The site itself has no d
 
 ## Adding a topic
 
-1. Pick a subject folder, or add a new category to `topics.json`.
-2. Copy `templates/topic/` to `<category>/<topic-id>/`. Use lowercase kebab-case for both.
-3. Build the page. Read [docs/TOPIC_GUIDE.md](docs/TOPIC_GUIDE.md) for the technical standards. Your scenes run inside the category's fixed environment through the shared stage, see [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
-4. Add an entry to `topics.json`.
-5. Run `npm run validate`.
-6. Check the page on desktop and at 400 px width, in a clean browser profile, with the console open.
-7. Add the topic to the table in `README.md`.
-8. Open a pull request using the template.
+Work through these in order. Each step links to the document that has the detail.
 
-## Changing a shared environment
+**1. Agree the idea.** Open an issue with the topic, the subject, the level and what the reader will change on screen. Keep it to one idea.
 
-Each category has one environment shared by all its topics (Biology is the lab), so changes to `shared/` reach every topic. If you change it, open every topic in that category at desktop width and at 400 px, orbit both sides, and say which you checked in the pull request. Never copy an environment into a topic. The checklist is in [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
+**2. Pick the subject and the level.**
+- The subject is the topic's primary category in `topics.json`. It decides the folder, the 3D room and the back link. If the topic really belongs to other subjects too, list them in `also` (Binary Numbers is in Computer Science, Math and Electronics, and uses the Computer Science room).
+- The level is `Beginner`, `Intermediate` or `Advanced`, and it must be honest. Beginner means no prior knowledge: every term defined, one idea per step, gentle start. If a reader needs school maths or science first, mark it Intermediate. See [docs/WRITING.md](docs/WRITING.md).
+
+**3. Create the page.** Copy `templates/topic/` to `<category>/<topic-id>/` (lowercase kebab-case for both). Set `category` in `VLStage.create` to your primary category, point the home link at `../../index.html#<category>`, and load the category's room script after `environments.js` if the category has one (the validator tells you). Do not build your own room, renderer or camera, and do not restyle the interface: use `shared/ui.css`. Technical standards: [docs/TOPIC_GUIDE.md](docs/TOPIC_GUIDE.md). Rooms and the stage: [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
+
+**4. Design it as steps.** Three to six short steps, each with one thing to look at and one control or two. Start from what a newcomer already knows and build up. Every step is reachable by hash (`#step-name`), by the stage buttons and by the arrow keys. Keep on-screen text short.
+
+**5. Write the explanations.** Each step has a one-sentence note on the left card and an "Explain this step" panel. Write them to [docs/WRITING.md](docs/WRITING.md): the section structure (What you see, How it works, optional In real life or What is left out), 150 to 220 words, plain voice, real numbers, no filler, no hype, no em dashes. Check every number against a source, hedge approximations with `~`, and say what is simplified ([docs/CONTENT_POLICY.md](docs/CONTENT_POLICY.md)).
+
+**6. Add it to the manifest.** One entry in `topics.json`: `id`, `category`, optional `also`, `title`, a summary of at most 160 characters, `path`, up to five `tags`, `level`, `status` and `added`. The field table is in the topic guide.
+
+**7. Make a preview image.** Open the page at 1200 x 750, turn the backdrop off, hide the interface, crop to the model at 16:10 and save a JPEG under 150 KB as `assets/previews/<topic-id>.jpg`. Add it as `preview` on the topic. The steps are in the topic guide. It must be a real capture, not a mock-up.
+
+**8. Check it.**
+- `npm run validate` passes.
+- Open every step on desktop and at about 400 px wide, with the console open: no errors, no overlapping controls, no horizontal scroll, labels readable.
+- Orbit to both sides and zoom in and out: nothing collides, and the model stays clear of the room.
+- Try the keyboard (every control reachable, visible focus), mute and unmute, and reduced motion.
+- Read each explain panel next to the screen: does every sentence match what is shown?
+- Leave no dev or test files in the topic folder.
+
+**9. Update the docs and open a pull request.** Add the topic to the table in `README.md`, then open a pull request using the template with screenshots at desktop and phone width and the sources for your facts.
+
+### Adding a new subject
+
+Add the category to `topics.json` (`id`, `name`, `blurb`, `accent`, `environment`), build its room as `shared/rooms/<name>.js` following "Adding an environment for a new category" in [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md), add an ambience profile in `shared/sound.js` with the same name, and add a line icon for it in `index.html`. Then add the first topic.
 
 ## What a good topic does
 
 - Teaches one idea well, by letting the reader change something and see the result.
 - Needs little text. The scene and controls carry the lesson, and the explanation panel adds depth.
+- Starts where the reader is. A beginner topic does not open with the hard part.
 - Is correct. See [docs/CONTENT_POLICY.md](docs/CONTENT_POLICY.md) for sourcing and how to word approximate numbers.
 - Is original work. Do not copy another site's code, layout or visual style.
 

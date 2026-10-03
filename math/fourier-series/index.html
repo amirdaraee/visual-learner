@@ -352,10 +352,11 @@ function waveSeg(el, sc, count, st) {
 
 var STAGES = [
   { id: 'circles', name: 'Circles', mode: 'wave',
-    explain: { title: 'One circle, one sine wave', body: [
-      'A point going round a circle at steady speed has a height that rises and falls as a <b>sine wave</b>. Follow that height as time passes and you draw the curve on the right. A bigger circle gives a taller wave, and a faster circle gives a shorter one.',
-      'A <b>Fourier series</b> says a repeating wave (with finite jumps and slopes) can be built from sine waves at 1×, 2×, 3× and so on, the base frequency. Put each circle on the rim of the one before and the height of the last tip is the sum of all of them.',
-      'The recipe depends on the wave. A square wave needs only odd harmonics k, with radius 4/(πk). A sawtooth needs every harmonic n, radius 2/(πn), turning alternately in phase and upside down. A triangle uses odd k, radius 8/(π²k²), so its circles shrink very quickly. Sharper corners need more, smaller circles.'], tryit: 'Pick Square and drag the slider from 1 to 25 circles. Then try Triangle and see how few circles it needs.' },
+    explain: { title: 'A circle turning at a steady speed draws a sine wave', sections: [
+      { h: 'What you see', p: ['On the left, circles spin, each one centred on the rim of the one before. A line from the last tip carries its height across to the yellow curve on the right, which is the wave being drawn.', 'The slider sets how many circles are used. The buttons choose which wave to build.'] },
+      { h: 'How it works', p: ['The height of a point going round a circle is a sine wave in time. A bigger circle gives a taller wave. A circle that turns twice as fast gives a wave half as long.', 'A Fourier series builds a repeating wave by adding sine waves at 1×, 2×, 3× and so on of a base speed. Each circle is one of them, and the height of the last tip is their sum.'] },
+      { h: 'Which circles', p: ['A square wave uses only the odd multiples k, with radius 4/(πk). A sawtooth uses every multiple n, with radius 2/(πn) and alternating sign. A triangle uses odd k with radius 8/(π²k²), so its circles shrink fast and it needs very few.'] }
+    ], tryit: ['Pick Square and move the slider from 1 to 25 circles. Then pick Triangle: three or four circles already look right.'] },
     why: 'Each circle sits on the rim of the one before. <span class="y">The height of the last tip</span> is the wave on the right.', hint: 'Drag the slider to add circles · space pauses',
     chart: { t: 'Circle radii', k: 'to scale' }, goLabel: function (sc) { return sc.paused() ? 'Play' : 'Pause'; }, go: function (sc) { sc.setPaused(!sc.paused()); },
     mount: function (el, sc) {
@@ -371,10 +372,10 @@ var STAGES = [
       mtext('radius of each circle, largest first', 14, 182, '#9ea8c2', 18);
     } },
   { id: 'add-up', name: 'Add up', mode: 'add',
-    explain: { title: 'A wave is a recipe of harmonics', body: [
-      'Each circle contributes one <b>harmonic</b>: a sine wave at a whole-number multiple of the base frequency. Its radius is its amplitude. The coloured ghost waves are the harmonics on their own, and the bright line is their sum.',
-      'Switch off the 1st harmonic and the sum loses its main swing. Switch off a high one and only the fine detail changes. Higher harmonics mostly sharpen corners, which is why a wave with sharp corners needs many of them.',
-      'The <b>RMS error</b> is the typical gap between your sum and the ideal wave, over one cycle. By Parseval&rsquo;s theorem its square equals the total power of the harmonics you left out, so it falls as you include more.'], tryit: 'On the square wave, turn the 1st harmonic off, then on again and turn the 3rd off. Which loss changes the shape more?' },
+    explain: { title: 'A wave is a recipe of harmonics', sections: [
+      { h: 'What you see', p: ['The thin coloured waves are single harmonics, and the bright line is their sum. The bars on the card show each circle\'s radius, and the chips switch a harmonic on or off.'] },
+      { h: 'How it works', p: ['A harmonic is a sine wave at a whole-number multiple of the base frequency, and its circle\'s radius is its size. Remove the 1st and the sum loses its main swing. Remove a high one and only the fine detail changes, because high harmonics mostly sharpen corners.', 'The RMS error is the typical gap between your sum and the ideal wave over one cycle. Its square equals the power of the harmonics you left out (Parseval\'s theorem), so it shrinks as you add more.'] }
+    ], tryit: ['On the square wave, turn the 1st harmonic off, then on again, and turn the 3rd off. Which change alters the shape more?'] },
     why: 'The wave is the <span class="y">sum of its harmonics.</span> Switch one off and see what changes.', hint: 'Toggle harmonics · space switches wave',
     chart: { t: 'Harmonics', k: 'amplitude, on or off' }, goLabel: function () { return 'All on'; }, go: function (sc, st) { for (var q = 0; q < 6; q++) sc.setMask(q, true); st.refresh(); },
     mount: function (el, sc, st) {
@@ -401,10 +402,11 @@ var STAGES = [
       }
     } },
   { id: 'corners', name: 'Corners', mode: 'corner',
-    explain: { title: 'Corners ring: the Gibbs overshoot', body: [
-      'A sum of smooth sine waves cannot jump instantly, so right next to a jump it overshoots, then rings. With a few terms the ringing is easy to see.',
-      'Add terms and the ringing is squeezed towards the jump, but the first peak does not get lower. For the square wave it settles near 1.179, an overshoot of about 9% of the 2-unit jump. The peak gets narrower, not smaller. The sawtooth has the same limit at its jump, though it needs more terms to reach it.',
-      'This is the <b>Gibbs phenomenon</b>. The RMS error still goes to zero, because the bad region shrinks, but the largest error next to the jump does not. The readout here is measured on the partial sum drawn, over a fine grid, not looked up from a formula.'], tryit: 'Slide from 5 to 50 terms. The amber peak gets thinner, but the measured overshoot stays near 9%. Then try Sawtooth.' },
+    explain: { title: 'Near a jump the sum overshoots by about 9%', sections: [
+      { h: 'What you see', p: ['The curve is a partial sum of a square wave or sawtooth, zoomed in on one jump. The dashed line is the ideal level, and the orange dot marks the highest point of the sum.'] },
+      { h: 'How it works', p: ['Smooth sine waves cannot jump instantly, so beside a jump the sum overshoots and rings. Adding terms squeezes the ringing towards the jump, but the first peak does not get lower. For the square wave it settles near 1.179, about 9% of the 2-unit jump. The peak gets narrower, not smaller.', 'This is the Gibbs phenomenon. The RMS error still goes to zero because the bad region shrinks, but the largest error next to the jump does not. The sawtooth has the same limit and needs more terms to reach it.'] },
+      { h: 'In real life', p: ['Cutting off the high frequencies of a signal gives the same ringing. It shows up as halos around sharp edges in heavily compressed images.'] }
+    ], tryit: ['Slide from 5 to 50 terms. The peak gets thinner, but the overshoot reading stays near 9%. Then try Sawtooth.'] },
     why: 'Near a jump the sum overshoots by <span class="y">about 9% of the jump</span>, however many terms you add.', hint: 'Slide the terms · watch the amber peak',
     chart: { t: 'Overshoot vs terms', k: '% of the jump' },
     enter: function (sc) { if (sc.wave() === 2) sc.setWave(0); },
@@ -478,7 +480,7 @@ info.addEventListener('click', function (e) { if (e.target === info) info.close(
 var exp = $('exp');
 function openExplain() {
   if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
-  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
   exp.showModal(); exp.scrollTop = 0;
 }
 $('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });

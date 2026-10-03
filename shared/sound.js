@@ -8,7 +8,7 @@
  *
  * VLSound.level(stageIndex, direction, steps) plays the stage-change sound: a sweep plus that stage's note, rising when you advance and falling when you go back.
  * Interaction sounds: ui, stage, pop, ping, blip, thump, step, tick, verdict_P, verdict_LP, verdict_VUS, verdict_LB, verdict_B, on, off.
- * Ambience profiles: lab. Add more by adding a function to PROFILES.
+ * Ambience profiles: one per room name (lab, study, physicslab, bench, hangar, chemlab, observatory, fieldstation, workshop, materialslab, devroom, analyst, clinic, neurolab). A room without a profile is silent apart from the interaction sounds.
  */
 (function () {
 'use strict';
@@ -123,6 +123,95 @@ var PROFILES = {
     every(32, 80, function () { var t = ctx.currentTime + 0.05; burst(t, 0.02, 0.04, 'bandpass', 3000, 2, null, -0.2); burst(t + 0.2, 0.025, 0.04, 'bandpass', 2600, 2, null, -0.2); });
     every(60, 120, function () { var t = ctx.currentTime + 0.05; tone(62, 'sine', t, 0.18, 0.05, 45, null, 0.8); });
   }
+};
+
+/* ---- ambience for the other rooms ----
+ * Each room gets a quiet bed (low room tone, a band of air or machinery, an optional mains hum) plus a few sounds that belong in it.
+ * Nothing ticks or repeats on a fixed beat. Levels are low; the master compressor keeps the sum calm. */
+function bed(o) {
+  var rt = loopSrc(brownBuf), rf = filt('lowpass', o.low || 300), rg = gain(o.lowGain || 0.08); rt.connect(rf); rf.connect(rg); rg.connect(master);
+  var ag0 = o.airGain || 0.014, air = loopSrc(noiseBuf), af = filt('bandpass', o.air || 300, o.airQ || 0.8), ag = gain(ag0); air.connect(af); af.connect(ag); ag.connect(master); lfo(0.05, ag0 * 0.4, ag.gain);
+  if (o.hum) {
+    var hv = o.humGain || 0.01, h1 = osc('sine', o.hum), h2 = osc('sine', o.hum * 2), g1 = gain(hv), g2 = gain(hv * 0.4);
+    h1.connect(g1); h2.connect(g2); g1.connect(master); g2.connect(master); lfo(0.07, hv * 0.25, g1.gain);
+  }
+}
+function soft(fn, minS, maxS) { every(minS, maxS, function () { fn(ctx.currentTime + 0.05); }); }
+function rustle(t) { burst(t, 0.22, 0.016, 'bandpass', 2400, 0.7, 1500, rand(-0.5, 0.5)); }
+function creak(t, f) { tone(f, 'sine', t, 0.3, 0.014, f * 0.8, null, rand(-0.6, 0.6)); }
+function clank(t) { var p = rand(-0.7, 0.7); tone(rand(330, 460), 'triangle', t, 0.35, 0.026, 280, null, p); burst(t, 0.05, 0.02, 'bandpass', 2600, 2, null, p); }
+function sweepPass(t, f0, f1, dur, peak) {
+  var s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; var bp = filt('bandpass', f0, 1.2), g = ctx.createGain(), p = panner(-0.6);
+  bp.frequency.setValueAtTime(f0, t); bp.frequency.linearRampToValueAtTime(f1, t + dur * 0.5); bp.frequency.linearRampToValueAtTime(f0, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + dur * 0.5); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+  if (p.pan) { p.pan.setValueAtTime(-0.6, t); p.pan.linearRampToValueAtTime(0.6, t + dur); }
+  s.connect(bp); bp.connect(g); g.connect(p); p.connect(master); s.start(t, Math.random() * 2); s.stop(t + dur + 0.1);
+}
+function pad(f, v, pan) { var o = osc('sine', f), g = gain(v); o.connect(g); placed(g, pan || 0); lfo(0.09, v * 0.4, g.gain); }
+
+PROFILES.study = function () {
+  bed({ low: 290, lowGain: 0.07, air: 260, airGain: 0.011 });
+  soft(rustle, 18, 40); soft(function (t) { creak(t, 140); }, 50, 110);
+};
+PROFILES.physicslab = function () {
+  bed({ low: 330, air: 280, airGain: 0.017, hum: 60, humGain: 0.009 });
+  var fan = loopSrc(noiseBuf), ff = filt('bandpass', 1900, 2), fg = gain(0.004); fan.connect(ff); ff.connect(fg); placed(fg, 0.5);
+  soft(function (t) { burst(t, 0.3, 0.02, 'lowpass', 600, 0.7, null, rand(-0.5, 0.5)); }, 30, 70);
+};
+PROFILES.bench = function () {
+  bed({ low: 280, air: 300, airGain: 0.012, hum: 100, humGain: 0.012 });
+  var fan = loopSrc(noiseBuf), ff = filt('bandpass', 1800, 1.5), fg = gain(0.008); fan.connect(ff); ff.connect(fg); placed(fg, 0.4);
+  soft(function (t) { burst(t, 0.015, 0.03, 'bandpass', 2800, 2, null, 0.3); burst(t + 0.18, 0.02, 0.03, 'bandpass', 2200, 2, null, 0.3); }, 35, 90);
+};
+PROFILES.hangar = function () {
+  bed({ low: 220, lowGain: 0.11, air: 420, airGain: 0.02 });
+  var w = loopSrc(noiseBuf), wf = filt('bandpass', 520, 0.6), wg = gain(0.012); w.connect(wf); wf.connect(wg); placed(wg, 0.6); lfo(0.06, 0.006, wg.gain);
+  soft(function (t) { sweepPass(t, 300, 900, 8, 0.03); }, 40, 90); soft(clank, 25, 60);
+};
+PROFILES.chemlab = function () {
+  bed({ low: 260, lowGain: 0.08, air: 650, airQ: 0.6, airGain: 0.03 });
+  var gas = loopSrc(noiseBuf), gf = filt('highpass', 3500), gg = gain(0.0035); gas.connect(gf); gf.connect(gg); placed(gg, 0.4);
+  soft(function (t) { for (var k = 0; k < 5; k++) burst(t + k * rand(0.05, 0.12), 0.05, 0.016, 'bandpass', rand(700, 1100), 4, null, -0.3); }, 7, 16);
+};
+PROFILES.observatory = function () {
+  bed({ low: 200, lowGain: 0.07, air: 300, airGain: 0.012 });
+  /* crickets outside the slit: a high tone, pulsed fast, gated slowly */
+  var o = osc('sine', 4300), g = gain(0.002), gate = gain(0.5); o.connect(g); lfo(26, 0.002, g.gain); g.connect(gate); lfo(0.4, 0.5, gate.gain); placed(gate, 0.5);
+  soft(function (t) { tone(100, 'sine', t, 0.8, 0.018, 78, null, -0.3); }, 60, 120);
+};
+PROFILES.fieldstation = function () {
+  bed({ low: 260, lowGain: 0.07, air: 500, airGain: 0.02 });
+  var sf = loopSrc(brownBuf), sl = filt('lowpass', 700), sg = gain(0.035); sf.connect(sl); sl.connect(sg); placed(sg, -0.3); lfo(0.11, 0.03, sg.gain);
+  soft(function (t) { var f = rand(2600, 4000), p = rand(-0.7, 0.7), n = 2 + Math.floor(Math.random() * 3); for (var k = 0; k < n; k++) tone(f * rand(0.95, 1.05), 'sine', t + k * 0.13, 0.1, 0.014, f * 1.25, null, p); }, 5, 14);
+};
+PROFILES.workshop = function () {
+  bed({ low: 250, lowGain: 0.1, air: 700, airGain: 0.016, hum: 60, humGain: 0.012 });
+  soft(clank, 25, 60); soft(function (t) { tone(700, 'sawtooth', t, 1.2, 0.008, 900, null, 0.5); }, 45, 100);
+};
+PROFILES.materialslab = function () {
+  bed({ low: 180, lowGain: 0.12, air: 350, airGain: 0.02, hum: 50, humGain: 0.01 });
+  var fr = loopSrc(brownBuf), fl = filt('lowpass', 160), fg = gain(0.05); fr.connect(fl); fl.connect(fg); placed(fg, 0.4); lfo(0.08, 0.015, fg.gain);
+  soft(function (t) { tone(320, 'sine', t, 1.4, 0.016, 360, null, -0.4); }, 40, 90);
+};
+PROFILES.devroom = function () {
+  bed({ low: 260, air: 1700, airQ: 1.2, airGain: 0.009, hum: 120, humGain: 0.012 });
+  var r = osc('sawtooth', 180), rf = filt('lowpass', 400), rg = gain(0.005); r.connect(rf); rf.connect(rg); placed(rg, 0.6);
+  soft(function (t) { var n = 6 + Math.floor(Math.random() * 7); for (var k = 0; k < n; k++) burst(t + k * rand(0.08, 0.2), 0.03, 0.014, 'bandpass', rand(2400, 3400), 2, null, -0.3); }, 35, 80);
+};
+PROFILES.analyst = function () {
+  bed({ low: 280, lowGain: 0.07, air: 340, airGain: 0.012 });
+  var c = loopSrc(noiseBuf), cb = filt('bandpass', 700, 0.55), cl = filt('lowpass', 1500), cg = gain(0.018); c.connect(cb); cb.connect(cl); cl.connect(cg); placed(cg, 0.4);
+  soft(rustle, 30, 70); soft(function (t) { creak(t, 120); }, 70, 140);
+};
+PROFILES.clinic = function () {
+  bed({ low: 240, lowGain: 0.075, air: 380, airGain: 0.016 });
+  soft(function (t) { tone(660, 'sine', t, 0.5, 0.012, null, null, 0.3); tone(880, 'sine', t + 0.35, 0.7, 0.01, null, null, 0.3); }, 60, 120);
+  soft(rustle, 25, 60);
+};
+PROFILES.neurolab = function () {
+  bed({ low: 240, air: 260, airGain: 0.012, hum: 50, humGain: 0.012 });
+  pad(110, 0.005, -0.2); pad(165, 0.004, 0.2);
+  soft(function (t) { tone(62, 'sine', t, 0.18, 0.04, 45, null, 0.6); }, 60, 120);
 };
 
 /* ---- lifecycle ---- */

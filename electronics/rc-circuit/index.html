@@ -348,10 +348,10 @@ mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
 function capStat() { return [['Capacitor', sim.v.toFixed(2) + ' V · ' + Math.round(sim.v / sim.vs * 100) + '%', 'hot'], ['Current', fmtI(current())], ['Time', sim.u.toFixed(2) + ' τ']]; }
 var STAGES = [
   { id: 'charge', name: 'Charge', why: 'The battery pushes charge through the resistor. The resistor limits the current, so the capacitor fills <span class="y">fast at first, then slowly.</span>', hint: 'Pick a source voltage · space restarts',
-    explain: { title: 'Why the capacitor fills fast, then slowly', body: [
-      'Flip the switch to the battery and current flows through the resistor onto the capacitor plates. The capacitor voltage V<sub>C</sub> rises, so the voltage left across the resistor, V<sub>s</sub> &minus; V<sub>C</sub>, shrinks. By Ohm&rsquo;s law the current is <b>I = (V<sub>s</sub> &minus; V<sub>C</sub>) / R</b>. It is largest at the start, I<sub>0</sub> = V<sub>s</sub> / R, and falls as the capacitor fills.',
-      'That feedback gives an exponential curve: <b>V<sub>C</sub>(t) = V<sub>s</sub> (1 &minus; e<sup>&minus;t/&tau;</sup>)</b>, with the time constant <b>&tau; = R &times; C</b>. After 1&tau; the capacitor is at ~63.2% of the supply voltage, then ~86.5% at 2&tau;, ~95.0% at 3&tau;, ~98.2% at 4&tau; and ~99.3% at 5&tau;. In theory it never quite arrives, but by about 5&tau; it is close enough for most purposes.',
-      'The amber dots show <b>conventional current</b>: the direction positive charge would move, out of the battery&rsquo;s + terminal. In the wires the moving charges are really electrons, which drift the other way. Dot speed rises with the current, compressed so small currents stay visible. Time is scaled for viewing: 1&tau; takes about 2 seconds here whatever the real value is.'], tryit: 'Press Restart and watch the dots slow as the curve flattens. Change the source voltage: the curve keeps its shape and only its height changes.' },
+    explain: { title: 'The capacitor fills fast at first, then slowly', sections: [
+      { h: 'What you see', p: ['The switch is set to the battery. Small amber dots move along the wires, and the cyan fill inside the capacitor rises. The graph shows the capacitor voltage against time in units of &tau;, the time constant.'] },
+      { h: 'How it works', p: ['Current flows through the resistor onto the capacitor plates. As the capacitor voltage V<sub>C</sub> rises, the voltage left across the resistor, V<sub>s</sub> &minus; V<sub>C</sub>, shrinks. By Ohm&rsquo;s law the current is I = (V<sub>s</sub> &minus; V<sub>C</sub>) / R. It is largest at the start, I<sub>0</sub> = V<sub>s</sub> / R, and falls as the capacitor fills.', 'That gives an exponential curve: V<sub>C</sub>(t) = V<sub>s</sub> (1 &minus; e<sup>&minus;t/&tau;</sup>), with &tau; = R &times; C. After 1&tau; the capacitor is at ~63.2% of the supply voltage, then ~86.5% at 2&tau;, ~95.0% at 3&tau;, ~98.2% at 4&tau; and ~99.3% at 5&tau;. In theory it never quite arrives, but by about 5&tau; it is close enough for most purposes.', 'The dots show conventional current, the direction positive charge would move, out of the + terminal. In the wires the moving charges are really electrons, which drift the other way. Time is scaled for viewing: 1&tau; takes about 2 seconds here, whatever its real value is.'] }
+    ], tryit: ['Press Restart and watch the dots slow as the curve flattens. Change the source voltage: the curve keeps its shape and only its height changes.'] },
     enter: function () { sim.auto = false; restart('charge'); },
     mount: function (el) {
       var sg = seg(el, VS_LIST.map(function (v) { return { label: v + ' V', v: v }; }), function (it) { sim.vs = it.v; restart('charge'); }, VS_LIST.indexOf(sim.vs), { title: 'Source' });
@@ -359,10 +359,10 @@ var STAGES = [
     },
     stats: capStat, goLabel: 'Restart', go: function () { restart('charge'); } },
   { id: 'discharge', name: 'Discharge', why: 'With the battery disconnected, the stored charge flows back through the resistor and <span class="y">the voltage falls by the same rule.</span>', hint: 'Flip the switch · space flips it',
-    explain: { title: 'Draining through the resistor', body: [
-      'Flip the switch to the discharge position. The battery is disconnected and the resistor now sits across the capacitor alone. Charge flows from the + plate, through the resistor, to the &minus; plate. The current through the resistor runs the opposite way to charging, and the dots reverse.',
-      'The voltage follows <b>V<sub>C</sub>(t) = V<sub>0</sub> e<sup>&minus;t/&tau;</sup></b>, where V<sub>0</sub> is the voltage when the switch flipped. It falls to ~36.8% of V<sub>0</sub> at 1&tau;, ~13.5% at 2&tau;, ~5.0% at 3&tau; and ~0.7% at 5&tau;. The starting current is I<sub>0</sub> = V<sub>0</sub> / R and it decays with the same &tau;. The energy stored in the capacitor, &frac12;CV<sup>2</sup>, ends up as heat in the resistor.',
-      'The time constant does not depend on the starting voltage: halve V<sub>0</sub> and the whole curve halves, but it still takes one &tau; to reach 36.8%. While the lever travels between contacts it touches neither, so nothing flows and the capacitor simply holds its voltage.'], tryit: 'Flip back to Charge before the capacitor is empty. The curve restarts from where it was and the dots turn round.' },
+    explain: { title: 'Draining through the resistor', sections: [
+      { h: 'What you see', p: ['The switch is set to the discharge position, so the battery is disconnected and the resistor sits across the capacitor alone. The dots reverse direction and the fill drops.'] },
+      { h: 'How it works', p: ['Charge flows from the + plate, through the resistor, to the &minus; plate. The voltage follows V<sub>C</sub>(t) = V<sub>0</sub> e<sup>&minus;t/&tau;</sup>, where V<sub>0</sub> is the voltage when the switch flipped. It falls to ~36.8% of V<sub>0</sub> at 1&tau;, ~13.5% at 2&tau;, ~5.0% at 3&tau; and ~0.7% at 5&tau;.', 'The starting current is I<sub>0</sub> = V<sub>0</sub> / R, and it decays with the same &tau;. The energy stored in the capacitor, &frac12;CV<sup>2</sup>, ends up as heat in the resistor.', 'The time constant does not depend on the starting voltage. Halve V<sub>0</sub> and the whole curve halves, but it still takes one &tau; to reach 36.8%. While the lever travels between the contacts it touches neither, so nothing flows and the capacitor holds its voltage.'] }
+    ], tryit: ['Flip back to Charge before the capacitor is empty. The curve picks up from where it was and the dots turn round.'] },
     enter: function () { sim.auto = false; restart('discharge'); },
     mount: function (el) {
       var sg = seg(el, [{ label: 'Charge', v: 'charge' }, { label: 'Discharge', v: 'discharge' }], function (it) { setMode(it.v); }, 1, { title: 'Switch <em>space</em>' });
@@ -370,10 +370,11 @@ var STAGES = [
     },
     stats: capStat, goLabel: 'Restart', go: function () { restart('discharge'); } },
   { id: 'time-constant', name: 'Time constant', why: 'τ = R × C. A bigger resistor or capacitor makes everything slower, and <span class="y">the curve keeps its shape.</span>', hint: 'Drag R and C · the picture keeps its pace',
-    explain: { title: 'Setting the pace with R and C', body: [
-      'The time constant is <b>&tau; = R &times; C</b>, with R in ohms and C in farads giving &tau; in seconds. For example 10 k&Omega; with 100 &micro;F gives 1.0 s. A larger R limits the current, and a larger C needs more charge to reach the same voltage, so either one makes the capacitor slower.',
-      'The time on screen is always scaled so 1&tau; takes about 2 seconds. That is why the curve never changes shape: only the real value of &tau; in the readout does. The marks sit at 1&tau; (~63.2%), 3&tau; (~95.0%) and 5&tau; (~99.3%). With auto-flip on, the switch alternates every 5&tau;.',
-      'Pairs like this time delays and filter signals. A low-pass filter passes slow changes and blocks fast ones, with its corner near 1 / (2&pi;RC). This is an ideal model with standard part values. Real resistors have a tolerance, often ~1&ndash;5%, and electrolytic capacitors often ~10&ndash;20% plus some leakage, so measured curves differ a little. It is a low-voltage teaching model: do not experiment with mains equipment, and treat large charged capacitors with care.'], tryit: 'Set R to 100 k&Omega; and C to 1000 &micro;F: &tau; is ~100 s, yet the picture still takes about 2 s per &tau;. Then try 1 k&Omega; and 1 &micro;F, which is 1 ms.' },
+    explain: { title: 'R and C set the pace', sections: [
+      { h: 'What you see', p: ['Three sliders set the resistor, the capacitor and the source voltage. The readout shows &tau; = R &times; C, the time to settle (about 5&tau;) and the starting current. The graph marks 1&tau;, 3&tau; and 5&tau;.'] },
+      { h: 'How it works', p: ['With R in ohms and C in farads, &tau; comes out in seconds. For example 10 k&Omega; with 100 &micro;F gives 1.0 s. A larger R limits the current, and a larger C needs more charge to reach the same voltage, so either one makes the capacitor slower.', 'The time on screen is always scaled so that 1&tau; takes about 2 seconds. That is why the curve never changes shape: only the real value of &tau; in the readout does. With auto-flip on, the switch alternates every 5&tau;.'] },
+      { h: 'In real life', p: ['An R and C pair makes time delays and filters signals. A low-pass filter passes slow changes and blocks fast ones, with its corner near 1 / (2&pi;RC).', 'This is an ideal model. Real resistors have a tolerance, often ~1&ndash;5%, and electrolytic capacitors often ~10&ndash;20% plus some leakage, so measured curves differ a little. It is a low-voltage teaching model. Do not experiment with mains equipment, and treat large charged capacitors with care.'] }
+    ], tryit: ['Set R to 100 k&Omega; and C to 1000 &micro;F. &tau; is ~100 s, yet the picture still takes about 2 s per &tau;. Then try 1 k&Omega; and 1 &micro;F, which is 1 ms.'] },
     enter: function () { sim.auto = true; restart('charge'); },
     mount: function (el) {
       var sr = slider(el, { title: 'Resistor R', keys: '[ ]', min: 0, max: R_LIST.length - 1, val: R_LIST.indexOf(sim.r), jump: 3, fmt: function (i) { return fmtR(R_LIST[i]); }, onInput: function (i) { sim.r = R_LIST[i]; } });
@@ -438,7 +439,7 @@ info.addEventListener('click', function (e) { if (e.target === info) info.close(
 var exp = $('exp');
 function openExplain() {
   if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
-  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
   exp.showModal(); exp.scrollTop = 0;
 }
 $('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
@@ -449,6 +450,7 @@ var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch 
 function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
 paintSnd();
 if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
 $('sndb').addEventListener('click', function () {
   if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
   try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}

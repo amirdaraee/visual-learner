@@ -343,7 +343,10 @@ function getScene() { if (!built.o) { built.o = sceneOrrery(); stage.add(built.o
 var PRE = { geo: 42164, gps: 26560 };
 
 var STAGES = [
-  { id: 'orbit', name: 'Circular orbit', explain: { title: 'Falling forever, and missing the ground', body: ["A spacecraft in a circular orbit is in free fall. Gravity bends its path toward the planet at exactly the rate the planet&rsquo;s surface curves away. For a circle of radius <b>r</b> that balance gives <b>v = &radic;(&mu;/r)</b>, where &mu; is the planet&rsquo;s gravitational parameter (~398,600 km&sup3;/s&sup2; for Earth).", "Higher orbits are <b>slower</b>, not faster. Radius counts from Earth&rsquo;s centre, so a 400 km altitude means r ~6,778 km, a speed of ~7.7 km/s and a period of ~92 minutes. The period follows <b>T = 2&pi;&radic;(r&sup3;/&mu;)</b>, so it grows quickly with radius. Everything here is idealised: one point mass, no atmosphere, no drag.", "The lime arrow is the velocity (length scaled to speed). The cyan arrow is the pull of gravity. Time is scaled so an orbit takes a few seconds."], tryit: 'Pick the GPS-like preset. The speed falls to ~3.9 km/s and the period grows to ~12 hours.' },
+  { id: 'orbit', name: 'Circular orbit', explain: { title: 'In a circular orbit, higher means slower', sections: [
+      { h: 'What you see', p: ['A spacecraft circles the planet. The lime arrow is its velocity, with the length scaled to the speed. The cyan arrow is the pull of gravity. Time is scaled, so an orbit takes a few seconds.'] },
+      { h: 'How it works', p: ['A spacecraft in a circular orbit is in free fall. Gravity bends its path towards the planet at exactly the rate the surface curves away. For a circle of radius r that balance gives v = &radic;(&mu;/r), where &mu; is the planet&rsquo;s gravitational parameter (~398,600 km&sup3;/s&sup2; for Earth).', 'Higher orbits are slower. Radius is measured from the centre of the Earth, so a 400 km altitude means r ~6,778 km, a speed of ~7.7 km/s and a period of ~92 minutes. The period is T = 2&pi;&radic;(r&sup3;/&mu;), so it grows quickly with radius.', 'Everything here is idealised: one point mass, no atmosphere, no drag.'] }
+    ], tryit: ['Pick the GPS-like preset. The speed falls to ~3.9 km/s and the period grows to ~12 hours.'] },
     why: 'Gravity sets one speed for each height. <span class="y">Higher orbits are slower</span> and take longer.', hint: 'Drag the altitude slider · presets below',
     chart: { t: 'Circular speed', k: 'vs altitude' },
     enter: function (sc) { sc.setMode('single'); },
@@ -361,7 +364,11 @@ var STAGES = [
       dot(lerp(x0, x1, (r - 200) / 20000), lerp(y0, y1, (vcirc(RE + r) - 3.5) / 4.5), '#fff');
       mtext('km/s', 44, 18, '#9ea8c2', 16); mtext('200 km', x0, 180, '#6f7894', 16); mtext('altitude', 310, 180, '#6f7894', 16, 'center'); mtext('20,200 km', x1, 180, '#6f7894', 16, 'right');
     } },
-  { id: 'transfer', name: 'Transfer', explain: { title: 'One ellipse that touches both orbits', body: ["Burn <b>forward</b> at one point of the inner orbit. The craft speeds up and its orbit stretches into an ellipse. The burn point stays on the ellipse as its lowest point (periapsis), and the opposite side rises until it reaches the target radius (apoapsis). The ellipse has semi-major axis <b>a = (r1 + r2)/2</b>.", "Coast half an ellipse, which takes <b>t = &pi;&radic;(a&sup3;/&mu;)</b>. At the top the craft is too slow to stay at that height, so a second forward burn lifts the low side and makes the orbit circular. The two burns are <b>&Delta;v1 = &radic;(&mu;/r1)(&radic;(2r2/(r1+r2)) &minus; 1)</b> and <b>&Delta;v2 = &radic;(&mu;/r2)(1 &minus; &radic;(2r1/(r1+r2)))</b>.", "For a ~400 km orbit to geostationary radius (~42,164 km) the burns are roughly 2.4 km/s and 1.5 km/s, about 3.9 km/s in all, over about 5.3 hours. Idealised: instant burns, circular coplanar orbits, no perturbations and no plane change. Real geostationary transfers also change inclination."], tryit: 'Press Start transfer, then drag the ratio toward 1.2. The total Δv and the trip time both shrink.' },
+  { id: 'transfer', name: 'Transfer', explain: { title: 'One ellipse that touches both orbits', sections: [
+      { h: 'What you see', p: ['The dashed yellow ellipse touches the inner orbit at burn 1 and the outer orbit at burn 2. The bars on the card compare the two burns and their total.'] },
+      { h: 'How it works', p: ['Burn forward at one point of the inner orbit. The craft speeds up and its orbit stretches into an ellipse. The burn point stays on the ellipse as its lowest point, the periapsis, and the opposite side rises until it reaches the target radius, the apoapsis. The ellipse has semi-major axis a = (r1 + r2)/2.', 'The craft coasts half an ellipse, which takes t = &pi;&radic;(a&sup3;/&mu;). At the top it is too slow to stay at that height, so a second forward burn lifts the low side and makes the orbit circular. The burns are &Delta;v1 = &radic;(&mu;/r1)(&radic;(2r2/(r1+r2)) &minus; 1) and &Delta;v2 = &radic;(&mu;/r2)(1 &minus; &radic;(2r1/(r1+r2))).', 'From a ~400 km orbit to geostationary radius (~42,164 km) the burns are roughly 2.4 km/s and 1.5 km/s, about 3.9 km/s in all, over about 5.3 hours.'] },
+      { h: 'What is left out', p: ['The burns are instant, the orbits are circular and in one plane, and nothing disturbs the path. Real geostationary transfers also change inclination.'] }
+    ], tryit: ['Press Start transfer, then drag the ratio towards 1.2. The total &Delta;v and the trip time both shrink.'] },
     why: 'Burn forward to raise the far side, coast half an ellipse, then <span class="y">burn again to circularise.</span>', hint: 'Slide the target orbit · Space starts the transfer',
     chart: { t: 'Cost of the two burns', k: 'time scaled' }, goLabel: 'Start transfer', go: function (sc) { sc.launch(); },
     enter: function (sc) { sc.setMode('transfer'); sc.setBurns(2); },
@@ -378,7 +385,11 @@ var STAGES = [
       mtext('a ~' + fmt(d.a) + ' km · e ~' + d.e.toFixed(3), 14, 130, '#dfe6f5', 17); mtext('r1 ~' + fmt(r1) + ' → r2 ~' + fmt(r1 * sc.ratio()) + ' km', 14, 154, '#9ea8c2', 16);
       mtext(el > 0 ? 'time scaled · elapsed ' + fmtT(el) : 'time scaled · press Start to fly', 14, 180, LIME, 16);
     } },
-  { id: 'two-burns', name: 'Why two burns', explain: { title: 'Speed drops on the way up', body: ["On the ellipse the speed follows the <b>vis-viva</b> equation, <b>v&sup2; = &mu;(2/r &minus; 1/a)</b>. Moving away from the planet turns speed into height, like a ball thrown upward, so the craft is fastest at periapsis and slowest at apoapsis.", "At apoapsis the ellipse speed is lower than the circular speed for that radius. With only burn 1, the craft climbs, swings round and falls back to the burn point, again and again. Burn 2 adds exactly the missing speed and lifts the low side, which turns the ellipse into the target circle.", "For a very large ratio (r2/r1 above about 11.94) a three-burn <b>bi-elliptic</b> transfer, which swings out far beyond the target first, can need less total &Delta;v than a Hohmann transfer, at the price of a much longer trip. Real missions also weigh time, fuel, and plane changes."], tryit: 'Choose Burn 1 only, fly it, and watch the craft come back to the burn point.' },
+  { id: 'two-burns', name: 'Why two burns', explain: { title: 'The craft slows as it climbs', sections: [
+      { h: 'What you see', p: ['The chart plots speed along the flight. The craft is fastest at the low point and slowest at the top. Choose Two burns or Burn 1 only to compare.'] },
+      { h: 'How it works', p: ['On the ellipse the speed follows the vis-viva equation, v&sup2; = &mu;(2/r &minus; 1/a). Moving away from the planet trades speed for height, like a ball thrown upwards, so the craft is fastest at periapsis and slowest at apoapsis.', 'At apoapsis the ellipse speed is lower than the circular speed for that radius. With only burn 1 the craft climbs, swings round and falls back to the burn point, again and again. Burn 2 adds exactly the missing speed and lifts the low side, which turns the ellipse into the target circle.'] },
+      { h: 'In real life', p: ['For a very large ratio (r2/r1 above about 11.94), a three-burn bi-elliptic transfer, which swings out far beyond the target first, can need less total &Delta;v than a Hohmann transfer, at the price of a much longer trip. Real missions also weigh time, fuel and plane changes.'] }
+    ], tryit: ['Choose Burn 1 only, fly it, and watch the craft come back to the burn point.'] },
     why: 'The craft slows as it climbs, so at the top it is <span class="y">too slow for a circle.</span> Burn 2 closes the gap.', hint: 'Compare two burns with one · Space switches',
     chart: { t: 'Speed along the flight', k: 'time scaled' }, goLabel: 'Fly again', go: function (sc) { sc.launch(); },
     enter: function (sc) { sc.setMode('transfer'); sc.setBurns(2); sc.launch(); },
@@ -455,7 +466,7 @@ info.addEventListener('click', function (e) { if (e.target === info) info.close(
 var exp = $('exp');
 function openExplain() {
   if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
-  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p><p style="font-size:12px;color:var(--mute)">Educational and idealised, not mission-planning advice. Time is scaled.</p>';
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">Educational and idealised, not mission-planning advice. Time is scaled.</p>';
   exp.showModal(); exp.scrollTop = 0;
 }
 $('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
@@ -466,6 +477,7 @@ var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch 
 function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
 paintSnd();
 if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
 $('sndb').addEventListener('click', function () {
   if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
   try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}

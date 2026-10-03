@@ -347,10 +347,11 @@ function cycle(i, d, n) { return (i + d + n) % n; }
 var STAGES = [
   { id: 'groups', name: 'Groups', why: 'Groups repel, so they spread out. <span class="y">More groups, smaller angles.</span>', hint: 'Pick a group count · drag to orbit',
     chart: { t: 'Smallest ideal angle', k: 'by group count' },
-    explain: { title: 'Why electron groups spread out', body: [
-      'Around a central atom, every <b>electron group</b> (a lone pair, or a whole single, double or triple bond) is a cloud of negative charge. Like charges repel, so the groups settle as far apart as they can. Counting groups is the first move of the <b>VSEPR</b> model.',
-      'Two groups end up 180° apart (linear). Three spread to 120° in a flat triangle. Four point to the corners of a tetrahedron, ~109.5° apart. Five make a trigonal bipyramid: three equatorial groups 120° apart, and two axial groups at 90° to them. Six point along the axes of an octahedron, 90° apart.',
-      'Here every group is a bond, so the atoms sit where the groups are. A double bond counts as one group, so CO2 (two double bonds) has two groups and is linear. VSEPR is a simple model: it predicts main-group shapes well but gives no energies and is less reliable for transition metals.'], tryit: 'Step the group count from 2 to 6 and watch the angle labels shrink as each group gets less room.' },
+    explain: { title: 'Electron groups push each other apart', sections: [
+      { h: 'What you see', p: ['A central atom (orange) with bonded atoms (blue). The yellow arc and label show the angle between neighbouring bonds. The number of groups is set with the buttons.'] },
+      { h: 'How it works', p: ['An electron group is a lone pair, or a whole single, double or triple bond. Each one is a cloud of negative charge, and like charges repel, so the groups settle as far apart as they can. Counting the groups is the first step of the VSEPR model.', 'Two groups end up 180° apart (linear). Three spread to 120° in a flat triangle. Four point to the corners of a tetrahedron, ~109.5° apart. Five make a trigonal bipyramid: three groups 120° apart around the middle and two at the poles, 90° from them. Six point along the axes of an octahedron, 90° apart.', 'Here every group is a bond, so the atoms sit where the groups are. A double bond counts as one group, so CO2, with two double bonds, has two groups and is linear.'] },
+      { h: 'What is left out', p: ['VSEPR is a simple model. It predicts the shapes of main-group molecules well, gives no energies, and is less reliable for transition metals.'] }
+    ], tryit: ['Step the group count from 2 to 6. The angle shrinks each time, because each group gets less room.'] },
     mount: function (el, sc, st) {
       var sg = seg(el, [2, 3, 4, 5, 6].map(function (n) { return { label: String(n), v: n }; }), function (it) { st.n = it.v; sc.setModel(it.v, 0); sc.setTitle(SHAPE[it.v + ',0']); }, st.n - 2, { title: 'Electron groups <em>[ ]</em>' });
       anglesSeg(el, sc);
@@ -370,10 +371,10 @@ var STAGES = [
     } },
   { id: 'lonepairs', name: 'Lone pairs', why: 'A lone pair takes more room than a bond. It <span class="y">squeezes the bonds</span> and sets the shape you see.', hint: 'Swap bonds for lone pairs · greyed options do not exist',
     chart: { t: 'Squeezed angles', k: 'four groups' },
-    explain: { title: 'Lone pairs take more room', body: [
-      'A <b>lone pair</b> belongs to the central atom alone, so it is held closer in and spreads out wider than a bonding pair. The shape name only describes the <b>atoms</b>, but lone pairs still count as groups and still push. In AXnEm notation, A is the central atom, X a bonded atom and E a lone pair.',
-      'Start from the arrangement for the total group count, then swap bonds for lone pairs. Three groups with one lone pair (AX2E) is bent. Four groups give pyramidal (AX3E) and bent (AX2E2). In a trigonal bipyramid, lone pairs take the equatorial spots, giving seesaw (AX4E), T-shaped (AX3E2) and linear (AX2E3). In an octahedron they sit opposite each other, giving square pyramidal (AX5E) and square planar (AX4E2).',
-      'Because lone pairs repel more than bonding pairs, real bond angles are somewhat smaller than the ideal: ~107° in NH3 and ~104.5° in H2O, against 109.5° for a perfect tetrahedron. The model is drawn at the ideal angles. Greyed-out buttons are combinations this page does not model.'], tryit: 'Hold four groups in total: go from AX4 to AX3E to AX2E2. The groups stay tetrahedral, but the visible shape goes from tetrahedron to pyramid to bent.' },
+    explain: { title: 'Lone pairs take more room than bonds', sections: [
+      { h: 'What you see', p: ['Two selectors set the bonding pairs (X) and the lone pairs (E). The shape name and the ideal angle update, and the purple lobes are the lone pairs. Greyed-out buttons are combinations this page does not model.'] },
+      { h: 'How it works', p: ['A lone pair belongs to the central atom alone, so it is held closer in and spreads out wider than a bonding pair. The shape name describes only the atoms, but lone pairs still count as groups and still push. In AXnEm notation, A is the central atom, X is a bonded atom and E is a lone pair.', 'Start from the arrangement for the total number of groups, then swap bonds for lone pairs. Three groups with one lone pair (AX2E) is bent. Four groups give trigonal pyramidal (AX3E) and bent (AX2E2). In a trigonal bipyramid the lone pairs take the middle positions, giving seesaw (AX4E), T-shaped (AX3E2) and linear (AX2E3). In an octahedron they sit opposite each other, giving square pyramidal (AX5E) and square planar (AX4E2).', 'Lone pairs repel more than bonding pairs, so real bond angles are somewhat smaller than the ideal ones: ~107° in NH3 and ~104.5° in H2O, against 109.5° for a perfect tetrahedron. The model is drawn at the ideal angles.'] }
+    ], tryit: ['Keep four groups in total and go from AX4 to AX3E to AX2E2. The groups stay tetrahedral, but the visible shape goes from tetrahedron to pyramid to bent.'] },
     mount: function (el, sc, st) {
       var xs, es;
       function refresh() {
@@ -395,10 +396,11 @@ var STAGES = [
     draw: function (sc, st) { drawFamily(st.x + ',' + st.e); } },
   { id: 'molecules', name: 'Real molecules', why: 'Real molecules fit the model. The scene shows <span class="y">ideal angles</span>; measured ones sit a little lower with lone pairs.', hint: 'Pick a molecule · A toggles angle labels',
     chart: { t: 'Squeezed angles', k: 'four groups' },
-    explain: { title: 'Checking the model against real molecules', body: [
-      'Each chip loads a real molecule into the model, with its formula, notation and shape. Methane (CH4) has four bonds and no lone pairs, so it is a clean tetrahedron at ~109.5°. Ammonia (NH3) has the same four groups, but one is a lone pair, giving a pyramid with angles of ~107°. Water (H2O) has two lone pairs, so it is bent, at ~104.5°.',
-      'The idea reaches past four groups. PCl5 is a trigonal bipyramid, SF6 an octahedron, and XeF4 puts its two lone pairs opposite each other so the four fluorine atoms form a flat square. Measured angles depend a little on phase and method, so inexact ones carry a ~.',
-      'Shape also decides polarity. Each polar bond has its own dipole, but in a symmetric molecule like CO2 the two dipoles point opposite ways and cancel. In bent H2O they do not cancel, so water is polar. Atom sizes and colours here are schematic, not to scale.'], tryit: 'Compare CH4, NH3 and H2O in turn. The chart marks where each real angle falls under the ideal 109.5°.' },
+    explain: { title: 'Checking the model against real molecules', sections: [
+      { h: 'What you see', p: ['Each chip loads a real molecule into the model, with its formula, notation and shape. The chart marks where each real angle falls compared with the ideal 109.5°.'] },
+      { h: 'How it works', p: ['Methane (CH4) has four bonds and no lone pairs, so it is a tetrahedron at ~109.5°. Ammonia (NH3) has the same four groups, but one is a lone pair, giving a pyramid with angles of ~107°. Water (H2O) has two lone pairs, so it is bent, at ~104.5°.', 'The same idea works beyond four groups. PCl5 is a trigonal bipyramid and SF6 is an octahedron. XeF4 has its two lone pairs on opposite sides, so the four fluorine atoms form a flat square. Measured angles depend a little on the phase and the method, so the inexact ones carry a ~.'] },
+      { h: 'In real life', p: ['Shape decides polarity. Each polar bond has its own dipole. In a symmetric molecule such as CO2 the two dipoles point in opposite directions and cancel. In bent H2O they do not cancel, so water is polar. Atom sizes and colours here are schematic, not to scale.'] }
+    ], tryit: ['Compare CH4, NH3 and H2O in turn and watch the angle shrink as lone pairs are added.'] },
     mount: function (el, sc, st) {
       var grid = document.createElement('div'), btns = []; grid.className = 'chips';
       function refresh() {
@@ -470,7 +472,7 @@ info.addEventListener('click', function (e) { if (e.target === info) info.close(
 var exp = $('exp');
 function openExplain() {
   if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
-  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
   exp.showModal(); exp.scrollTop = 0;
 }
 $('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });

@@ -397,11 +397,10 @@ function overlayChip(el, sc) {
 }
 var PX0 = 36, PX1 = 584;
 var STEPS = [
-  { name: 'One source', hash: 'one', mode: 'one', explain: { title: 'One source, one wavelength', body: [
-      'A source bobbing at a steady rate sends ripples outward as rings. The distance from one crest to the next is the <b>wavelength</b> λ. The time between crests passing a spot is the <b>period</b> T, and the number per second is the <b>frequency</b> f = 1/T.',
-      'A crest travels one wavelength in one period, so the wave speed is <b>v = fλ</b>. Here the speed is held fixed, so a shorter wavelength means a higher frequency. Real water waves are more complicated, because their speed also depends on wavelength, so read this as a simplified model.',
-      'The rings thin out as they grow. In a flat tank the energy spreads round a circle, so the height falls roughly as <b>1/√r</b>. Heights are exaggerated, lengths are in arbitrary tank units (u), and the edges absorb the waves instead of reflecting them.'],
-    tryit: 'Drag the wavelength slider. The rings crowd together and the frequency rises while the speed stays put.' },
+  { name: 'One source', hash: 'one', mode: 'one', explain: { title: 'One source sends out rings of a fixed length', sections: [
+      { h: 'What you see', p: ['A source in the middle of the tank bobs at a steady rate and sends out ripples. The slider sets the wavelength, which is the distance from one crest to the next.'] },
+      { h: 'How it works', p: ['The time between crests passing a spot is the period T, and the number per second is the frequency f = 1/T. A crest travels one wavelength in one period, so the wave speed is v = fλ.', 'Here the speed is held fixed, so a shorter wavelength means a higher frequency. Real water waves are more complicated, because their speed also depends on wavelength, so this is a simplified model.', 'The rings thin out as they grow. In a flat tank the energy spreads around a circle, so the height falls roughly as 1/√r. Heights are exaggerated, lengths are in arbitrary tank units (u), and the edges absorb the waves instead of reflecting them.'] }
+    ], tryit: ['Drag the wavelength slider. The rings crowd together and the frequency rises, while the speed stays the same.'] },
     why: 'Ripples spread as rings. Crest to crest is one wavelength, and <span class="y">speed = frequency × wavelength.</span>', hint: 'Drag the wavelength · space pauses',
     chart: { t: 'Height along one ray', k: 'schematic' },
     mount: function (el, sc) { var l = lamSlider(el, sc); return { nudge: function (dr) { l.nudge(dr); } }; },
@@ -414,11 +413,10 @@ var STEPS = [
       curve(function (u) { return amp(u * R) * Math.cos(k * u * R - ph); }, PX0, PX1, 240, y, CYAN, 3);
       mtext('distance from the source →', PX0, 184, '#6f7894', 13); mtext('ticks: one λ each', PX1, 184, '#6f7894', 13, 'right');
     } },
-  { name: 'Two sources', hash: 'two', mode: 'two', explain: { title: 'Two sources add', body: [
-      'Each source makes its own rings, and where they overlap the heights simply <b>add</b> (superposition, a good approximation for small ripples). At a point P the two waves have travelled different distances r₁ and r₂. The <b>path difference</b> is Δ = |r₁ − r₂|.',
-      'If Δ is a whole number of wavelengths, <b>Δ = mλ</b>, crest meets crest and the water moves strongly: <b>constructive</b>. If Δ is a half-odd number, <b>Δ = (m + ½)λ</b>, crest meets trough and they cancel: <b>destructive</b>. Points with the same Δ lie on a hyperbola with the two sources as its foci, which is why you see curved lines fanning out.',
-      'Δ can never exceed the spacing d, so only d/λ matters. There are 2⌊d/λ⌋ + 1 loud lines and 2⌊d/λ + ½⌋ quiet ones. When d/λ is exactly a half-odd number, the outermost quiet pair lies along the line through the sources. Quiet lines are close to calm, not perfectly: away from the centre line the two waves differ a little in height.'],
-    tryit: 'Widen the spacing slowly. A new pair of lines appears each time d/λ passes a multiple of ½, then swings in toward the middle.' },
+  { name: 'Two sources', hash: 'two', mode: 'two', explain: { title: 'Two sources add', sections: [
+      { h: 'What you see', p: ['Source A and source B each make their own rings. The gold lines mark where the water moves strongly (loud) and the pink lines mark where it stays nearly still (quiet).'] },
+      { h: 'How it works', p: ['Where the rings overlap, the heights add. This is superposition, and it is a good approximation for small ripples. At a point P the two waves have travelled different distances r₁ and r₂. The difference Δ = |r₁ − r₂| is the path difference.', 'If Δ is a whole number of wavelengths (Δ = mλ), crest meets crest and the water moves strongly: constructive interference. If Δ is a half-odd number (Δ = (m + ½)λ), crest meets trough and they cancel: destructive interference. Points with the same Δ lie on a hyperbola with the two sources as its foci, which is why the lines curve and fan out.', 'Δ can never be larger than the spacing d, so only d/λ matters. There are 2⌊d/λ⌋ + 1 loud lines and 2⌊d/λ + ½⌋ quiet ones. When d/λ is exactly a half-odd number, the outermost quiet pair lies along the line through the sources. Quiet lines are close to calm, not perfectly: away from the centre line the two waves differ a little in height.'] }
+    ], tryit: ['Widen the spacing slowly. A new pair of lines appears each time d/λ passes a multiple of ½, then swings in towards the middle.'] },
     why: 'Add a second source. <span class="y">Crest on crest is loud, crest on trough is calm.</span> Only d and λ set the pattern.', hint: 'Change d and λ · toggle the lines',
     chart: { t: 'Intensity along the far edge', k: 'relative' },
     mount: function (el, sc) { var l = lamSlider(el, sc); dSlider(el, sc); overlayOn = true; sc.setOverlay(true); overlayChip(el, sc); return { nudge: function (dr) { l.nudge(dr); } }; },
@@ -430,11 +428,10 @@ var STEPS = [
       mx.beginPath(); for (i = 0; i < n; i++) { var x = lerp(PX0, PX1, i / (n - 1)), y = 160 - p[i] * 124; if (i) mx.lineTo(x, y); else mx.moveTo(x, y); } mx.strokeStyle = CYAN; mx.lineWidth = 2.5; mx.stroke();
       mtext('left edge', PX0, 184, '#6f7894', 13); mtext('far edge of the tank', 310, 184, '#6f7894', 13, 'center'); mtext('right edge', PX1, 184, '#6f7894', 13, 'right');
     } },
-  { name: 'Probe', hash: 'probe', mode: 'probe', explain: { title: 'Reading one point', body: [
-      'Click or tap the water to place the probe. The two thin lines run from the probe to each source. Their lengths differ by Δ, shown in wavelengths.',
-      'Close to a whole number of wavelengths the two waves arrive in step and the heights add: <b>loud</b>. Close to a half-odd number they arrive opposite and cancel: <b>quiet</b>. On a wide screen the chart shows each wave at the probe and their sum in white.',
-      'The height readout is the size of the sum as a share of the most it could be, a₁ + a₂. From the formula, size = √(a₁² + a₂² + 2a₁a₂cos(2πΔ/λ)). It hits 100% when Δ is a whole number of wavelengths, and falls close to 0%, not exactly 0, near a quiet line, because the two waves are not quite the same size there.'],
-    tryit: 'Press Loud spot, then Quiet spot, and watch the white trace swell and flatten. Then change d and see the probe drift off its line.' },
+  { name: 'Probe', hash: 'probe', mode: 'probe', explain: { title: 'Reading one point', sections: [
+      { h: 'What you see', p: ['Click or tap the water to place the probe. Two thin lines run from the probe to the two sources, and their lengths differ by Δ, shown in wavelengths. On a wide screen the chart shows each wave at the probe, and their sum in white.'] },
+      { h: 'How it works', p: ['Close to a whole number of wavelengths, the two waves arrive in step and the heights add: loud. Close to a half-odd number they arrive opposite and cancel: quiet.', 'The height readout is the size of the sum as a share of the most it could be, a₁ + a₂. The formula is size = √(a₁² + a₂² + 2a₁a₂cos(2πΔ/λ)). It reaches 100% when Δ is a whole number of wavelengths. Near a quiet line it falls close to 0%, but not exactly, because the two waves are not quite the same size there.'] }
+    ], tryit: ['Press Loud spot, then Quiet spot, and watch the white trace swell and flatten. Then change d and watch the probe drift off its line.'] },
     why: 'Click the water. The probe compares its distance to each source: <span class="y">whole wavelengths add, half wavelengths cancel.</span>', hint: 'Click or tap the water to place the probe',
     chart: { t: 'Waves at the probe', k: 'A lime · B violet · sum white' },
     mount: function (el, sc, st) {
@@ -456,11 +453,10 @@ var STEPS = [
       curve(function (u) { return base(f.a1, f.r1)(u) + base(f.a2, f.r2)(u); }, PX0, PX1, 160, y, '#ffffff', 3);
       mtext('time → (two periods)', PX0, 184, '#6f7894', 13); mtext('Δ = ' + num(f.dl) + ' λ', PX1, 184, f.j.kind === 'loud' ? GOLD : f.j.kind === 'quiet' ? CORAL : '#9ea8c2', 13, 'right');
     } },
-  { name: 'Far field', hash: 'far', mode: 'far', explain: { title: 'Seen from far away', body: [
-      'Far from the sources, the two paths to a point run almost parallel. The extra distance the farther wave travels is then just <b>d sin θ</b>, where θ is the angle from the centre line. The right triangle at the sources shows it: the gold side is d sin θ.',
-      'Loud directions satisfy <b>d sin θ = mλ</b> and quiet ones <b>d sin θ = (m + ½)λ</b>. These are the straight lines the hyperbolas settle onto far away. The same rule describes light through two narrow slits, where λ is tiny, so the angles are small and sin θ ≈ θ = mλ/d.',
-      'It is an approximation that works when the point is much farther away than d. Closer in, use the exact path difference from the Probe step. Because sin θ cannot exceed 1, the largest loud order is m = ⌊d/λ⌋.'],
-    tryit: 'Shrink d to less than λ. Only the straight-ahead line is left, because no angle gives d sin θ = λ.' },
+  { name: 'Far field', hash: 'far', mode: 'far', explain: { title: 'Seen from far away the lines become straight', sections: [
+      { h: 'What you see', p: ['The triangle at the sources shows the extra distance the farther wave travels: the gold side is d sin θ, where θ is the angle from the centre line. The angle slider moves the viewing direction.'] },
+      { h: 'How it works', p: ['Far from the sources the two paths to a point are almost parallel, so the extra distance is just d sin θ. Loud directions satisfy d sin θ = mλ and quiet ones d sin θ = (m + ½)λ. These are the straight lines the hyperbolas settle onto far away.', 'The same rule describes light through two narrow slits. There λ is tiny, so the angles are small and sin θ ≈ θ = mλ/d.', 'It is an approximation that works when the point is much farther away than d. Closer in, use the exact path difference from the Probe step. Because sin θ cannot be larger than 1, the highest loud order is m = ⌊d/λ⌋.'] }
+    ], tryit: ['Shrink d to less than λ. Only the straight-ahead line is left, because no angle gives d sin θ = λ.'] },
     why: 'Far away the two paths are nearly parallel and differ by <span class="y">d sin θ.</span> Loud when that equals mλ.', hint: 'Swing the angle · try d below λ',
     chart: { t: 'Path difference vs angle', k: 'd sin θ in λ' },
     mount: function (el, sc) {
@@ -558,7 +554,7 @@ info.addEventListener('click', function (e) { if (e.target === info) info.close(
 var exp = $('exp');
 function openExplain() {
   if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
-  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
   exp.showModal(); exp.scrollTop = 0;
 }
 $('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
