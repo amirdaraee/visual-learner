@@ -38,7 +38,7 @@ npm run serve        # http://localhost:8844
 npm run validate     # checks topics.json and every topic page
 ```
 
-If you do not use npm: `python3 -m http.server 8844`.
+If you do not use npm: `node scripts/serve.mjs 8844`, or any static file server on the repository folder.
 
 Opening `index.html` straight from disk shows the topic pages but not the landing page, because browsers block `fetch` on `file://`.
 

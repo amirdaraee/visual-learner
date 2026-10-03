@@ -9,7 +9,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "serve": "python3 -m http.server 8844",
+    "serve": "node scripts/serve.mjs 8844",
     "validate": "node scripts/validate.mjs",
     "test:unit": "node tests/run-unit.mjs",
     "test:e2e": "playwright test",
