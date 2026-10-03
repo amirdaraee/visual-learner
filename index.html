@@ -5,268 +5,243 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0d0c">
 <title>Visual Learner</title>
-<meta name="description" content="Interactive 3D explainers for science and engineering. Pick a subject, orbit the idea, change it, understand it.">
+<meta name="description" content="Interactive 3D explainers for science and engineering. Pick a subject, then explore its concepts.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* The page scrolls over a live view of the Biology lab (the same shared stage the topics use). Without WebGL, or with
-   reduced motion, the lab is skipped and a plain gradient is shown. Tokens match shared/ui.css (smoked glass). */
+/* Two levels on one page: a grid of subjects, then the concepts inside a subject (#biology). Search and the subject
+   filter stay on top of both. No libraries and no 3D here. Tokens match shared/ui.css (smoked glass, one lime accent). */
 :root {
   color-scheme: dark;
   --bg: #0b0d0c; --ink: #f1f3ee; --ink-2: #c4c9c1; --mute: #99a097; --rule: rgba(255, 255, 255, 0.13);
-  --glass: rgba(12, 14, 13, 0.5); --glass-hi: rgba(255, 255, 255, 0.07);
+  --glass: rgba(255, 255, 255, 0.045); --glass-hi: rgba(255, 255, 255, 0.08);
   --lime: #c8f03c; --lime-ink: #11160a;
   --display: 'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif; --mono: 'Martian Mono', ui-monospace, Menlo, monospace;
-  --blur: blur(16px) saturate(1.15);
 }
 * { box-sizing: border-box; }
-/* the page background lives on html: a body background would paint over the lab behind it */
-html { background: radial-gradient(ellipse 70% 60% at 75% 30%, #1d2a22 0%, transparent 70%), var(--bg); scroll-behavior: smooth; }
-body { margin: 0; min-height: 100vh; color: var(--ink); font-family: Figtree, system-ui, sans-serif; line-height: 1.5; }
+html { background: radial-gradient(ellipse 80% 50% at 80% -10%, #1b2a21 0%, transparent 70%), var(--bg); background-attachment: fixed; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font-family: Figtree, system-ui, sans-serif; line-height: 1.5; display: flex; flex-direction: column; }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 6px; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 8px; }
+.wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding-inline: 20px; }
 
-#world { position: fixed; inset: 0; z-index: -2; }
-#gl { display: block; width: 100%; height: 100%; pointer-events: none; }
-.shade { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, rgba(8, 10, 9, 0.78) 0%, rgba(8, 10, 9, 0.35) 45%, transparent 75%), linear-gradient(transparent 55%, rgba(8, 10, 9, 0.6)); }
-.fallback { display: none; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 22px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 800 1.15rem var(--display); letter-spacing: -0.02em; }
+.brand svg { width: 28px; height: 28px; }
+.top a.src { font-size: 13px; color: var(--mute); text-decoration: none; }
+.top a.src:hover { color: var(--ink); }
 
-/* ---- hero ---- */
-.hero { min-height: min(100vh, 860px); display: grid; align-content: center; gap: 22px; padding-block: 96px 64px; max-width: 640px; }
-.tag { display: inline-flex; width: max-content; font: 500 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); border: 1px solid var(--lime); padding: 5px 12px; border-radius: 99px; }
-h1 { margin: 0; font: 800 clamp(2.8rem, 9vw, 5.6rem)/0.95 var(--display); letter-spacing: -0.035em; text-wrap: balance; text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5); }
+main { flex: 1; padding-block: 24px 72px; outline: none; }
+.crumb { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; font-size: 14px; font-weight: 600; color: var(--mute); text-decoration: none; }
+.crumb:hover { color: var(--ink); }
+.crumb svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+h1 { margin: 0; font: 800 clamp(2rem, 5.5vw, 3.2rem)/1.02 var(--display); letter-spacing: -0.03em; text-wrap: balance; }
 h1 em { font-style: normal; color: var(--lime); }
-.lead { margin: 0; max-width: 34em; font-size: 1.2rem; color: var(--ink-2); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6); }
-.cta { display: flex; gap: 10px; flex-wrap: wrap; }
-.btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 22px; border-radius: 99px; background: var(--lime); color: var(--lime-ink); font-weight: 700; font-size: 15px; text-decoration: none; transition: filter 0.12s; }
-.btn:hover { filter: brightness(1.08); }
-.btn.ghost { background: var(--glass); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
-.btn.ghost:hover { background: rgba(255, 255, 255, 0.1); filter: none; }
-.btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.facts { display: flex; gap: 8px 26px; flex-wrap: wrap; margin: 6px 0 0; padding: 0; list-style: none; font: 500 12px var(--mono); color: var(--mute); }
-.facts b { color: var(--ink); font-weight: 500; }
+.lead { margin: 12px 0 0; max-width: 40em; color: var(--ink-2); font-size: 1.05rem; }
 
-/* ---- the rest of the page sits on a surface that darkens over the lab ---- */
-.page { background: linear-gradient(transparent, rgba(8, 10, 9, 0.9) 220px); padding-top: 120px; }
-.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin-bottom: 56px; }
-.how div { padding: 18px 20px; border-radius: 16px; background: var(--glass); border: 1px solid var(--rule); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
-.how b { display: block; font: 800 1.15rem var(--display); letter-spacing: -0.02em; }
-.how b i { font: 500 11px var(--mono); font-style: normal; color: var(--lime); margin-right: 8px; letter-spacing: 0.08em; }
-.how span { color: var(--ink-2); font-size: 14px; }
-
-#topics { scroll-margin-top: 70px; }
-.bar { position: sticky; top: 0; z-index: 5; padding-block: 12px; background: linear-gradient(rgba(8, 10, 9, 0.92) 70%, transparent); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+/* search and the subject filter, kept on both levels */
+.bar { position: sticky; top: 0; z-index: 5; margin-top: 26px; padding-block: 12px; background: linear-gradient(rgba(11, 13, 12, 0.94) 72%, transparent); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .search { flex: 1 1 240px; min-width: 0; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 99px; background: var(--glass-hi); border: 1px solid var(--rule); }
 .search input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 15px; }
 .search:focus-within { border-color: var(--lime); }
 .search svg { width: 16px; height: 16px; fill: none; stroke: var(--mute); stroke-width: 2; stroke-linecap: round; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { height: 42px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--rule); background: var(--glass-hi); color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.12s, color 0.12s; }
-.chip:hover { color: var(--ink); background: rgba(255, 255, 255, 0.11); }
+.chip { height: 42px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--rule); background: var(--glass); color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.chip:hover { color: var(--ink); background: var(--glass-hi); }
 .chip[aria-pressed="true"] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
 
-main { display: grid; gap: 44px; padding-block: 24px 80px; }
-.cat { display: grid; gap: 14px; }
-.cat header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
-.cat h2 { margin: 0; font: 800 1.7rem var(--display); letter-spacing: -0.025em; display: flex; align-items: center; gap: 10px; }
-.cat h2 i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-.cat p { margin: 0; color: var(--mute); font-size: 14px; }
-.cat .n { margin-left: auto; font: 500 11px var(--mono); color: var(--mute); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
-.card { position: relative; display: grid; gap: 10px; align-content: start; padding: 18px; border-radius: 16px; background: var(--glass); border: 1px solid var(--rule); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); text-decoration: none; transition: transform 0.18s, border-color 0.18s; }
-a.card:hover { transform: translateY(-3px); border-color: var(--accent); }
-.card h3 { margin: 0; padding-right: 34px; font: 800 1.2rem/1.15 var(--display); letter-spacing: -0.02em; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; margin-top: 12px; }
+.count { margin: 18px 0 0; font: 500 11px var(--mono); letter-spacing: 0.06em; color: var(--mute); }
+
+.card { position: relative; display: grid; gap: 8px; align-content: start; padding: 22px; border-radius: 18px; background: var(--glass); border: 1px solid var(--rule); text-decoration: none; transition: transform 0.18s, border-color 0.18s, background 0.18s; }
+a.card:hover { transform: translateY(-3px); border-color: var(--accent); background: var(--glass-hi); }
+/* preview tile at the top of a card: a real screenshot, or a tinted tile with the subject icon until one exists */
+.shot { position: relative; margin: -22px -22px 10px; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 17px 17px 0 0; background: #101311; }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s; }
+a.card:hover .shot img { transform: scale(1.04); }
+.shot.ph { display: grid; place-items: center; background: radial-gradient(ellipse 70% 80% at 50% 40%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 75%), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 28px), #101311; }
+.shot.ph .ico { width: 72px; height: 72px; border-radius: 22px; margin: 0; }
+.shot.ph .ico svg { width: 36px; height: 36px; }
+.shot:not(.ph) .ico { position: absolute; left: 14px; bottom: 14px; margin: 0; width: 38px; height: 38px; border-radius: 12px; background: rgba(11, 13, 12, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.shot:not(.ph) .ico svg { width: 20px; height: 20px; }
+.card.has-shot h2, .card.has-shot h3 { padding-right: 0; }
+.card.has-shot .arrow { top: 14px; right: 14px; width: 30px; height: 30px; padding: 7px; border-radius: 50%; background: rgba(11, 13, 12, 0.7); stroke: var(--ink); z-index: 1; }
+.ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 8px; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card h2, .card h3 { margin: 0; font: 800 1.35rem/1.15 var(--display); letter-spacing: -0.025em; padding-right: 30px; }
+.card h3 { font-size: 1.2rem; }
 .card p { margin: 0; font-size: 14px; color: var(--ink-2); }
-.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.card .arrow { position: absolute; right: 18px; top: 22px; width: 16px; height: 16px; fill: none; stroke: var(--mute); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.18s, transform 0.18s; }
+a.card:hover .arrow { stroke: var(--accent); transform: translate(2px, -2px); }
+.foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .pill { font: 500 10.5px var(--mono); padding: 3px 9px; border-radius: 99px; background: var(--glass-hi); color: var(--mute); }
-.pill.lvl { color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); background: transparent; }
-.go { position: absolute; right: 16px; top: 16px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--glass-hi); color: var(--accent); transition: background 0.18s, color 0.18s; }
-a.card:hover .go { background: var(--accent); color: var(--lime-ink); }
-.go svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.empty { border-style: dashed; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; color: var(--mute); }
-.empty h3 { color: var(--mute); font: 600 1rem Figtree, sans-serif; letter-spacing: 0; }
+.pill.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); }
+.pill.lvl { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.pill.sub { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); }
+.card.soon { opacity: 0.72; }
+.empty { margin-top: 20px; padding: 28px; border-radius: 18px; border: 1px dashed var(--rule); color: var(--mute); }
+.empty b { color: var(--ink); display: block; font: 800 1.15rem var(--display); letter-spacing: -0.02em; margin-bottom: 4px; }
 .empty a { color: var(--lime); }
-.none, .err { color: var(--mute); text-align: center; padding: 60px 0; }
-footer { border-top: 1px solid var(--rule); padding-block: 28px 48px; color: var(--mute); font-size: 13px; display: flex; gap: 8px 20px; flex-wrap: wrap; }
+.err { color: var(--mute); text-align: center; padding: 60px 0; }
+
+footer { border-top: 1px solid var(--rule); padding-block: 22px 36px; color: var(--mute); font-size: 13px; display: flex; gap: 8px 20px; flex-wrap: wrap; }
 footer a { color: var(--ink-2); }
 
-@media (max-width: 700px) {
-  .hero { padding-block: 84px 40px; min-height: 100vh; min-height: 100svh; align-content: end; }
-  .shade { background: linear-gradient(transparent 25%, rgba(8, 10, 9, 0.88) 62%); }
-  .btn { flex: 1 1 auto; justify-content: center; }
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; gap: 10px; }
+  .card { padding: 18px; }
+  .shot { margin: -18px -18px 8px; aspect-ratio: 2 / 1; }
   .chips { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; width: 100%; padding-bottom: 2px; } .chips::-webkit-scrollbar { display: none; } .chip { flex: 0 0 auto; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<div id="world"><canvas id="gl" aria-hidden="true"></canvas></div>
-<div class="shade"></div>
-
 <div class="wrap">
-  <section class="hero">
-    <span class="tag">Interactive 3D explainers</span>
-    <h1>Learn it by <em>turning it around</em></h1>
-    <p class="lead">Science and engineering ideas you can orbit, tweak and break, each in a lab built for its subject. Play first, then read the explanation.</p>
-    <div class="cta">
-      <a class="btn" href="#topics">Browse topics <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg></a>
-      <a class="btn ghost" id="featured" href="biology/exome-sequencing/">Try the exome lab</a>
-    </div>
-    <ul class="facts" id="facts"></ul>
-  </section>
+  <header class="top">
+    <a class="brand" href="#" aria-label="Visual Learner, all subjects"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#171b18"/><path d="M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16" fill="none" stroke="#c8f03c" stroke-width="2.6" stroke-linecap="round"/></svg>Visual Learner</a>
+    <a class="src" href="https://github.com/amirdaraee/visual-learner">GitHub</a>
+  </header>
 </div>
 
-<div class="page">
-  <div class="wrap">
-    <div class="how" aria-label="How a topic works">
-      <div><b><i>01</i>Orbit it</b><span>Drag to look from any side. Every scene is a real 3D model.</span></div>
-      <div><b><i>02</i>Change it</b><span>Sliders and switches let you break the idea and see why.</span></div>
-      <div><b><i>03</i>Explain it</b><span>One button opens the full story for the step you are on.</span></div>
-    </div>
-
-    <div id="topics" class="bar" role="search">
-      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search topics" aria-label="Search topics" autocomplete="off"></label>
+<div class="wrap" style="flex:1;display:flex;flex-direction:column">
+  <main id="main" tabindex="-1">
+    <div id="head"></div>
+    <div class="bar" role="search">
+      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search concepts" aria-label="Search concepts" autocomplete="off"></label>
       <div class="chips" id="chips" role="group" aria-label="Filter by subject"></div>
     </div>
-
-    <main id="main" aria-live="polite"><p class="none">Loading topics…</p></main>
-
-    <footer>
-      <span>Educational and schematic. Not professional advice.</span>
-      <a href="https://github.com/amirdaraee/visual-learner">Source on GitHub</a>
-      <a href="https://github.com/amirdaraee/visual-learner/blob/main/CONTRIBUTING.md">Add a topic</a>
-    </footer>
-  </div>
+    <div id="out" aria-live="polite"><p class="err">Loading…</p></div>
+  </main>
+  <footer>
+    <span>Educational and schematic. Not professional advice.</span>
+    <a href="https://github.com/amirdaraee/visual-learner/blob/main/CONTRIBUTING.md">Add a concept</a>
+  </footer>
 </div>
 
 <script>
 (function () {
 'use strict';
-var data = null, active = 'all', query = '';
-var mainEl = document.getElementById('main'), chipsEl = document.getElementById('chips'), q = document.getElementById('q');
-var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
+var data = null, query = '';
+var headEl = document.getElementById('head'), outEl = document.getElementById('out'), chipsEl = document.getElementById('chips'), q = document.getElementById('q'), mainEl = document.getElementById('main');
+var ARROW = '<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
+var BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg>';
+/* one simple line icon per subject; the fallback is a plain ring */
+var ICONS = {
+  biology: '<path d="M8 3c0 6 8 6 8 12s-8 6-8 6"/><path d="M16 3c0 6-8 6-8 12s8 6 8 6"/><path d="M9 7.5h6M9 16.5h6"/>',
+  math: '<path d="M18 5H6l6 7-6 7h12"/>',
+  physics: '<ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/><circle cx="12" cy="12" r="1.3"/>',
+  electronics: '<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>',
+  aerospace: '<circle cx="12" cy="12" r="3.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(-25 12 12)"/>',
+  chemistry: '<path d="M9 3h6M10 3v6l-5.5 9.5A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  astronomy: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  earth: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  engineering: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
+  materials: '<path d="M12 3l7 4v8l-7 4-7-4V7z"/><path d="M12 3v8M12 11l7 4M12 11 5 15"/>',
+  'computer-science': '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
+  statistics: '<path d="M3 20h18M6 20v-7M11 20V5M16 20v-10"/>',
+  health: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  neuroscience: '<circle cx="12" cy="12" r="2.5"/><path d="M12 9.5V4.8M9.8 13.2 5.4 16M14.2 13.2l4.4 2.8"/><circle cx="12" cy="3.5" r="1.3"/><circle cx="4.4" cy="16.6" r="1.3"/><circle cx="19.6" cy="16.6" r="1.3"/>'
+};
 
 function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function icon(id) { var s = el('span', 'ico'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = '<svg viewBox="0 0 24 24">' + (ICONS[id] || '<circle cx="12" cy="12" r="8"/>') + '</svg>'; return s; }
+/* a topic belongs to its primary category and any listed in "also" */
+function inCat(t, cat) { return t.category === cat.id || (t.also || []).indexOf(cat.id) >= 0; }
+function topicCats(t) { return [t.category].concat(t.also || []).map(function (id) { return data.categories.filter(function (c) { return c.id === id; })[0]; }).filter(Boolean); }
+function liveCount(cat) { return data.topics.filter(function (t) { return inCat(t, cat) && t.status === 'live'; }).length; }
+function count(n) { return n + (n === 1 ? ' concept' : ' concepts'); }
+function currentCat() { var id = decodeURIComponent(location.hash.replace(/^#\/?/, '')); return data.categories.filter(function (c) { return c.id === id; })[0] || null; }
 
-function topicCard(t, cat) {
-  var live = t.status === 'live';
-  var c = el(live ? 'a' : 'div', 'card'); c.style.setProperty('--accent', cat.accent || '#c8f03c');
-  if (live) { c.href = t.path; c.insertAdjacentHTML('beforeend', '<span class="go">' + ARROW + '</span>'); }
-  c.appendChild(el('h3', null, t.title)); c.appendChild(el('p', null, t.summary));
-  var meta = el('div', 'meta');
-  if (t.level) meta.appendChild(el('span', 'pill lvl', t.level));
-  (t.tags || []).forEach(function (g) { meta.appendChild(el('span', 'pill', g)); });
-  if (!live) meta.appendChild(el('span', 'pill', 'coming soon'));
-  c.appendChild(meta); return c;
+function shot(src, cat, withIcon) {
+  var d = el('div', 'shot' + (src ? '' : ' ph')); d.setAttribute('aria-hidden', 'true');
+  if (src) { var i = el('img'); i.src = src; i.alt = ''; i.loading = 'lazy'; i.decoding = 'async'; i.width = 1200; i.height = 750; d.appendChild(i); }
+  if (withIcon) d.appendChild(icon(cat.id));
+  return d;
 }
 
-function render() {
-  mainEl.textContent = '';
-  var term = query.trim().toLowerCase(), shown = 0;
-  data.categories.forEach(function (cat) {
-    if (active !== 'all' && active !== cat.id) return;
-    var topics = data.topics.filter(function (t) {
-      if (t.category !== cat.id) return false;
-      if (!term) return true;
-      return (t.title + ' ' + t.summary + ' ' + (t.tags || []).join(' ')).toLowerCase().indexOf(term) >= 0;
+function topicCard(t, cat) {
+  var live = t.status === 'live', c = el(live ? 'a' : 'div', 'card' + (live ? '' : ' soon')); c.style.setProperty('--accent', cat.accent || '#c8f03c');
+  if (live) { c.href = t.path; c.insertAdjacentHTML('beforeend', ARROW); }
+  if (t.preview) { c.classList.add('has-shot'); c.appendChild(shot(t.preview, cat, false)); }
+  c.appendChild(el('h3', null, t.title)); c.appendChild(el('p', null, t.summary));
+  var foot = el('div', 'foot');
+  topicCats(t).filter(function (c) { return c.id !== cat.id || !currentCat(); }).forEach(function (c) { var sp = el('span', 'pill sub', c.name); sp.style.setProperty('--accent', c.accent || '#c8f03c'); foot.appendChild(sp); });
+  if (t.level) foot.appendChild(el('span', 'pill lvl', t.level));
+  (t.tags || []).forEach(function (g) { foot.appendChild(el('span', 'pill', g)); });
+  if (!live) foot.appendChild(el('span', 'pill', 'coming soon'));
+  c.appendChild(foot); return c;
+}
+
+function emptyBox(title, text) {
+  var e = el('div', 'empty'); e.appendChild(el('b', null, title));
+  var p = el('span'); p.appendChild(document.createTextNode(text)); e.appendChild(p); return e;
+}
+
+function draw() {
+  var cat = currentCat(), term = query.trim().toLowerCase();
+  /* heading */
+  headEl.textContent = '';
+  if (cat) {
+    var back = el('a', 'crumb'); back.href = '#'; back.insertAdjacentHTML('beforeend', BACK); back.appendChild(document.createTextNode('All subjects')); headEl.appendChild(back);
+    headEl.appendChild(el('h1', null, cat.name)); headEl.appendChild(el('p', 'lead', cat.blurb));
+    document.title = cat.name + ' · Visual Learner';
+  } else {
+    var h = el('h1'); h.appendChild(document.createTextNode('Pick a ')); h.appendChild(el('em', null, 'subject')); headEl.appendChild(h);
+    headEl.appendChild(el('p', 'lead', 'Interactive 3D explainers you can orbit and change. Open a subject to see its concepts.'));
+    document.title = 'Visual Learner';
+  }
+  /* filter chips: All plus one per subject; they navigate, so the browser Back button works */
+  Array.prototype.forEach.call(chipsEl.children, function (c) { c.setAttribute('aria-pressed', (cat ? c.dataset.id === cat.id : c.dataset.id === 'all') ? 'true' : 'false'); });
+
+  outEl.textContent = '';
+  /* searching: matching concepts, limited to the open subject if there is one */
+  if (term) {
+    var hits = data.topics.filter(function (t) {
+      if (cat && !inCat(t, cat)) return false;
+      return (t.title + ' ' + t.summary + ' ' + (t.tags || []).join(' ') + ' ' + topicCats(t).map(function (c) { return c.name; }).join(' ')).toLowerCase().indexOf(term) >= 0;
     });
-    if (term && !topics.length) return;
-    var sec = el('section', 'cat'); sec.style.setProperty('--accent', cat.accent || '#c8f03c');
-    var head = el('header'), h = el('h2'); h.appendChild(el('i')); h.appendChild(document.createTextNode(cat.name));
-    head.appendChild(h); head.appendChild(el('p', null, cat.blurb)); head.appendChild(el('span', 'n', topics.length + (topics.length === 1 ? ' topic' : ' topics')));
-    sec.appendChild(head);
-    var grid = el('div', 'grid');
-    if (topics.length) topics.forEach(function (t) { grid.appendChild(topicCard(t, cat)); });
-    else {
-      var e = el('div', 'card empty'); e.appendChild(el('h3', null, 'First topic coming soon'));
-      var p = el('p'); p.appendChild(document.createTextNode('Want to build it? Read ')); var a = el('a', null, 'CONTRIBUTING.md'); a.href = 'https://github.com/amirdaraee/visual-learner/blob/main/CONTRIBUTING.md'; p.appendChild(a); p.appendChild(document.createTextNode('.')); e.appendChild(p);
-      grid.appendChild(e);
+    outEl.appendChild(el('p', 'count', hits.length + (hits.length === 1 ? ' MATCH' : ' MATCHES') + ' FOR “' + query.trim().toUpperCase() + '”' + (cat ? ' IN ' + cat.name.toUpperCase() : '')));
+    if (!hits.length) { outEl.appendChild(emptyBox('Nothing matches yet', cat ? 'Try another word, or pick All to search every subject.' : 'Try another word, or clear the search.')); return; }
+    var g = el('div', 'grid'); hits.forEach(function (t) { g.appendChild(topicCard(t, cat || topicCats(t)[0])); }); outEl.appendChild(g); return;
+  }
+  /* inside a subject: its concepts */
+  if (cat) {
+    var topics = data.topics.filter(function (t) { return inCat(t, cat); });
+    if (!topics.length) {
+      var e = emptyBox('First concept coming soon', 'Want to build it? Read '), a = el('a', null, 'CONTRIBUTING.md'); a.href = 'https://github.com/amirdaraee/visual-learner/blob/main/CONTRIBUTING.md';
+      e.lastChild.appendChild(a); e.lastChild.appendChild(document.createTextNode('.')); outEl.appendChild(e); return;
     }
-    sec.appendChild(grid); mainEl.appendChild(sec); shown++;
+    var gt = el('div', 'grid'); topics.forEach(function (t) { gt.appendChild(topicCard(t, cat)); }); outEl.appendChild(gt); return;
+  }
+  /* home: the subjects */
+  var grid = el('div', 'grid');
+  data.categories.forEach(function (c) {
+    var n = liveCount(c), card = el('a', 'card' + (n ? '' : ' soon')); card.href = '#' + c.id; card.style.setProperty('--accent', c.accent || '#c8f03c');
+    card.classList.add('has-shot'); card.appendChild(shot(c.preview, c, true)); card.appendChild(el('h2', null, c.name)); card.insertAdjacentHTML('beforeend', ARROW);
+    card.appendChild(el('p', null, c.blurb));
+    var foot = el('div', 'foot'); foot.appendChild(el('span', 'pill' + (n ? ' on' : ''), n ? count(n) : 'Coming soon')); card.appendChild(foot);
+    grid.appendChild(card);
   });
-  if (!shown) mainEl.appendChild(el('p', 'none', 'No topics match “' + query + '”.'));
+  outEl.appendChild(grid);
 }
 
 function chip(id, name) {
-  var b = el('button', 'chip', name); b.type = 'button'; b.setAttribute('aria-pressed', id === active ? 'true' : 'false'); b.dataset.id = id;
-  b.addEventListener('click', function () { active = id; Array.prototype.forEach.call(chipsEl.children, function (c) { c.setAttribute('aria-pressed', c.dataset.id === id ? 'true' : 'false'); }); render(); });
+  var b = el('button', 'chip', name); b.type = 'button'; b.dataset.id = id; b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', function () { if (id === 'all') { history.pushState(null, '', location.pathname + location.search); draw(); window.scrollTo(0, 0); } else location.hash = id; });
   chipsEl.appendChild(b);
 }
 
-function facts(d) {
-  var live = d.topics.filter(function (t) { return t.status === 'live'; });
-  var f = document.getElementById('facts');
-  [[live.length, live.length === 1 ? 'live topic' : 'live topics'], [d.categories.length, 'subjects'], ['0', 'sign-ups, trackers or cookies']].forEach(function (x) {
-    var li = el('li'); var b = el('b', null, String(x[0])); li.appendChild(b); li.appendChild(document.createTextNode(' ' + x[1])); f.appendChild(li);
-  });
-  if (live.length) document.getElementById('featured').href = live[0].path;
-}
-
-fetch('topics.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) {
-  data = d; chip('all', 'All'); d.categories.forEach(function (c) { chip(c.id, c.name); }); facts(d); render();
+fetch('topics.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) {
+  data = d; chip('all', 'All'); d.categories.forEach(function (c) { chip(c.id, c.name); }); draw();
+  window.addEventListener('hashchange', function () { draw(); window.scrollTo(0, 0); });
+  window.addEventListener('popstate', function () { draw(); });
+  q.addEventListener('input', function () { query = q.value; draw(); });
 }).catch(function () {
-  mainEl.textContent = '';
-  mainEl.appendChild(el('p', 'err', 'Could not load topics.json. If you opened this file directly, serve the folder instead: npm run serve'));
-});
-q.addEventListener('input', function () { query = q.value; if (data) render(); });
-})();
-</script>
-
-<!-- the live lab behind the hero: loaded only when it can run well, otherwise the page keeps its plain gradient -->
-<script>
-(function () {
-'use strict';
-var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var lite = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ''));
-if (calm || lite) { var w = document.getElementById('world'); if (w) w.remove(); return; }
-var urls = [
-  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js',
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js',
-  'shared/environments.js', 'shared/stage.js'
-];
-/* scripts keep their order: each one loads after the one before it */
-function load(i, done) { if (i >= urls.length) return done(); var s = document.createElement('script'); s.src = urls[i]; s.onload = function () { load(i + 1, done); }; s.onerror = function () { var w = document.getElementById('world'); if (w) w.remove(); }; document.head.appendChild(s); }
-
-load(0, function () {
-  var T = window.THREE, stage = VLStage.create({ canvas: document.getElementById('gl'), view: document.getElementById('world'), category: 'biology', prefix: 'vl-landing',
-    /* the scene sits to the right of the headline on wide screens and higher up on phones */
-    viewOffset: function (w, h) { return w > 900 ? { x: -w * 0.2, y: -h * 0.02 } : { x: 0, y: h * 0.27 }; } });
-  if (!stage.ok) { var wv = document.getElementById('world'); if (wv) wv.remove(); return; }
-
-  /* a double helix standing on the bench: two strands and the rungs between them (schematic) */
-  var group = new T.Group(), N = 38, R = 0.9, H = 5.6, turns = 2.6;
-  var a = VLStage.soft('#9cc41f', 0.04), b = VLStage.soft('#2fb4d6', 0.04), rung = VLStage.soft('#b8bfb0', 0);
-  var ball = new T.SphereGeometry(0.17, 18, 14), bar = new T.CylinderGeometry(0.045, 0.045, 1, 8);
-  for (var i = 0; i < N; i++) {
-    var k = i / (N - 1), y = (k - 0.5) * H, ang = k * turns * Math.PI * 2;
-    var p1 = new T.Vector3(Math.cos(ang) * R, y, Math.sin(ang) * R), p2 = new T.Vector3(-Math.cos(ang) * R, y, -Math.sin(ang) * R);
-    var m1 = new T.Mesh(ball, a); m1.position.copy(p1); var m2 = new T.Mesh(ball, b); m2.position.copy(p2); group.add(m1, m2);
-    var r = new T.Mesh(bar, rung); r.position.set(0, y, 0); r.scale.y = R * 2 - 0.3; r.rotation.z = Math.PI / 2; r.rotation.y = -ang; group.add(r);
-  }
-  group.rotation.z = 0.12;
-  var phone = window.innerWidth <= 700;
-  var subject = { group: group, w: phone ? 4.6 : 3.4, h: phone ? 6.4 : 4.4, base: 2.8, update: function (t, dt) { group.rotation.y += dt * 0.35; } };
-  stage.add(subject); stage.show(subject); stage.setCine(true);
-
-  var last = performance.now(), t = 0, visible = true;
-  function frame(now) {
-    requestAnimationFrame(frame);
-    if (!visible || document.hidden) { last = now; return; }
-    var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
-    subject.update(t, dt); stage.frame(dt, t);
-  }
-  /* stop drawing once the hero has scrolled away */
-  window.addEventListener('scroll', function () { visible = window.scrollY < window.innerHeight * 1.1; }, { passive: true });
-  requestAnimationFrame(frame);
+  outEl.textContent = '';
+  outEl.appendChild(el('p', 'err', 'Could not load topics.json. If you opened this file directly, serve the folder instead: npm run serve'));
 });
 })();
 </script>

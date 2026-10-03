@@ -4,11 +4,11 @@ Guidance for AI coding assistants working in this repository.
 
 ## What this repo is
 
-Visual Learner: a static GitHub Pages site of interactive 3D explainers, grouped by subject (Biology, Math, Physics, Electronics, Aerospace, Chemistry). Each topic is one self-contained `index.html`. A landing page lists them from `topics.json`.
+Visual Learner: a static GitHub Pages site of interactive 3D explainers, grouped by subject (Biology, Math, Physics, Chemistry, Astronomy and more; the full list is in `topics.json`). Each topic is one self-contained `index.html`. A landing page lists them from `topics.json`.
 
 ## Layout
 
-- `index.html` renders `topics.json`. Do not hard-code topics in it. Its hero is a live view of the Biology lab built on the shared stage (skipped with reduced motion or no WebGL), so a change to `shared/` also needs a look at the landing page. Its CSS is inline (the page scrolls, unlike topics) but uses the same tokens as `shared/ui.css`.
+- `index.html` renders `topics.json` as two levels: a grid of subjects, then the concepts inside one (`#biology`), with search and a subject filter on both. Do not hard-code topics in it. It uses no libraries and no 3D; its CSS is inline (the page scrolls, unlike topics) but uses the same tokens as `shared/ui.css`.
 - `topics.json` is the manifest. Schema in `docs/TOPIC_GUIDE.md`.
 - `<category>/<topic>/index.html` is one topic. Topics must not depend on each other.
 - `templates/topic/index.html` is the starter for new topics.
@@ -18,7 +18,7 @@ Visual Learner: a static GitHub Pages site of interactive 3D explainers, grouped
 ## Commands
 
 ```sh
-npm run serve       # static server on http://localhost:8000
+npm run serve       # static server on http://localhost:8844
 npm run validate    # manifest + page checks, must pass
 ```
 
@@ -55,7 +55,7 @@ Full version in `docs/TOPIC_GUIDE.md`.
 - Respects `prefers-reduced-motion`. Every control is keyboard reachable with a visible focus ring.
 - Uses the category environment through the shared stage (backdrop can be switched off; the stage clamps camera yaw and zoom while it is on).
 - Has sound only through `shared/sound.js` (procedural, no audio files), with a mute control, and never before a user gesture.
-- Has an "Explain this step" panel with the full explanation, and a link back to `../../index.html`.
+- Has an "Explain this step" panel with the full explanation, written to `docs/WRITING.md` (plain voice, right level, no filler), and a link back to `../../index.html`.
 - Labels approximate numbers with `~`, and says "schematic" when the visual is not to scale.
 - Fails gracefully when WebGL is unavailable.
 

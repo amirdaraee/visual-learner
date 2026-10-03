@@ -15,7 +15,7 @@ Open an issue first for a new topic so we can agree on scope. Small fixes can go
 ```sh
 git clone https://github.com/amirdaraee/visual-learner.git
 cd visual-learner
-npm run serve       # http://localhost:8000
+npm run serve       # http://localhost:8844
 ```
 
 Node 18 or newer is only needed for `npm run validate`. The site itself has no dependencies.

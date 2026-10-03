@@ -6,7 +6,7 @@
  *   env.group.position.y = floorY;       // local y = 0 is the floor / bench top
  *   env.update(time, dt);                // each frame
  *
- * Available: lab (biology), studio (neutral default).
+ * Core rooms: lab (biology), studio (neutral default). Other subjects: shared/rooms/<name>.js (see docs/ENVIRONMENTS.md).
  * Topics do not pick one directly: they call VLEnv.forCategory(category, THREE), or let VLStage do it.
  * The floor is a matte dark bench top (no reflection).
  */
@@ -630,9 +630,10 @@ ENV.studio = function (T) {
   benchFloor(T, g, 90, 70);
   var wallTex = canvasTex(T, 8, 256, function (x, w, h) { var gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#070a14'); gr.addColorStop(1, '#16253f'); x.fillStyle = gr; x.fillRect(0, 0, w, h); });
   var wall = new T.Mesh(new T.PlaneGeometry(110, 40), new T.MeshBasicMaterial({ map: wallTex })); wall.position.set(0, 14, -20); g.add(wall);
-  [[-14, 8, '#7fe3ff'], [14, 8, '#ffb454']].forEach(function (s) {
-    var panel = new T.Mesh(new T.PlaneGeometry(4, 12), new T.MeshBasicMaterial({ color: hdr(T, s[2], 1.3) })); panel.position.set(s[0], s[1] + 5, -19.5); g.add(panel);
-    var sp = new T.Mesh(new T.PlaneGeometry(22, 26), new T.MeshBasicMaterial({ map: glow, color: hdr(T, s[2], 1), transparent: true, opacity: 0.4, depthWrite: false, blending: T.AdditiveBlending, fog: false })); sp.position.set(s[0], s[1] + 5, -19.3); g.add(sp);
+  /* two thin, dim light strips high on the back wall with a soft spill: a quiet backdrop that never competes with the subject */
+  [[-13, '#8fb4ff'], [13, '#ffd9a8']].forEach(function (s) {
+    var strip = new T.Mesh(new T.PlaneGeometry(12, 0.3), new T.MeshBasicMaterial({ color: hdr(T, s[1], 0.55) })); strip.position.set(s[0], 15, -19.5); g.add(strip);
+    var sp = new T.Mesh(new T.PlaneGeometry(26, 12), new T.MeshBasicMaterial({ map: glow, color: hdr(T, s[1], 0.6), transparent: true, opacity: 0.16, depthWrite: false, blending: T.AdditiveBlending, fog: false })); sp.position.set(s[0], 14, -19.4); g.add(sp);
   });
   return { group: g, update: function () {} };
 };
@@ -642,7 +643,34 @@ ENV.studio = function (T) {
  * Improving an environment upgrades all topics of that category at once.
  * Keep this map in sync with the "environment" field of each category in topics.json (npm run validate checks it).
  */
-ENV.CATEGORY_ENV = { biology: 'lab' };
+/* Helpers shared with the per-subject rooms in shared/rooms/*.js, so every room is built from the same parts and stays consistent. */
+ENV.kit = {
+  mulberry: mulberry, canvasTex: canvasTex, glowTex: glowTex, hdr: hdr, metal: metal, mat: mat, box: box, cyl: cyl, plane: plane, lathe: lathe,
+  contactShadow: contactShadow, makeWall: makeWall, rectGeo: rectGeo, woodTable: woodTable, tileFloor: tileFloor, benchFloor: benchFloor,
+  buildWindow: buildWindow, skyTexture: skyTexture, skylineTexture: skylineTexture, glassVessel: glassVessel, glassMat: glassMat, bottle: bottle,
+  mugProp: mugProp, tubeRack: tubeRack, makeStool: makeStool, makeMicroscope: makeMicroscope, roundedBox: roundedBox, rrShape: rrShape,
+  whiteboardTex: whiteboardTex, paperLabel: paperLabel, tickTexture: tickTexture
+};
+
+/* Rooms: the lab and the neutral studio live in this file. Every other subject's room is its own file in shared/rooms/ and
+ * registers itself as ENV.<name>; a topic page loads only the room of its primary category. A subject whose room file is not
+ * loaded falls back to the studio. */
+ENV.CATEGORY_ENV = {
+  'biology': 'lab',
+  'math': 'study',
+  'physics': 'physicslab',
+  'electronics': 'bench',
+  'aerospace': 'hangar',
+  'chemistry': 'chemlab',
+  'astronomy': 'observatory',
+  'earth': 'fieldstation',
+  'engineering': 'workshop',
+  'materials': 'materialslab',
+  'computer-science': 'devroom',
+  'statistics': 'analyst',
+  'health': 'clinic',
+  'neuroscience': 'neurolab'
+};
 ENV.nameFor = function (category) { var n = ENV.CATEGORY_ENV[category]; return n && typeof ENV[n] === 'function' ? n : 'studio'; };
 ENV.forCategory = function (category, T) { return ENV[ENV.nameFor(category)](T); };
 

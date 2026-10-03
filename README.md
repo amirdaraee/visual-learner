@@ -11,11 +11,19 @@ Every topic is a single self-contained web page: a full-screen 3D scene you can 
 | Subject | Topics |
 | --- | --- |
 | Biology | [Exome Lab: Find the Variant](biology/exome-sequencing/) |
-| Math | coming soon |
-| Physics | coming soon |
-| Electronics | coming soon |
-| Aerospace | coming soon |
-| Chemistry | coming soon |
+| Math | [Fourier Series: Waves from Circles](math/fourier-series/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/) |
+| Physics | [Wave Interference: Two Ripples](physics/wave-interference/) |
+| Electronics | [The RC Circuit: Charging a Capacitor](electronics/rc-circuit/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
+| Aerospace | [Orbits: The Hohmann Transfer](aerospace/hohmann-transfer/) |
+| Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/) |
+| Astronomy | coming soon |
+| Earth & Environment | coming soon |
+| Engineering | coming soon |
+| Materials | coming soon |
+| Computer Science | [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
+| Statistics & Data | coming soon |
+| Health & Medicine | [Exome Lab: Find the Variant](biology/exome-sequencing/) |
+| Neuroscience | coming soon |
 
 The landing page builds itself from [`topics.json`](topics.json).
 
@@ -26,11 +34,11 @@ Every subject has one fixed 3D environment shared by all its topics (Biology is 
 No build step. Any static file server works.
 
 ```sh
-npm run serve        # http://localhost:8000
+npm run serve        # http://localhost:8844
 npm run validate     # checks topics.json and every topic page
 ```
 
-If you do not use npm: `python3 -m http.server 8000`.
+If you do not use npm: `python3 -m http.server 8844`.
 
 Opening `index.html` straight from disk shows the topic pages but not the landing page, because browsers block `fetch` on `file://`.
 

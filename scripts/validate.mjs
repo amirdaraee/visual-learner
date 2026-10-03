@@ -1,5 +1,5 @@
 // Validates topics.json and every live topic page. No dependencies.
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,13 +27,18 @@ for (const c of data.categories || []) {
   if (!c.name) fail(`category "${c.id}": missing name`);
   if (!c.blurb) fail(`category "${c.id}": missing blurb`);
   if (!HEX.test(c.accent || '')) fail(`category "${c.id}": accent must be a #rrggbb colour`);
+  if (c.preview && !existsSync(join(root, c.preview))) fail(`category "${c.id}": preview ${c.preview} does not exist`);
 }
 
 /* environments: every category has ONE fixed environment, defined in shared/environments.js and shared by all its topics */
 const envSrc = readFileSync(join(root, 'shared', 'environments.js'), 'utf8');
-const envNames = new Set([...envSrc.matchAll(/ENV\.([a-z]+) = function \(T\)/g)].map((m) => m[1]));
+const roomDir = join(root, 'shared', 'rooms');
+const roomFiles = existsSync(roomDir) ? readdirSync(roomDir).filter((f) => f.endsWith('.js')) : [];
+const roomNames = new Set();
+for (const f of roomFiles) for (const m of readFileSync(join(roomDir, f), 'utf8').matchAll(/ENV\.([a-z]+) = function \(T\)/g)) { roomNames.add(m[1]); if (m[1] + '.js' !== f) fail(`shared/rooms/${f}: defines room "${m[1]}", the file must be named ${m[1]}.js`); }
+const envNames = new Set([...envSrc.matchAll(/ENV\.([a-z]+) = function \(T\)/g)].map((m) => m[1]).concat([...roomNames]));
 const mapSrc = (envSrc.match(/ENV\.CATEGORY_ENV = \{([^}]*)\}/) || [])[1] || '';
-const codeEnv = Object.fromEntries([...mapSrc.matchAll(/([a-z-]+):\s*'([a-z]+)'/g)].map((m) => [m[1], m[2]]));
+const codeEnv = Object.fromEntries([...mapSrc.matchAll(/'?([a-z-]+)'?:\s*'([a-z]+)'/g)].map((m) => [m[1], m[2]]));
 for (const c of data.categories || []) {
   if (!envNames.has(c.environment)) fail(`category "${c.id}": environment must be one of ${[...envNames].join(', ')}`);
   else if ((codeEnv[c.id] || 'studio') !== c.environment) fail(`category "${c.id}": topics.json says "${c.environment}" but ENV.CATEGORY_ENV in shared/environments.js says "${codeEnv[c.id] || 'studio'}"`);
@@ -50,6 +55,17 @@ for (const t of data.topics || []) {
   if (topicIds.has(t.id)) fail(`${where}: duplicate id`);
   topicIds.add(t.id);
   if (!catIds.has(t.category)) fail(`${where}: unknown category "${t.category}"`);
+  /* a topic lives in one primary category (folder, environment, back link) and may also be listed under others */
+  if (t.also !== undefined) {
+    if (!Array.isArray(t.also)) fail(`${where}: "also" must be an array of category ids`);
+    else {
+      if (new Set(t.also).size !== t.also.length) fail(`${where}: "also" has duplicates`);
+      for (const id of t.also) {
+        if (!catIds.has(id)) fail(`${where}: "also" lists unknown category "${id}"`);
+        else if (id === t.category) fail(`${where}: "also" repeats the primary category "${id}"`);
+      }
+    }
+  }
   if (!t.title) fail(`${where}: missing title`);
   if (!t.summary) fail(`${where}: missing summary`);
   else if (t.summary.length > 160) fail(`${where}: summary is ${t.summary.length} characters, max 160`);
@@ -59,6 +75,8 @@ for (const t of data.topics || []) {
   if (t.tags && (!Array.isArray(t.tags) || t.tags.length > 5)) fail(`${where}: tags must be an array of at most 5`);
   if (!t.path || !t.path.endsWith('/') || t.path.startsWith('/') || t.path.includes('..')) { fail(`${where}: path must be relative and end in "/"`); continue; }
   if (t.category && !t.path.startsWith(t.category + '/')) fail(`${where}: path must start with "${t.category}/"`);
+  /* no leftover dev/test pages, and no eval of page input, may ship inside a topic folder */
+  { const dir = join(root, t.path); if (existsSync(dir)) for (const f of readdirSync(dir)) if ((f.startsWith('_') || f.startsWith('.')) && f !== '.DS_Store') fail(`${where}: stray file "${f}" in the topic folder (remove dev/test files)`); }
   if (t.status !== 'live') continue;
 
   const file = join(root, t.path, 'index.html');
@@ -68,7 +86,8 @@ for (const t of data.topics || []) {
   const back = '../'.repeat(depth) + 'index.html';
   if (!/<title>[^<]+<\/title>/i.test(html)) fail(`${where}: page has no <title>`);
   if (!/<meta[^>]+name=["']description["']/i.test(html)) fail(`${where}: page has no meta description`);
-  if (!html.includes(`href="${back}"`)) fail(`${where}: page must link back with href="${back}"`);
+  /* the link may carry the subject anchor, e.g. ../../index.html#biology, so it opens on that subject */
+  if (!html.includes(`href="${back}"`) && !html.includes(`href="${back}#${t.category}"`)) fail(`${where}: page must link back with href="${back}#${t.category}"`);
   if (/<script[^>]+src=["']http:\/\//i.test(html)) fail(`${where}: scripts must use https`);
   if (/\b(AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,})/.test(html)) fail(`${where}: looks like it contains a secret`);
   if (/google-analytics|googletagmanager|gtag\(|plausible\.io|segment\.com/i.test(html)) fail(`${where}: analytics and trackers are not allowed`);
@@ -79,6 +98,13 @@ for (const t of data.topics || []) {
   const stageSrc = '../'.repeat(depth) + 'shared/stage.js', envSrcPath = '../'.repeat(depth) + 'shared/environments.js';
   if (!html.includes(`src="${stageSrc}"`)) fail(`${where}: page must load the shared stage with <script src="${stageSrc}">`);
   if (!html.includes(`src="${envSrcPath}"`)) fail(`${where}: page must load the shared environments with <script src="${envSrcPath}">`);
+  /* a subject whose room lives in shared/rooms/ must have its room file loaded after the core environments */
+  const roomOfTopic = (data.categories || []).find((c) => c.id === t.category);
+  if (roomOfTopic && roomNames.has(roomOfTopic.environment)) {
+    const roomSrc = '../'.repeat(depth) + `shared/rooms/${roomOfTopic.environment}.js`;
+    if (!html.includes(`src="${roomSrc}"`)) fail(`${where}: page must load its subject's room with <script src="${roomSrc}"> (after environments.js)`);
+    else if (html.indexOf(roomSrc) < html.indexOf(envSrcPath)) fail(`${where}: the room script must come after environments.js`);
+  }
   const uiSrc = '../'.repeat(depth) + 'shared/ui.css';
   if (!html.includes(`href="${uiSrc}"`)) fail(`${where}: page must use the shared interface style with <link rel="stylesheet" href="${uiSrc}">`);
   if (!/VLStage\.create\(/.test(html)) fail(`${where}: page must create its scene with VLStage.create(...)`);

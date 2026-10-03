@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>The CPU: What Is Inside the Chip</title>
+<meta name="description" content="How a real CPU works: its floor plan, a real RISC-V instruction split into fields, the adder built from switches, the pipeline and the cache that make it fast.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D explainer of how a real CPU works"><canvas id="gl"></canvas><div id="loading">Powering up the chip…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Computer Science</span><span id="tagStage">Step 1 of 5</span></div>
+        <h1>How a real <em>CPU</em> works</h1>
+        <p>The floor plan of a chip, one real RISC-V instruction, the adder behind it, and the pipeline and cache that make it fast.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1">
+      <div class="grp"><span class="lab">Step <em>1–5 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn" id="go" type="button" hidden></button>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#computer-science" title="All Computer Science concepts" aria-label="All Computer Science concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Studio backdrop (B)" aria-label="Studio backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>How a real CPU works</h2>
+    <p>The <b>CPU</b> (central processing unit) follows instructions: it fetches one from memory, works out what it asks, does it, and repeats. This page covers five parts of a real one: the floor plan of the chip, one instruction in the real RISC-V RV32I instruction set, the adder that an <code>add</code> uses, the pipeline that overlaps instructions, and the caches that hide slow memory.</p>
+    <p>Everything is simplified. Real chips have far more instructions, longer pipelines and bigger caches, and numbers on this page are typical values that vary by product.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>5</code> or <code>←</code> <code>→</code> step · <code>Space</code> main action · <code>[</code> <code>]</code> slider · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Schematic and educational. Sizes, delays and counts are rough, typical orders of magnitude. Nothing here is drawn to scale.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/devroom.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- helpers ---------- */
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function sstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', CORAL = '#ff6b86', AMBER = '#ffb454', LIME = '#c8f03c', GREEN = '#58c48a', VIOLET = '#a98be8', BLUE = '#5b9cf0', MONO = 'ui-monospace, Menlo, Consolas, monospace';
+var dummy = new T.Object3D();
+function box(w, h, d, mat, x, y, z, parent) { var m = new T.Mesh(new T.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); if (parent) parent.add(m); return m; }
+function plate(parent, text, x, y, z, size, color) { var l = label(text, { plane: true, size: size, color: color }); l.position.set(x, y, z); parent.add(l); return l; }
+/* a text pane whose canvas is redrawn only when its key changes */
+function disp(w, h, px) {
+  var c = document.createElement('canvas'); c.width = Math.round(w * px); c.height = Math.round(h * px);
+  var g = c.getContext('2d'), tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter;
+  var m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  m.userData.key = '';
+  m.userData.paint = function (key, fn) { if (m.userData.key === key) return; m.userData.key = key; g.clearRect(0, 0, c.width, c.height); fn(g, c.width, c.height); tex.needsUpdate = true; };
+  return m;
+}
+function panel(parent, x, y, w, h) { var d = disp(w, h, 100); d.position.set(x, y, 0.34); parent.add(d); return d; }
+function tx(g, s, x, y, size, col, al, bold) { g.font = (bold ? '600 ' : '') + size + 'px ' + MONO; g.fillStyle = col || '#fff'; g.textAlign = al || 'left'; g.textBaseline = 'middle'; g.fillText(String(s), x, y); }
+function pill(g, x, y, w, h, fill, line, rad) { var r = rad || Math.min(h / 2, 12); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); g.fillStyle = fill; g.fill(); if (line) { g.lineWidth = 2; g.strokeStyle = line; g.stroke(); } }
+function card(g, w, h) { pill(g, 2, 2, w - 4, h - 4, 'rgba(10,15,22,0.94)', 'rgba(255,255,255,0.14)', 14); }
+function strip(parent, mat, pts) {
+  for (var q = 1; q < pts.length; q++) {
+    var a = pts[q - 1], b = pts[q], dx = b[0] - a[0], dy = b[1] - a[1], m = box(Math.sqrt(dx * dx + dy * dy) + 0.14, 0.14, 0.08, mat, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 0.32, parent);
+    m.rotation.z = Math.atan2(dy, dx);
+  }
+}
+/* an upright board with two feet, the base every flat diagram sits on */
+function board(w, h) {
+  var g = new T.Group(), m = soft('#1b2430', 0.05);
+  box(w, h, 0.4, m, 0, 0, 0, g); box(w - 0.5, h - 0.5, 0.08, soft('#27343f', 0.05), 0, 0, 0.24, g);
+  box(1, 0.5, 0.9, m, -w * 0.38, -h / 2 - 0.25, 0, g); box(1, 0.5, 0.9, m, w * 0.38, -h / 2 - 0.25, 0, g);
+  return g;
+}
+function hx(v, n) { return '0x' + ('00000000' + (v >>> 0).toString(16).toUpperCase()).slice(-n); }
+function bin(v, n) { return ('0000000000000000000000000000000000000000' + (v >>> 0).toString(2)).slice(-n); }
+
+/* LOGIC START: pure logic, no drawing. A node test extracts and checks this block. */
+/* ---------- RISC-V RV32I: a small assembler, decoder and interpreter ---------- */
+var RV = {
+  addi: { t: 'I', op: 0x13, f3: 0 }, add: { t: 'R', op: 0x33, f3: 0, f7: 0 }, sub: { t: 'R', op: 0x33, f3: 0, f7: 0x20 },
+  beq: { t: 'B', op: 0x63, f3: 0 }, bne: { t: 'B', op: 0x63, f3: 1 }, ecall: { t: 'I', op: 0x73, f3: 0 }
+};
+function reg(s) { var m = /^x(\d+)$/.exec(s); if (!m || +m[1] > 31) throw new Error('bad register ' + s); return +m[1]; }
+function encode(name, a) {
+  var d = RV[name], w;
+  if (d.t === 'R') w = (d.f7 << 25) | (a.rs2 << 20) | (a.rs1 << 15) | (d.f3 << 12) | (a.rd << 7) | d.op;
+  else if (d.t === 'I') { if (a.imm < -2048 || a.imm > 2047) throw new Error('imm range'); w = ((a.imm & 0xfff) << 20) | (a.rs1 << 15) | (d.f3 << 12) | (a.rd << 7) | d.op; }
+  else {
+    if (a.imm % 2 || a.imm < -4096 || a.imm > 4094) throw new Error('branch range');
+    w = (((a.imm >> 12) & 1) << 31) | (((a.imm >> 5) & 0x3f) << 25) | (a.rs2 << 20) | (a.rs1 << 15) | (d.f3 << 12) | (((a.imm >> 1) & 0xf) << 8) | (((a.imm >> 11) & 1) << 7) | d.op;
+  }
+  return w >>> 0;
+}
+function assemble(src) {
+  var labels = {}, lines = [], addr = 0, pend = '';
+  src.forEach(function (ln) { var m = /^(\w+):$/.exec(ln); if (m) { labels[m[1]] = addr; pend = m[1]; } else { lines.push({ addr: addr, text: ln, label: pend }); pend = ''; addr += 4; } });
+  return lines.map(function (l) {
+    var p = l.text.replace(/,/g, ' ').split(/\s+/), n = p[0], a = { rd: 0, rs1: 0, rs2: 0, imm: 0 };
+    if (!RV[n]) throw new Error('unknown instruction ' + n);
+    if (n === 'add' || n === 'sub') { a.rd = reg(p[1]); a.rs1 = reg(p[2]); a.rs2 = reg(p[3]); }
+    else if (n === 'addi') { a.rd = reg(p[1]); a.rs1 = reg(p[2]); a.imm = +p[3]; }
+    else if (n === 'beq' || n === 'bne') { a.rs1 = reg(p[1]); a.rs2 = reg(p[2]); a.imm = labels[p[3]] - l.addr; }
+    return { addr: l.addr, text: l.text, label: l.label, word: encode(n, a) };
+  });
+}
+function sx(v, n) { return (v << (32 - n)) >> (32 - n); }
+/* reads the fields from the bits of the word alone, as the hardware does */
+function decodeWord(w) {
+  var op = w & 0x7f, rd = (w >>> 7) & 31, f3 = (w >>> 12) & 7, rs1 = (w >>> 15) & 31, rs2 = (w >>> 20) & 31, f7 = w >>> 25;
+  var d = { word: w, op: op, rd: rd, rs1: rs1, rs2: rs2, f3: f3, name: '?', fmt: '?', imm: 0, fields: [] };
+  if (op === 0x33) { d.fmt = 'R'; d.name = f7 === 0x20 ? 'sub' : 'add'; d.fields = [['funct7', 7, f7, 'f7'], ['rs2', 5, rs2, 'rs2'], ['rs1', 5, rs1, 'rs1'], ['funct3', 3, f3, 'f3'], ['rd', 5, rd, 'rd'], ['opcode', 7, op, 'opcode']]; }
+  else if (op === 0x13 || op === 0x73) { d.fmt = 'I'; d.name = op === 0x73 ? 'ecall' : 'addi'; d.imm = sx(w >>> 20, 12); d.fields = [['imm[11:0]', 12, w >>> 20, 'imm'], ['rs1', 5, rs1, 'rs1'], ['funct3', 3, f3, 'f3'], ['rd', 5, rd, 'rd'], ['opcode', 7, op, 'opcode']]; }
+  else if (op === 0x63) {
+    d.fmt = 'B'; d.name = f3 === 1 ? 'bne' : 'beq';
+    d.imm = sx((((w >>> 31) & 1) << 12) | (((w >>> 7) & 1) << 11) | (((w >>> 25) & 0x3f) << 5) | (((w >>> 8) & 0xf) << 1), 13);
+    d.fields = [['imm[12|10:5]', 7, f7, 'imm'], ['rs2', 5, rs2, 'rs2'], ['rs1', 5, rs1, 'rs1'], ['funct3', 3, f3, 'f3'], ['imm[4:1|11]', 5, rd, 'imm'], ['opcode', 7, op, 'opcode']];
+  }
+  return d;
+}
+function execute(regs, pc, d) {
+  var a = regs[d.rs1], b = d.fmt === 'I' ? d.imm : regs[d.rs2], r = { a: a, b: b, nextPc: pc + 4, rd: -1 };
+  if (d.name === 'add' || d.name === 'addi') { r.res = (a + b) | 0; r.rd = d.rd; r.sym = '+'; }
+  else if (d.name === 'sub') { r.res = (a - b) | 0; r.rd = d.rd; r.sym = '-'; }
+  else if (d.name === 'beq' || d.name === 'bne') { r.taken = (a === b) === (d.name === 'beq'); if (r.taken) r.nextPc = pc + d.imm; }
+  else if (d.name === 'ecall') r.halt = true;
+  return r;
+}
+var SRC = ['addi x1,x0,0', 'addi x2,x0,1', 'addi x3,x0,6', 'loop:', 'add x1,x1,x2', 'addi x2,x2,1', 'bne x2,x3,loop', 'ecall'];
+var PROG = assemble(SRC);
+
+/* ---------- gates and adders ---------- */
+function nandOf(a, b) { return (a & b) ^ 1; }
+function fullAdd(a, b, c) { var x1 = a ^ b, a1 = a & b, a2 = x1 & c; return { x1: x1, a1: a1, a2: a2, s: x1 ^ c, c: a1 | a2 }; }
+function ripple(A, B, cin) { var out = [], c = cin, i, r; for (i = 0; i < 4; i++) { r = fullAdd((A >> i) & 1, (B >> i) & 1, c); r.cin = c; out.push(r); c = r.c; } return out; }
+
+/* ---------- pipeline schedule: one row per instruction, tiles are [cycle, stage] ---------- */
+var STG = ['IF', 'ID', 'EX', 'MEM', 'WB'];
+var IL = ['add x1,x2,x3', 'sub x4,x5,x6', 'beq x7,x0,L', 'and x8,x9,x10', 'or x11,x12,x13', 'add x14,x15,x16'];
+function schedule(piped, wrong) {
+  var rows = [], k, r, f;
+  function row(text, f0, bad, nt) { var tl = []; for (k = 0; k < nt; k++) tl.push({ c: f0 + k, s: k, bad: bad }); rows.push({ text: text, bad: bad, tiles: tl, wb: bad ? 0 : f0 + 4 }); }
+  if (!piped) { for (r = 0; r < 6; r++) row(IL[r], 5 * r + 1, false, 5); }
+  else {
+    for (r = 0; r < 3; r++) row('I' + (r + 1) + ' ' + IL[r], r + 1, false, 5);
+    f = 4; if (wrong) { row('wrong path', 4, true, 2); row('wrong path', 5, true, 1); f = 6; }
+    for (r = 3; r < 6; r++) row('I' + (r + 1) + ' ' + IL[r], f + r - 3, false, 5);
+  }
+  if (!piped) rows.forEach(function (x, i) { x.text = 'I' + (i + 1) + ' ' + x.text; });
+  var total = 0; rows.forEach(function (x) { if (!x.bad) total = Math.max(total, x.wb); });
+  return { rows: rows, total: total, resolve: wrong && piped ? 5 : 0 };
+}
+function finished(sch, cyc) { return sch.rows.filter(function (x) { return !x.bad && x.wb <= cyc; }).length; }
+
+/* ---------- cache demo: direct mapped, 4 lines, 4 numbers per line ---------- */
+var NLINE = 4, PER = 4, NREAD = 32;
+function readAt(pattern, i) { return pattern ? (i % 8) * 4 + Math.floor(i / 8) : i; }
+function cacheRead(lines, idx) { var b = idx >> 2, l = b % NLINE, hit = lines[l] === b; lines[l] = b; return { hit: hit, b: b, l: l }; }
+/* LOGIC END */
+
+/* ---------- scene 1: package, die, core ---------- */
+var ZLV = [
+  { name: 'Package', size: '~4 cm across', nl: 'Transistors', nv: '~billions', why: 'The <span class="y">package</span> is the part you hold. A metal lid covers the die, and contact pads on the underside connect to the board.' },
+  { name: 'Die', size: '~100–400 mm²', nl: 'Cores · clock', nv: '~4–16 · ~3–5 GHz', why: 'The <span class="y">die</span> is a thin piece of silicon. This floor plan shows 8 cores, a shared L3 cache and the circuits that reach memory and the outside. Schematic.' },
+  { name: 'Core', size: '~a few mm²', nl: 'Clock', nv: '~3–5 GHz', why: 'One <span class="y">core</span> is a full processor. Instructions flow from the caches through fetch and decode to the execution units. Schematic.' }
+];
+function fadeSet(g) {
+  var ms = [], seen = [];
+  g.traverse(function (o) { var m = o.material; if (!m) return; (Array.isArray(m) ? m : [m]).forEach(function (mm) { if (seen.indexOf(mm) < 0) { seen.push(mm); mm.userData.o = mm.opacity; mm.transparent = true; ms.push(mm); } }); });
+  return ms;
+}
+function sceneChip() {
+  var root = new T.Group(), gs, sets, tl = [[], [], []], z = 0, target = 0, lastLv = 0, i, n, cores = [];
+  function blk(g, list, x, y, w, h, col, name, tip, ls) {
+    var m = box(w, h, 0.4, soft(col, 0.14), x, y, 0.3, g), nm = name.split('|'); m.userData.tip = tip; list.push(m);
+    nm.forEach(function (s, k) { plate(g, s, x, y + (nm.length - 1) * (ls || 0.3) * 0.6 - k * (ls || 0.3) * 1.2, 0.52, ls || 0.3); });
+    return m;
+  }
+  /* package: top view and underside */
+  var g0 = new T.Group(), P0 = tl[0];
+  P0.push(box(5.4, 5.4, 0.3, soft('#2b6b58', 0.1), -2.7, 0, 0, g0), box(3.9, 3.9, 0.36, soft('#8d98a4', 0.08), -2.7, 0, 0.32, g0), box(3.6, 3.6, 0.3, soft('#2b6b58', 0.1), 3.7, 0, 0, g0));
+  P0[0].userData.tip = 'Package substrate · a small circuit board that carries the die and routes its signals to the pads'; P0[1].userData.tip = 'Heat spreader · a metal lid that moves heat from the die to the cooler'; P0[2].userData.tip = 'Underside of the package · hundreds to thousands of contacts for power and signals';
+  var pads = new T.InstancedMesh(new T.BoxGeometry(0.14, 0.14, 0.06), new T.MeshBasicMaterial({ color: H('#d8b25a', 1.1) }), 196);
+  for (i = 0; i < 196; i++) { dummy.position.set(3.7 + (i % 14 - 6.5) * 0.22, (Math.floor(i / 14) - 6.5) * 0.22, 0.17); dummy.updateMatrix(); pads.setMatrixAt(i, dummy.matrix); }
+  pads.frustumCulled = false; g0.add(pads);
+  plate(g0, 'HEAT SPREADER', -2.7, 0.2, 0.55, 0.34); plate(g0, 'metal lid over the die', -2.7, -0.35, 0.55, 0.26); plate(g0, 'PACKAGE · top', -2.7, -3.2, 0.2, 0.34);
+  plate(g0, 'UNDERSIDE', 3.7, 2.3, 0.2, 0.3); plate(g0, 'contact pads (some chips use pins)', 3.7, -2.4, 0.2, 0.26);
+  /* die: 8 cores each with an L2, shared L3, and the circuits that reach the outside */
+  var g1 = new T.Group(), P1 = tl[1];
+  P1.push(box(11.4, 6.6, 0.25, soft('#3a4a6c', 0.1), 0, 0, 0, g1));
+  P1[0].userData.tip = 'Die · a thin piece of silicon with the circuits printed on it';
+  for (i = 0; i < 8; i++) {
+    var cx = -4.45 + (i % 4) * 2.1, top = i < 4, cy = top ? 2.4 : -2.4, ly = top ? 1.3 : -1.3;
+    cores.push(blk(g1, P1, cx, cy, 2.0, 1.5, '#26705f', 'CORE ' + (i + 1), 'Core ' + (i + 1) + ' · a complete processor with its own registers, execution units and L1 caches', 0.32));
+    blk(g1, P1, cx, ly, 2.0, 0.7, '#8a7228', 'L2', 'L2 cache · private to this core, ~0.5 to 2 MB, ~3 to 5 ns', 0.26);
+  }
+  blk(g1, P1, -1.25, 0, 8.4, 1.7, '#5a4a9a', 'SHARED L3 CACHE · ~tens of MB', 'L3 cache · shared by all cores, ~10 to 20 ns. A block one core loaded can be found by another.', 0.32);
+  blk(g1, P1, 4.35, 2.15, 2.3, 2.0, '#a8404f', 'MEMORY|CONTROLLER', 'Memory controller · sends read and write requests to the RAM chips', 0.26);
+  blk(g1, P1, 4.35, 0, 2.3, 1.7, '#9a5a2e', 'SYSTEM|AGENT', 'System agent · connects the cores, L3 and the other blocks, and manages power and clocks', 0.26);
+  blk(g1, P1, 4.35, -2.15, 2.3, 2.0, '#2f5f9e', 'I/O + PCIe', 'I/O and PCIe · links to graphics cards, SSDs and other devices', 0.26);
+  plate(g1, 'DIE · schematic floor plan, not to scale', 0, -3.85, 0.2, 0.3);
+  /* one core */
+  var g2 = new T.Group(), P2 = tl[2], mLine = soft('#6c8498', 0.25);
+  P2.push(box(8.0, 6.0, 0.2, soft('#2a3647', 0.06), 0, 0, 0, g2));
+  [[[1.3, 1.9], [1.6, 1.9]], [[-1.6, 1.9], [-1.3, 1.9]], [[2.7, 1.25], [2.7, 0.45]], [[-1.6, -0.2], [-1.3, -0.2]], [[3.0, -0.85], [3.0, -1.6]]].forEach(function (p) { strip(g2, mLine, p); });
+  blk(g2, P2, -2.7, 1.9, 2.2, 1.3, '#8a7228', 'L1 INSTRUCTION|CACHE', 'L1 instruction cache · ~32 to 64 KB, ~1 ns. Holds the instructions about to run.', 0.24);
+  blk(g2, P2, 0, 1.9, 2.6, 1.3, '#26705f', 'FETCH +|BRANCH PREDICTOR', 'Fetch and branch predictor · reads the next instructions and guesses which way each branch will go', 0.24);
+  blk(g2, P2, 2.7, 1.9, 2.2, 1.3, VIOLET, 'DECODE', 'Decode · splits each instruction into fields and turns it into smaller internal steps', 0.28);
+  blk(g2, P2, -2.7, -0.2, 2.2, 1.3, '#9a5a2e', 'REGISTER|FILE', 'Register file · the fastest storage in the machine, read and written every cycle', 0.26);
+  blk(g2, P2, -0.5, -0.2, 1.6, 1.3, '#a8404f', 'INTEGER|ALU', 'Integer ALU · adds, subtracts, compares and does logic on whole numbers', 0.22);
+  blk(g2, P2, 1.25, -0.2, 1.6, 1.3, '#a8404f', 'FLOATING|POINT', 'Floating-point unit · arithmetic on numbers with a decimal point', 0.22);
+  blk(g2, P2, 3.0, -0.2, 1.6, 1.3, '#a8404f', 'LOAD /|STORE', 'Load/store unit · reads data from the L1 data cache and writes results back to it', 0.22);
+  blk(g2, P2, 3.0, -2.2, 2.2, 1.2, '#8a7228', 'L1 DATA|CACHE', 'L1 data cache · ~32 to 64 KB, ~1 ns. Misses go on to L2, then L3, then RAM.', 0.24);
+  plate(g2, 'EXECUTION UNITS', 1.25, 0.78, 0.52, 0.26, AMBER); plate(g2, 'misses go on to L2, L3 and RAM', -1.3, -2.2, 0.3, 0.26); plate(g2, 'ONE CORE · schematic', 0, -3.5, 0.2, 0.3);
+  gs = [g0, g1, g2]; gs.forEach(function (g) { root.add(g); }); sets = gs.map(fadeSet);
+  function place() {
+    gs.forEach(function (g, k) {
+      var d = z - k, a = 1 - sstep(Math.abs(d) / 0.7);
+      g.scale.setScalar(Math.pow(2.6, d)); g.position.z = d * 2.2; g.visible = a > 0.01;
+      sets[k].forEach(function (m) { m.opacity = m.userData.o * a; });
+    });
+  }
+  place();
+  return {
+    group: root, w: 6.1, h: 4, base: 4, tips: function () { return tl[clamp(Math.round(z), 0, 2)]; },
+    amount: function () { return z; }, level: function () { return clamp(Math.round(z), 0, 2); },
+    setAmount: function (v) { z = target = clamp(v, 0, 2); place(); }, setTarget: function (l) { target = l; },
+    rows: function () { var l = ZLV[this.level()]; return [['Looking at', l.name, 'hot'], ['Size', l.size], [l.nl, l.nv]]; },
+    update: function (t, dt) {
+      if (Math.abs(target - z) > 0.001) { z += (target - z) * Math.min(1, dt * 3.5); if (Math.abs(target - z) < 0.002) z = target; }
+      var lv = Math.round(z); if (lv !== lastLv) { lastLv = lv; sfx('step'); }
+      place();
+      cores.forEach(function (m, k) { m.material.emissiveIntensity = 1 + (calm ? 0 : 0.7 * Math.sin(t * 1.4 + k * 1.7)); });
+    }
+  };
+}
+
+/* ---------- scene 2: one RISC-V instruction ---------- */
+var PHN = ['FETCH', 'DECODE', 'EXECUTE', 'WRITE-BACK'], PHC = [CYAN, AMBER, CORAL, LIME];
+var FCOL = { opcode: AMBER, rd: CORAL, f3: VIOLET, rs1: CYAN, rs2: GREEN, f7: LIME, imm: LIME };
+var OPN = { 0x33: 'OP', 0x13: 'OP-IMM', 0x63: 'BRANCH', 0x73: 'SYSTEM' };
+function sceneRv() {
+  var root = new T.Group(), bd = board(10.6, 8.8), S, i;
+  root.add(bd);
+  var pI = panel(bd, 0, 2.75, 10, 2.9), pM = panel(bd, -2.9, -1.55, 4.6, 5.2), pR = panel(bd, 2.6, -0.2, 5, 2.5), pX = panel(bd, 2.6, -2.85, 5, 2.55);
+  var pk = new T.Mesh(new T.BoxGeometry(0.3, 0.3, 0.3), new T.MeshBasicMaterial({ color: H(CYAN, 2.2) })); pk.position.z = 0.7; pk.visible = false; bd.add(pk);
+  var auto = !calm, rate = 0.86, acc = 0, hold = 0, pu = 1, pa = [0, 0], pb = [0, 0], pdur = 0.7;
+  function reset() { S = { pc: 0, next: 0, regs: [0, 0, 0, 0, 0, 0, 0, 0], ph: -1, word: 0, d: null, r: null, done: 0, halted: false, taken: null }; pu = 1; pk.visible = false; hold = 0; }
+  reset();
+  function memY(r) { return -1.55 + 2.6 - (76 + 56 * r + 28) / 100; }
+  function regP(k) { return [0.1 + (14 + (k % 4) * 121 + 58) / 100, -0.2 + 1.25 - (56 + Math.floor(k / 4) * 92 + 42) / 100]; }
+  function anchors() {
+    var d = S.d, r = S.r;
+    if (S.ph === 0) return [[-2.5, memY(S.pc / 4)], [0, 2.45]];
+    if (S.ph === 1) return [[0, 1.4], d.name === 'ecall' ? [2.6, 0.8] : regP(d.rs1)];
+    if (S.ph === 2) return [regP(d.name === 'ecall' ? 0 : d.rs1), [2.6, -2.85]];
+    return [[2.6, -2.85], r.halt ? [2.6, -0.2] : r.rd > 0 ? regP(r.rd) : [-2.5, memY(S.next / 4)]];
+  }
+  function advance() {
+    if (S.halted) { reset(); return; }
+    S.ph = (S.ph + 1) % 4;
+    if (S.ph === 0) { S.pc = S.next; S.word = PROG[S.pc / 4].word; S.d = S.r = null; }
+    else if (S.ph === 1) S.d = decodeWord(S.word);
+    else if (S.ph === 2) { S.r = execute(S.regs, S.pc, S.d); if (S.r.taken != null) S.taken = S.r.taken; }
+    else { if (S.r.rd > 0) S.regs[S.r.rd] = S.r.res; S.next = S.r.nextPc; S.done++; if (S.r.halt) { S.halted = true; sfx('ping'); hint('Done. x1 = ' + S.regs[1] + ', the sum of 1 to 5.'); } }
+    var a = anchors(); pa = a[0]; pb = a[1]; pu = calm ? 1 : 0; pdur = Math.min(0.7, 0.9 / rate); pk.visible = !calm && !(S.ph === 3 && S.r.halt);
+    sfx(['tick', 'blip', 'step', 'thump'][S.ph]);
+  }
+  function fieldVal(d, f) {
+    var k = f[3];
+    if (k === 'rd' || k === 'rs1' || k === 'rs2') return 'x' + d[k];
+    if (k === 'opcode') return OPN[f[2]] || '?';
+    if (k === 'imm') return d.fmt === 'I' ? String(d.imm) : f[0].charAt(4) === '1' && f[0].charAt(5) === '2' ? d.imm + ' bytes' : '(rest)';
+    return String(f[2]);
+  }
+  function capt() {
+    var d = S.d, r = S.r, ph = S.ph;
+    if (ph < 0) return ['Ready', 'four phases per instruction', ''];
+    if (ph === 0) return ['Read the word at PC', 'address ' + hx(S.pc, 2) + ' holds ' + hx(S.word, 8), 'PC does not change until write-back'];
+    if (ph === 1) return ['Split the word into fields', d.name === 'ecall' ? 'a system call, no registers read' : d.fmt === 'R' ? 'read x' + d.rs1 + ' = ' + S.regs[d.rs1] + ' and x' + d.rs2 + ' = ' + S.regs[d.rs2] : d.fmt === 'I' ? 'read x' + d.rs1 + ' = ' + S.regs[d.rs1] + ', immediate = ' + d.imm : 'read x' + d.rs1 + ' = ' + S.regs[d.rs1] + ' and x' + d.rs2 + ' = ' + S.regs[d.rs2], 'opcode ' + (OPN[d.op] || '?') + ' means ' + d.name];
+    if (ph === 2) return d.name === 'ecall' ? ['System call', 'the program asks to stop', ''] : r.taken != null ? ['ALU compares', r.a + ' and ' + r.b + (r.a === r.b ? ': equal' : ': not equal'), r.taken ? 'branch TAKEN' : 'branch NOT taken'] : ['ALU ' + (r.sym === '+' ? 'adds' : 'subtracts'), r.a + ' ' + r.sym + ' ' + r.b + ' = ' + r.res, ''];
+    if (r.halt) return ['Stop', 'x1 = ' + S.regs[1] + ' (1+2+3+4+5)', 'press Next phase to run again'];
+    if (r.rd > 0) return ['Write the result back', 'x' + r.rd + ' ← ' + r.res, 'PC ← ' + hx(S.next, 2) + ' (PC + 4)'];
+    return ['Update the PC', 'PC ← ' + hx(S.next, 2) + (r.taken ? ' (' + hx(S.pc, 2) + ' - ' + (-S.d.imm) + ')' : ' (next instruction)'), r.taken ? 'jumped back to loop' : 'fell through'];
+  }
+  function paintI(g, w, h) {
+    card(g, w, h);
+    var d = S.d, ph = S.ph, bw = 29, x0 = (w - 32 * bw) / 2, by = 112, bh = 52, bits = bin(S.word, 32), pos = 0;
+    tx(g, ph < 0 ? 'THE INSTRUCTION' : 'INSTRUCTION AT PC = ' + hx(S.pc, 2), 26, 28, 17, '#9fb0c2', 'left', true);
+    if (d) tx(g, d.fmt + '-type · ' + d.name, w - 26, 28, 17, LIME, 'right', true);
+    tx(g, ph < 0 ? 'press Next phase to start' : ph === 0 ? '?  (only 32 bits so far)' : PROG[S.pc / 4].text, 26, 72, ph < 0 ? 26 : 38, ph < 0 ? '#9fb0c2' : '#fff', 'left', true);
+    if (ph < 0) return;
+    tx(g, 'bit 31', x0, by - 12, 13, '#7d8da0'); tx(g, 'bit 0', x0 + 32 * bw, by - 12, 13, '#7d8da0', 'right');
+    if (!d) { pill(g, x0, by, 32 * bw, bh, '#1e2733', '#3a4656', 8); for (i = 0; i < 32; i++) tx(g, bits.charAt(i), x0 + i * bw + bw / 2, by + bh / 2, 22, '#cfd8e3', 'center'); }
+    else d.fields.forEach(function (f) {
+      var fw = f[1] * bw, col = FCOL[f[3]], k;
+      g.globalAlpha = 0.28; g.fillStyle = col; g.fillRect(x0 + pos * bw + 1, by, fw - 2, bh); g.globalAlpha = 1; g.strokeStyle = col; g.lineWidth = 2; g.strokeRect(x0 + pos * bw + 1, by, fw - 2, bh);
+      for (k = 0; k < f[1]; k++) tx(g, bits.charAt(pos + k), x0 + (pos + k) * bw + bw / 2, by + bh / 2, 22, '#fff', 'center', true);
+      tx(g, f[0], x0 + (pos + f[1] / 2) * bw, by + bh + 22, 15, col, 'center', true); tx(g, fieldVal(d, f), x0 + (pos + f[1] / 2) * bw, by + bh + 48, 16, '#fff', 'center');
+      pos += f[1];
+    });
+    tx(g, 'word  ' + hx(S.word, 8), 26, 268, 22, '#fff', 'left', true);
+    if (d && d.fmt === 'B') tx(g, 'offset ' + d.imm + ' bytes: target ' + hx(S.pc + d.imm, 2), w - 26, 268, 17, '#c7d6d0', 'right');
+  }
+  function paintM(g, w, h) {
+    card(g, w, h); tx(g, 'PROGRAM MEMORY', 20, 28, 17, '#9fb0c2', 'left', true); tx(g, 'address', 18, 58, 13, '#7d8da0'); tx(g, 'word', 92, 58, 13, '#7d8da0'); tx(g, 'assembly', 250, 58, 13, '#7d8da0');
+    PROG.forEach(function (p, r) {
+      var y = 76 + 56 * r, on = S.ph >= 0 && S.pc === p.addr, fetch = on && S.ph === 0;
+      pill(g, 10, y, w - 20, 50, fetch ? 'rgba(127,227,255,0.22)' : on ? 'rgba(200,240,60,0.12)' : 'rgba(255,255,255,0.04)', on ? LIME : 'rgba(255,255,255,0.1)', 8);
+      tx(g, hx(p.addr, 2), 18, y + 25, 17, '#9fb0c2'); tx(g, hx(p.word, 8).slice(2), 92, y + 25, 19, on ? '#fff' : '#cfd8e3', 'left', on);
+      if (p.label) tx(g, p.label + ':', 250, y + 11, 13, AMBER, 'left', true);
+      tx(g, p.text, 250, y + (p.label ? 31 : 25), 18, on ? '#fff' : '#cfd8e3', 'left', on);
+    });
+    tx(g, '1 instruction = 4 bytes = 32 bits', w / 2, 492, 15, '#7d8da0', 'center');
+  }
+  function paintR(g, w, h) {
+    card(g, w, h); tx(g, 'REGISTERS', 20, 28, 17, '#9fb0c2', 'left', true); tx(g, 'x0 always reads 0', w - 20, 28, 14, '#7d8da0', 'right');
+    var d = S.d, ph = S.ph;
+    for (i = 0; i < 8; i++) {
+      var x = 14 + (i % 4) * 121, y = 56 + Math.floor(i / 4) * 92, rd = d && ph >= 1 && ph <= 2 && d.name !== 'ecall' && (d.rs1 === i || (d.fmt !== 'I' && d.rs2 === i)), wr = ph === 3 && S.r.rd === i && i > 0;
+      pill(g, x, y, 114, 84, wr ? 'rgba(200,240,60,0.28)' : rd ? 'rgba(127,227,255,0.16)' : 'rgba(255,255,255,0.05)', wr ? LIME : rd ? CYAN : 'rgba(255,255,255,0.12)', 10);
+      tx(g, 'x' + i, x + 12, y + 18, 15, wr ? LIME : rd ? CYAN : '#9fb0c2', 'left', true); if (wr) tx(g, 'written', x + 104, y + 18, 12, LIME, 'right'); else if (rd) tx(g, 'read', x + 104, y + 18, 12, CYAN, 'right');
+      tx(g, S.regs[i], x + 57, y + 54, 34, '#fff', 'center', true);
+    }
+  }
+  function paintX(g, w, h) {
+    card(g, w, h); var c = capt(), pw = (w - 28) / 4;
+    for (i = 0; i < 4; i++) { var on = i === S.ph; pill(g, 10 + i * (pw + 2.7), 12, pw, 40, on ? PHC[i] : 'rgba(255,255,255,0.05)', on ? '#fff' : 'rgba(255,255,255,0.12)', 10); tx(g, PHN[i], 10 + i * (pw + 2.7) + pw / 2, 33, i === 3 ? 13 : 15, on ? '#10151a' : '#9fb0c2', 'center', true); }
+    tx(g, c[0], 22, 98, 21, '#fff', 'left', true); tx(g, c[1], 22, 145, 20, LIME, 'left'); tx(g, c[2], 22, 192, 17, '#c7d6d0', 'left');
+  }
+  return {
+    group: root, w: 5.5, h: 5.1, base: 4.9, tips: function () { return []; },
+    isAuto: function () { return auto; }, setAuto: function (v) { auto = v; acc = 0; }, setRate: function (r) { rate = r; },
+    restart: function () { reset(); }, stepNow: function () { advance(); acc = 0; },
+    rows: function () {
+      var d = S.d, started = S.ph >= 0;
+      return [['Phase', started ? PHN[S.ph] : 'ready', 'hot'], ['PC', started ? hx(S.pc, 2) : '0x00'], ['Instruction', started && S.ph > 0 ? PROG[S.pc / 4].text : started ? '?' : '-'], ['Machine word', started ? hx(S.word, 8) : '-'], ['x1 (the sum)', S.regs[1]], ['Branch', S.taken == null ? '-' : S.taken ? 'taken' : 'not taken']];
+    },
+    update: function (t, dt) {
+      if (auto && !S.halted) { acc += dt * rate; if (acc >= 1) { acc -= 1; advance(); } }
+      else if (auto && S.halted) { hold += dt; if (hold > 3.5) reset(); }
+      if (pu < 1) { pu = Math.min(1, pu + dt / pdur); pk.position.x = lerp(pa[0], pb[0], sstep(pu)); pk.position.y = lerp(pa[1], pb[1], sstep(pu)); if (pu >= 1) pk.visible = false; }
+      pk.material.color.copy(H(PHC[Math.max(0, S.ph)], 2.2));
+      pI.userData.paint([S.ph, S.pc, S.word, S.done].join('|'), paintI);
+      pM.userData.paint([S.ph, S.pc].join('|'), paintM);
+      pR.userData.paint([S.ph, S.pc, S.regs.join(',')].join('|'), paintR);
+      pX.userData.paint([S.ph, S.pc, S.done].join('|'), paintX);
+    }
+  };
+}
+
+/* ---------- scene 3: switches to adders ---------- */
+var ON = LIME, OFF = '#5d6b7a', WAIT = '#b8903a';
+function vcol(v) { return v === 1 ? ON : v === 0 ? OFF : WAIT; }
+function wire(g, pts, v) {
+  g.strokeStyle = vcol(v); g.lineWidth = 5; g.lineJoin = 'round'; g.setLineDash(v < 0 ? [10, 8] : []); g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+  for (var q = 1; q < pts.length; q++) g.lineTo(pts[q][0], pts[q][1]);
+  g.stroke(); g.setLineDash([]);
+}
+function node(g, x, y, v) { g.fillStyle = vcol(v); g.beginPath(); g.arc(x, y, 6, 0, 6.2832); g.fill(); }
+/* a labelled value box centred on (cx, cy) */
+function vbox(g, cx, cy, name, v, wd) { var w = wd || 78; pill(g, cx - w / 2, cy - 22, w, 44, v === 1 ? 'rgba(200,240,60,0.2)' : 'rgba(255,255,255,0.06)', vcol(v), 10); tx(g, name + ' ' + (v < 0 ? '?' : v), cx, cy + 1, 19, '#fff', 'center', true); }
+/* gate symbols, top-left at (x, y), 110 x 70; inputs on the left, output on the right */
+function gate(g, type, x, y, ov, name) {
+  var w = 110, h = 70;
+  g.beginPath(); g.moveTo(x, y);
+  if (type === 'and' || type === 'nand') { g.lineTo(x + w * 0.5, y); g.bezierCurveTo(x + w * 1.05, y, x + w * 1.05, y + h, x + w * 0.5, y + h); g.lineTo(x, y + h); }
+  else { g.quadraticCurveTo(x + w * 0.6, y, x + w, y + h / 2); g.quadraticCurveTo(x + w * 0.6, y + h, x, y + h); g.quadraticCurveTo(x + w * 0.28, y + h / 2, x, y); }
+  g.closePath(); g.fillStyle = '#18222e'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#dbe4ee'; g.stroke();
+  if (type === 'xor') { g.beginPath(); g.moveTo(x - 14, y); g.quadraticCurveTo(x + 14, y + h / 2, x - 14, y + h); g.stroke(); }
+  if (type === 'nand') { g.beginPath(); g.arc(x + w + 8, y + h / 2, 8, 0, 6.2832); g.fillStyle = '#18222e'; g.fill(); g.stroke(); }
+  tx(g, name || type.toUpperCase(), x + w * 0.42, y + h / 2 + 1, 17, vcol(ov) === OFF ? '#9fb0c2' : LIME, 'center', true);
+}
+function table(g, x, y, heads, rows, hi, cw) {
+  var r, c;
+  heads.forEach(function (s, k) { tx(g, s, x + k * cw + cw / 2, y, 17, '#9fb0c2', 'center', true); });
+  rows.forEach(function (row, q) {
+    var yy = y + 34 + q * 30;
+    if (q === hi) pill(g, x - 8, yy - 14, heads.length * cw + 16, 28, 'rgba(200,240,60,0.18)', LIME, 8);
+    row.forEach(function (v, k) { tx(g, v, x + k * cw + cw / 2, yy, 18, q === hi ? '#fff' : '#cfd8e3', 'center', q === hi); });
+  });
+}
+function sceneAdder() {
+  var root = new T.Group(), bd = board(10.6, 7.2), lv = 0, rv = 4, rt = 0, i, inp = { a: 1, b: 1, c: 0, A: 5, B: 3 };
+  root.add(bd);
+  var pn = panel(bd, 0, 0, 10, 6.2);
+  function sw(g, x, y, closed, name, note, right) {
+    var col = closed ? ON : OFF;
+    g.strokeStyle = col; g.lineWidth = 5; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 18); g.moveTo(x, y + 62); g.lineTo(x, y + 80); g.stroke();
+    g.beginPath(); g.moveTo(x, y + 62); g.lineTo(closed ? x : x + 22, closed ? y + 18 : y + 22); g.stroke(); node(g, x, y + 18, closed ? 1 : 0); node(g, x, y + 62, closed ? 1 : 0);
+    tx(g, name, right ? x + 30 : x - 44, y + 34, 18, '#fff', right ? 'left' : 'right', true); tx(g, note, right ? x + 30 : x - 44, y + 56, 13, '#9fb0c2', right ? 'left' : 'right');
+  }
+  function draw(g, w, h) {
+    card(g, w, h);
+    var a = inp.a, b = inp.b, c = inp.c, y, r;
+    if (lv === 0) {
+      tx(g, 'ONE TRANSISTOR AS A SWITCH', 30, 30, 18, '#9fb0c2', 'left', true);
+      tx(g, 'supply = 1', 520, 60, 20, LIME, 'center', true); wire(g, [[520, 80], [520, 170]], 1); sw(g, 520, 170, a === 1, 'switch', a ? 'closed' : 'open', true);
+      wire(g, [[520, 250], [520, 330]], a); node(g, 520, 330, a); wire(g, [[520, 330], [650, 330]], a);
+      g.beginPath(); g.arc(690, 330, 38, 0, 6.2832); g.fillStyle = a ? 'rgba(200,240,60,0.55)' : '#18222e'; g.fill(); g.lineWidth = 4; g.strokeStyle = vcol(a); g.stroke(); tx(g, 'out ' + a, 690, 331, 22, '#fff', 'center', true);
+      g.strokeStyle = OFF; g.lineWidth = 5; g.beginPath(); g.moveTo(520, 330); g.lineTo(520, 365);
+      for (r = 0; r < 5; r++) g.lineTo(520 + (r % 2 ? -14 : 14), 375 + r * 14); g.lineTo(520, 450); g.lineTo(520, 480); g.stroke();
+      tx(g, 'pull-down resistor', 560, 410, 16, '#9fb0c2'); tx(g, 'ground = 0', 520, 505, 18, '#9fb0c2', 'center', true);
+      vbox(g, 150, 220, 'gate', a); g.setLineDash([8, 8]); g.strokeStyle = vcol(a); g.lineWidth = 3; g.beginPath(); g.moveTo(190, 220); g.lineTo(504, 220); g.stroke(); g.setLineDash([]);
+      tx(g, 'the voltage on the gate', 110, 290, 16, '#9fb0c2', 'left'); tx(g, 'decides whether the switch conducts', 110, 314, 16, '#9fb0c2', 'left');
+      tx(g, a ? 'gate = 1: the switch is closed, so the output is 1' : 'gate = 0: the switch is open, so the resistor pulls the output to 0', w / 2, 570, 21, '#fff', 'center');
+    } else if (lv === 1) {
+      var o = nandOf(a, b);
+      tx(g, 'NAND GATE FROM FOUR TRANSISTORS', 30, 30, 18, '#9fb0c2', 'left', true);
+      tx(g, 'supply = 1', 270, 56, 18, LIME, 'center', true); wire(g, [[170, 80], [370, 80]], 1); wire(g, [[170, 80], [170, 110]], 1); wire(g, [[370, 80], [370, 110]], 1);
+      sw(g, 170, 110, a === 0, 'A', 'on when 0'); sw(g, 370, 110, b === 0, 'B', 'on when 0');
+      wire(g, [[170, 190], [170, 220], [370, 220], [370, 190]], o); wire(g, [[270, 220], [270, 260]], o); node(g, 270, 220, o); wire(g, [[270, 220], [440, 220]], o);
+      sw(g, 270, 260, a === 1, 'A', 'on when 1'); sw(g, 270, 380, b === 1, 'B', 'on when 1'); wire(g, [[270, 340], [270, 380]], o === 0 ? 1 : 0); wire(g, [[270, 460], [270, 490]], o === 0 ? 1 : 0);
+      tx(g, 'ground = 0', 270, 512, 18, '#9fb0c2', 'center', true); vbox(g, 480, 220, 'out', o, 84);
+      table(g, 600, 70, ['A', 'B', 'OUT'], [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 0]], a * 2 + b, 90);
+      wire(g, [[570, 320], [610, 320]], a); wire(g, [[570, 350], [610, 350]], b); wire(g, [[736, 335], [800, 335]], o); gate(g, 'nand', 610, 300, o, 'NAND'); tx(g, 'NAND = AND, then invert', 600, 405, 16, '#c7d6d0'); tx(g, 'NOT, AND, OR and XOR can all be', 600, 435, 15, '#9fb0c2'); tx(g, 'built from NAND gates', 600, 457, 15, '#9fb0c2');
+      tx(g, 'output is 0 only when both inputs are 1', w / 2, 570, 21, '#fff', 'center');
+    } else if (lv === 2) {
+      var s = a ^ b, cy = a & b;
+      tx(g, 'HALF ADDER: ADDS TWO BITS', 30, 30, 18, '#9fb0c2', 'left', true);
+      vbox(g, 55, 100, 'A', a, 74); vbox(g, 55, 160, 'B', b, 74);
+      wire(g, [[92, 100], [330, 100]], a); wire(g, [[200, 100], [200, 280], [330, 280]], a); node(g, 200, 100, a);
+      wire(g, [[92, 160], [250, 160], [250, 130], [330, 130]], b); wire(g, [[250, 160], [250, 310], [330, 310]], b); node(g, 250, 160, b);
+      gate(g, 'xor', 330, 80, s); gate(g, 'and', 330, 260, cy);
+      wire(g, [[440, 115], [590, 115]], s); wire(g, [[440, 295], [590, 295]], cy); vbox(g, 630, 115, 'Sum', s, 100); vbox(g, 630, 295, 'Carry', cy, 100);
+      table(g, 740, 70, ['A', 'B', 'Cy', 'Sum'], [[0, 0, 0, 0], [0, 1, 0, 1], [1, 0, 0, 1], [1, 1, 1, 0]], a * 2 + b, 60);
+      tx(g, 'Sum = A XOR B: 1 when the inputs differ', 330, 440, 17, '#c7d6d0'); tx(g, 'Carry = A AND B: 1 when both are 1', 330, 470, 17, '#c7d6d0');
+      tx(g, a + ' + ' + b + ' = ' + cy + s + ' in binary', w / 2, 570, 21, '#fff', 'center');
+    } else if (lv === 3) {
+      var f = fullAdd(a, b, c);
+      tx(g, 'FULL ADDER: TWO BITS PLUS A CARRY IN', 30, 30, 18, '#9fb0c2', 'left', true);
+      vbox(g, 55, 90, 'A', a, 74); vbox(g, 55, 150, 'B', b, 74); vbox(g, 55, 460, 'Cin', c, 90);
+      wire(g, [[92, 90], [240, 90]], a); wire(g, [[170, 90], [170, 220], [240, 220]], a); node(g, 170, 90, a);
+      wire(g, [[92, 150], [200, 150], [200, 120], [240, 120]], b); wire(g, [[200, 150], [200, 250], [240, 250]], b); node(g, 200, 150, b);
+      gate(g, 'xor', 240, 70, f.x1); gate(g, 'and', 240, 200, f.a1);
+      wire(g, [[350, 105], [420, 105], [420, 90], [500, 90]], f.x1); wire(g, [[420, 105], [420, 280], [500, 280]], f.x1); node(g, 420, 105, f.x1);
+      wire(g, [[100, 460], [460, 460], [460, 120], [500, 120]], c); wire(g, [[460, 310], [500, 310]], c); node(g, 460, 310, c);
+      gate(g, 'xor', 500, 70, f.s); gate(g, 'and', 500, 260, f.a2);
+      wire(g, [[610, 105], [710, 105]], f.s); vbox(g, 750, 105, 'Sum', f.s, 80);
+      wire(g, [[350, 235], [640, 235], [640, 220], [700, 220]], f.a1); wire(g, [[610, 295], [660, 295], [660, 250], [700, 250]], f.a2);
+      gate(g, 'or', 700, 200, f.c); wire(g, [[810, 235], [850, 235]], f.c); vbox(g, 890, 235, 'Cout', f.c, 90);
+      tx(g, 'first pair: A + B', 245, 300, 14, '#9fb0c2', 'left');
+      table(g, 600, 352, ['A', 'B', 'Ci', 'Co', 'Sum'], [[0, 0, 0, 0, 0], [0, 0, 1, 0, 1], [0, 1, 0, 0, 1], [0, 1, 1, 1, 0], [1, 0, 0, 0, 1], [1, 0, 1, 1, 0], [1, 1, 0, 1, 0], [1, 1, 1, 1, 1]], a * 4 + b * 2 + c, 56);
+      tx(g, a + ' + ' + b + ' + ' + c + ' = ' + f.c + f.s + ' in binary', 40, 570, 21, '#fff', 'left');
+    } else {
+      var R = ripple(inp.A, inp.B, 0), total = inp.A + inp.B, sumBits = '';
+      tx(g, '4-BIT RIPPLE-CARRY ADDER', 30, 30, 18, '#9fb0c2', 'left', true); tx(g, 'bit 0 is on the right', w - 30, 30, 15, '#7d8da0', 'right');
+      for (i = 3; i >= 0; i--) sumBits += rv > i ? R[i].s : '·';
+      for (i = 0; i < 4; i++) {
+        var x = 760 - i * 190, done = rv > i, now = rv === i, cin = i ? (rv >= i ? R[i - 1].c : -1) : 0, ao = (inp.A >> i) & 1, bo = (inp.B >> i) & 1;
+        pill(g, x, 200, 140, 130, now ? 'rgba(255,180,84,0.18)' : 'rgba(255,255,255,0.05)', now ? AMBER : done ? '#8da1b5' : OFF, 12);
+        tx(g, 'FULL ADDER', x + 70, 224, 14, '#9fb0c2', 'center', true); tx(g, 'bit ' + i, x + 70, 250, 20, '#fff', 'center', true); tx(g, now ? 'adding...' : done ? 'done' : 'waiting', x + 70, 290, 15, now ? AMBER : '#9fb0c2', 'center');
+        vbox(g, x + 38, 74, 'a' + i, ao, 64); vbox(g, x + 102, 74, 'b' + i, bo, 64); wire(g, [[x + 38, 96], [x + 38, 200]], ao); wire(g, [[x + 102, 96], [x + 102, 200]], bo);
+        wire(g, [[x + 70, 330], [x + 70, 400]], done ? R[i].s : -1); vbox(g, x + 70, 424, 's' + i, done ? R[i].s : -1, 64);
+        var cout = done ? R[i].c : -1, nx = i < 3 ? x - 50 : 150; wire(g, [[x, 270], [nx, 270]], cout);
+        if (i < 3) tx(g, 'c' + (i + 1) + ' ' + (cout < 0 ? '?' : cout), x - 25, 246, 15, vcol(cout), 'center', true);
+        if (i === 0) { wire(g, [[x + 140, 270], [975, 270]], 0); tx(g, 'cin 0', 938, 246, 15, '#9fb0c2', 'center', true); }
+      }
+      vbox(g, 100, 270, 'Cout', rv >= 4 ? R[3].c : -1, 100);
+      y = 508; tx(g, 'A ' + bin(inp.A, 4) + ' (' + inp.A + ')  +  B ' + bin(inp.B, 4) + ' (' + inp.B + ')  =  ' + (rv >= 4 ? R[3].c : '·') + sumBits + (rv >= 4 ? ' (' + total + ')' : ''), w / 2, y, 24, '#fff', 'center', true);
+      tx(g, 'each full adder waits for the carry from the bit on its right', w / 2, 552, 17, '#9fb0c2', 'center');
+    }
+  }
+  return {
+    group: root, w: 5.5, h: 3.8, base: 4.1, tips: function () { return []; },
+    level: function () { return lv; }, setLevel: function (v) { lv = v; rv = v === 4 && !calm ? 0 : 4; rt = 0; sfx('step'); },
+    get: function (k) { return inp[k]; }, toggle: function (k, bit) { if (bit == null) inp[k] ^= 1; else inp[k] ^= (1 << bit); if (lv === 4 && !calm) { rv = 0; rt = 0; } },
+    bit: function (k, i) { return (inp[k] >> i) & 1; },
+    rows: function () {
+      var a = inp.a, b = inp.b, c = inp.c, f;
+      if (lv === 0) return [['Gate', a, 'hot'], ['Switch', a ? 'closed' : 'open'], ['Output', a]];
+      if (lv === 1) return [['A · B', a + ' · ' + b, 'hot'], ['NAND output', nandOf(a, b)], ['Rule', 'only 1 · 1 gives 0']];
+      if (lv === 2) return [['A + B', a + ' + ' + b, 'hot'], ['Sum (XOR)', a ^ b], ['Carry (AND)', a & b]];
+      if (lv === 3) { f = fullAdd(a, b, c); return [['A · B · Cin', a + ' · ' + b + ' · ' + c, 'hot'], ['Sum', f.s], ['Carry out', f.c]]; }
+      var R = ripple(inp.A, inp.B, 0), t = inp.A + inp.B;
+      return [['A + B', inp.A + ' + ' + inp.B, 'hot'], ['Sum', rv >= 4 ? t + ' (' + bin(t, 5) + ')' : 'adding...'], ['Carries', rv >= 4 ? R.map(function (x) { return x.c; }).join('') : '...']];
+    },
+    update: function (t, dt) {
+      if (rv < 4) { rt += dt; var n = Math.floor(rt / 0.55); if (n > rv) { rv = Math.min(4, n); sfx('blip'); } }
+      pn.userData.paint([lv, inp.a, inp.b, inp.c, inp.A, inp.B, rv].join('|'), draw);
+    }
+  };
+}
+
+/* ---------- scene 4: the pipeline grid ---------- */
+var SCOL = [BLUE, VIOLET, AMBER, GREEN, CORAL];
+function scenePipe() {
+  var root = new T.Group(), bd = board(10.6, 6.4), piped = 1, wrong = 0, sch, tl = [], cyc = 0, auto = !calm, SPD = 1.6, PW = 1000, PH = 560, cw = 0, lastC = -1;
+  root.add(bd);
+  box(10, 5.6, 0.1, soft('#0f1620', 0.03), 0, 0, 0.3, bd);
+  var tiles = new T.InstancedMesh(new T.BoxGeometry(1, 1, 1), new T.MeshBasicMaterial(), 40); tiles.frustumCulled = false; bd.add(tiles);
+  var ov = disp(10, 5.6, 100); ov.position.set(0, 0, 0.58); bd.add(ov);
+  function layout() {
+    sch = schedule(piped, wrong); tl = []; cw = Math.min(70, (PW - 250) / sch.total);
+    sch.rows.forEach(function (r, q) { r.tiles.forEach(function (t) { tl.push({ q: q, c: t.c, s: t.s, bad: t.bad }); }); });
+    tl.forEach(function (t, k) { tiles.setColorAt(k, new T.Color(t.bad ? '#5a3a44' : SCOL[t.s]).multiplyScalar(0.85)); });
+    tiles.count = tl.length; tiles.instanceColor.needsUpdate = true; ov.userData.key = ''; lastC = -1;
+  }
+  function px(c) { return 230 + (c - 0.5) * cw; }
+  function py(q) { return 70 + q * 50 + 25; }
+  function paint(g, w, h) {
+    var fc = Math.floor(cyc + 0.0001), q, k;
+    pill(g, 2, 2, w - 4, h - 4, 'rgba(10,15,22,0.0)', 'rgba(255,255,255,0.14)', 14);
+    tx(g, 'cycle', 214, 38, 16, '#9fb0c2', 'right', true);
+    for (k = 1; k <= sch.total; k++) tx(g, k, px(k), 38, cw < 40 ? 12 : 17, k === fc ? LIME : '#9fb0c2', 'center', k === fc);
+    sch.rows.forEach(function (r, q2) { tx(g, r.text, 16, py(q2), r.bad ? 15 : 17, r.bad ? CORAL : '#e6edf5', 'left', !r.bad); });
+    tl.forEach(function (t) { if (t.c <= fc) tx(g, t.bad ? '✕' : STG[t.s], px(t.c), py(t.q), cw < 40 ? 11 : 17, t.bad ? '#ffb0bd' : '#10151a', 'center', true); });
+    if (sch.resolve && fc >= sch.resolve) { g.strokeStyle = CORAL; g.lineWidth = 3; g.setLineDash([8, 6]); g.strokeRect(px(sch.resolve) - cw / 2, 66, cw, 50 * sch.rows.length + 8); g.setLineDash([]); tx(g, 'branch resolved: wrong guess, 2 instructions flushed', px(sch.resolve) - cw / 2, 70 + 50 * sch.rows.length + 14, 16, CORAL, 'left', true); }
+    STG.forEach(function (s, n) { pill(g, 230 + n * 150, h - 52, 138, 32, SCOL[n], null, 8); tx(g, s + ' ' + ['fetch', 'decode', 'execute', 'memory', 'write'][n], 230 + n * 150 + 69, h - 36, 14, '#10151a', 'center', true); });
+  }
+  layout(); if (calm) cyc = sch.total;
+  return {
+    group: root, w: 5.5, h: 3.5, base: 3.7, tips: function () { return []; },
+    mode: function () { return piped; }, wrong: function () { return wrong; }, total: function () { return sch.total; }, progress: function () { return cyc / sch.total; },
+    setMode: function (v) { piped = v; layout(); cyc = calm ? sch.total : 0; }, setWrong: function (v) { wrong = v; layout(); cyc = calm ? sch.total : 0; },
+    setProgress: function (p) { auto = false; cyc = p * sch.total; }, replay: function () { cyc = 0; auto = true; },
+    rows: function () {
+      var fc = Math.floor(cyc + 0.0001), fin = finished(sch, fc), base = schedule(1, 0).total;
+      return [['Cycle', fc + ' of ' + sch.total, 'hot'], ['Finished', fin + ' of 6'], ['Instr. per cycle', fc ? (fin / fc).toFixed(2) + ' instr' : '-'], ['First result', 'cycle 5'], ['Lost to branch', piped && wrong ? sch.total - base + ' cycles' : piped ? 'none' : 'n/a (no overlap)']];
+    },
+    update: function (t, dt) {
+      if (auto && cyc < sch.total) { cyc = Math.min(sch.total, cyc + dt * SPD); if (cyc >= sch.total) sfx('ping'); }
+      var fc = Math.floor(cyc + 0.0001);
+      tl.forEach(function (tt, k) {
+        var u = sstep(cyc - (tt.c - 1)), x = (px(tt.c) - 500) / 100, y = (280 - py(tt.q)) / 100;
+        dummy.position.set(x, y, 0.42); dummy.scale.set(Math.max(0.001, (cw - 4) / 100 * u), Math.max(0.001, 0.42 * u), 0.2); dummy.updateMatrix(); tiles.setMatrixAt(k, dummy.matrix);
+      });
+      tiles.instanceMatrix.needsUpdate = true;
+      if (fc !== lastC) { lastC = fc; if (fc > 0 && fc <= sch.total && auto) sfx('tick'); }
+      ov.userData.paint(piped + '|' + wrong + '|' + fc, paint);
+    }
+  };
+}
+
+/* ---------- scene 5a: the memory ladder ---------- */
+var LAD = [
+  { n: 'Registers', k: 'Regs', ns: 0.3, dt: 'well under 1 ns', wk: 'under a second', cap: '~100s of bytes', col: LIME },
+  { n: 'L1 cache', k: 'L1', ns: 1, dt: '~1 ns', wk: '~1 second', cap: '~32–64 KB per core', col: CYAN },
+  { n: 'L2 cache', k: 'L2', ns: 4, dt: '~3–5 ns', wk: '~3–5 seconds', cap: '~0.5–2 MB per core', col: BLUE },
+  { n: 'L3 cache', k: 'L3', ns: 14, dt: '~10–20 ns', wk: '~10–20 seconds', cap: '~16–64 MB shared', col: VIOLET },
+  { n: 'RAM', k: 'RAM', ns: 80, dt: '~60–100 ns', wk: '~1 to 2 minutes', cap: '~8–64 GB', col: AMBER },
+  { n: 'SSD', k: 'SSD', ns: 50000, dt: '~tens of µs', wk: '~3 hours to a day', cap: '~0.5–4 TB', col: CORAL }
+];
+function sceneLadder() {
+  var root = new T.Group(), bars = [], tips = [], sel = 4, mode = 0, vals = [[], []], cur = [];
+  root.position.y = -1.5;
+  box(11.2, 1.3, 2.4, soft('#1b2430', 0.05), 0, -0.65, 0, root);
+  function hgt(i) { return 0.45 + 4.4 * (Math.log(LAD[i].ns) / Math.LN10 + 0.52) / 5.22; }
+  LAD.forEach(function (Lv, i) {
+    var x = (i - 2.5) * 1.8, mat = soft(Lv.col, 0.12), m = new T.Mesh(new T.BoxGeometry(1.2, 1, 1.2), mat);
+    m.userData.tip = Lv.n + ' · ' + Lv.dt + ' · ' + Lv.cap; m.position.set(x, 0.5, 0); root.add(m); tips.push(m); bars.push({ m: m, mat: mat }); cur.push(0.3);
+    plate(root, Lv.n, x, -0.38, 1.21, 0.36); plate(root, Lv.cap.replace(' per core', '').replace(' shared', ''), x, -0.9, 1.21, 0.26, '#9fb0c2');
+    [Lv.dt, Lv.wk].forEach(function (s, k) { var l = label(s, { size: 0.24, color: Lv.col }); l.visible = k === 0; root.add(l); vals[k].push(l); });
+  });
+  plate(root, 'log scale · approximate', 0, 4.35, 0, 0.3, '#9fb0c2');
+  return {
+    group: root, w: 5.9, h: 4.3, base: 3.3, tips: function () { return tips; },
+    select: function (i) { sel = i; }, sel: function () { return sel; }, mode: function () { return mode; },
+    setMode: function (m) { mode = m; vals[0].forEach(function (l) { l.visible = !m; }); vals[1].forEach(function (l) { l.visible = !!m; }); },
+    rows: function () { var l = LAD[sel]; return [[l.n, l.dt, 'hot'], ['1 ns = 1 second', l.wk], ['Holds', l.cap]]; },
+    update: function (t, dt) {
+      bars.forEach(function (b, i) {
+        cur[i] += (hgt(i) - cur[i]) * Math.min(1, dt * 5); b.m.scale.y = cur[i]; b.m.position.y = cur[i] / 2; b.mat.emissiveIntensity = i === sel ? 4 + Math.sin(t * 3) : 1;
+        vals[mode][i].position.set(b.m.position.x, cur[i] + 0.4, 0);
+      });
+    }
+  };
+}
+
+/* ---------- scene 5b: a tiny cache ---------- */
+function sceneCache() {
+  var root = new T.Group(), bd = board(10.6, 6.6), pat = 0, lines, n, hits, misses, last, flash = 0, auto = !calm, rate = 1.5, acc = 0, hold = 0, i;
+  root.add(bd);
+  var pn = panel(bd, 0, 0, 10, 5.8);
+  function reset() { lines = [-1, -1, -1, -1]; n = hits = misses = 0; last = null; flash = 0; acc = 0; hold = 0; pn.userData.key = ''; }
+  reset();
+  function step() { if (n >= NREAD) { reset(); return; } var idx = readAt(pat, n), r = cacheRead(lines, idx); r.idx = idx; n++; if (r.hit) hits++; else misses++; last = r; flash = 1; sfx(r.hit ? 'blip' : 'thump'); }
+  function bx(b) { return 60 + (b % 4) * 230; }
+  function draw(g, w, h) {
+    card(g, w, h); var b, k, cell = 52;
+    tx(g, 'MEMORY: an array of 32 numbers, 4 per cache line', 30, 28, 17, '#9fb0c2', 'left', true);
+    for (b = 0; b < 8; b++) {
+      var y = 52 + Math.floor(b / 4) * 100, inC = lines[b % NLINE] === b;
+      for (k = 0; k < 4; k++) {
+        var idx = b * 4 + k, cur = last && last.idx === idx;
+        pill(g, bx(b) + k * (cell - 2), y, cell - 4, cell - 4, cur ? (last.hit ? 'rgba(88,196,138,0.55)' : 'rgba(255,107,134,0.55)') : 'rgba(255,255,255,0.06)', cur ? (last.hit ? GREEN : CORAL) : inC ? CYAN : 'rgba(255,255,255,0.14)', 8);
+        tx(g, idx, bx(b) + k * (cell - 2) + (cell - 4) / 2, y + (cell - 4) / 2, 18, cur ? '#fff' : '#cfd8e3', 'center', cur);
+      }
+      tx(g, 'block ' + b + (inC ? ' (in cache)' : ''), bx(b), y + cell + 8, 14, inC ? CYAN : '#7d8da0', 'left');
+    }
+    tx(g, 'CACHE: 4 lines. Block b can only go in line b mod 4', 30, 276, 17, '#9fb0c2', 'left', true);
+    for (b = 0; b < NLINE; b++) {
+      var hot = last && last.l === b, kc = hot ? (last.hit ? GREEN : CORAL) : 'rgba(255,255,255,0.14)';
+      for (k = 0; k < 4; k++) {
+        pill(g, bx(b) + k * (cell - 2), 306, cell - 4, cell - 4, lines[b] < 0 ? 'rgba(255,255,255,0.03)' : hot ? (last.hit ? 'rgba(88,196,138,0.45)' : 'rgba(255,107,134,0.45)') : 'rgba(127,227,255,0.14)', kc, 8);
+        if (lines[b] >= 0) tx(g, lines[b] * 4 + k, bx(b) + k * (cell - 2) + (cell - 4) / 2, 306 + (cell - 4) / 2, 18, '#fff', 'center');
+      }
+      tx(g, 'line ' + b + (lines[b] >= 0 ? ' · block ' + lines[b] : ' · empty'), bx(b), 366 + 8, 14, hot ? kc : '#7d8da0', 'left');
+    }
+    if (last && !last.hit && flash > 0.3) { g.strokeStyle = CORAL; g.lineWidth = 4; g.setLineDash([8, 6]); g.beginPath(); g.moveTo(bx(last.b) + 100, 52 + Math.floor(last.b / 4) * 100 + cell + 24); g.lineTo(bx(last.l) + 100, 304); g.stroke(); g.setLineDash([]); }
+    var msg = !last ? 'Press Next read, or let it play' : last.hit ? 'HIT: number ' + last.idx + ' was already in line ' + last.l + ' (~1 ns)' : 'MISS: block ' + last.b + ' loaded from RAM into line ' + last.l + ' (~80 ns)';
+    tx(g, msg, w / 2, 452, 26, !last ? '#cfd8e3' : last.hit ? GREEN : CORAL, 'center', true);
+    tx(g, 'read ' + n + ' of ' + NREAD + '   hits ' + hits + '   misses ' + misses + (n ? '   hit rate ' + Math.round(100 * hits / n) + '%' : ''), w / 2, 500, 20, '#fff', 'center');
+    tx(g, 'hit ~1 ns, miss ~80 ns (illustrative) · a real line is 64 bytes', w / 2, 545, 14, '#7d8da0', 'center');
+  }
+  return {
+    group: root, w: 5.5, h: 4.1, base: 3.9, tips: function () { return []; },
+    isAuto: function () { return auto; }, setAuto: function (v) { auto = v; acc = 0; }, setRate: function (r) { rate = r; },
+    restart: function () { reset(); }, stepNow: function () { step(); acc = 0; }, pattern: function () { return pat; }, setPattern: function (p) { pat = p; reset(); },
+    rows: function () {
+      var avg = n ? (hits + misses * 80) / n : 0;
+      return [['Reading', pat ? 'jumping by 4' : 'in order', 'hot'], ['Reads', n + ' of ' + NREAD], ['Hits · misses', hits + ' · ' + misses], ['Hit rate', n ? Math.round(100 * hits / n) + '%' : '-'], ['Avg per read', n ? '~' + avg.toFixed(0) + ' ns' : '-']];
+    },
+    update: function (t, dt) {
+      if (auto) { if (n < NREAD) { acc += dt * rate; if (acc >= 1) { acc -= 1; step(); } } else { hold += dt; if (hold > 3.5) reset(); } }
+      flash = Math.max(0, flash - dt * 1.5);
+      pn.userData.paint([pat, n, flash > 0.3 ? 1 : 0].join('|'), draw);
+    }
+  };
+}
+
+/* ---------- stage: renderer, camera, the category environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'computer-science', fallbackText: 'This explainer needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null;
+canvas.addEventListener('pointerdown', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var list = sc.tips(); if (!list.length) { tipEl.classList.remove('on'); return; }
+  var r = canvas.getBoundingClientRect(); ndc.set((ptr.x - r.left) / r.width * 2 - 1, -((ptr.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var hit = ray.intersectObjects(list, false)[0];
+  if (hit && hit.object.userData.tip) { tipEl.textContent = hit.object.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = (it.i ? '<i></i>' : '') + '<span></span>'; if (it.i) b.firstChild.textContent = it.i; b.lastChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); }); wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start, true);
+  return { pick: pick, next: function () { pick((cur + 1) % items.length); } };
+}
+/* independent on/off buttons, one per bit */
+function toggles(el, title, items) {
+  var group = document.createElement('div'), wrap = document.createElement('div'); group.className = 'grp'; wrap.className = 'seg';
+  group.innerHTML = '<span class="lab">' + title + '</span>';
+  items.forEach(function (it) {
+    var b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<i></i><span></span>'; b.lastChild.textContent = it.name;
+    function paint() { var v = it.get(); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.firstChild.textContent = v; b.setAttribute('aria-label', it.name + ' is ' + v + ', press to flip'); }
+    b.addEventListener('click', function () { it.flip(); paint(); sfx('tick'); }); paint(); wrap.appendChild(b);
+  });
+  group.appendChild(wrap); el.appendChild(group);
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  inp.addEventListener('pointerdown', function () { inp.dataset.drag = '1'; }); inp.addEventListener('pointerup', function () { inp.dataset.drag = ''; });
+  el.appendChild(group); paint();
+  return { set: function (v) { if (inp.dataset.drag) return; inp.value = v; paint(); }, nudge: function (d) { inp.value = clamp(+inp.value + d * (o.step || 1) * 5, o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+var ICON_NEXT = '<svg viewBox="0 0 12 12" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M3 1.5v9l7-4.5z"/></svg>', ICON_RESTART = '<svg viewBox="0 0 12 12" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M6 1.2a4.8 4.8 0 1 0 4.7 5.8H9.2A3.3 3.3 0 1 1 6 2.7c.9 0 1.7.4 2.3 1L6.8 5.2H11V1L9.4 2.6A4.8 4.8 0 0 0 6 1.2z"/></svg>';
+function speedRate(v) { return 0.3 * Math.pow(20, v / 100); }
+/* step-by-step or auto-play, a speed slider and a restart button, shared by the instruction and cache demos */
+function runCtl(el, sc, unit) {
+  seg(el, [{ label: 'Step by step', v: false }, { label: 'Auto-play', v: true }], function (it) { sc.setAuto(it.v); }, sc.isAuto() ? 1 : 0, { title: 'Mode <em>space</em>' });
+  var sl = slider(el, { title: 'Speed', keys: '[ ]', min: 0, max: 100, val: 35, fmt: function (v) { return speedRate(v).toFixed(1) + ' ' + unit; }, onInput: function (v) { sc.setRate(speedRate(v)); } });
+  var g = document.createElement('div'); g.className = 'grp'; g.innerHTML = '<span class="lab">Run</span>'; var rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn ghost'; rb.innerHTML = ICON_RESTART + 'Restart'; rb.addEventListener('click', function () { sc.restart(); sfx('ui'); }); g.appendChild(rb); el.appendChild(g);
+  sc.setRate(speedRate(35));
+  return { next: function () { sc.stepNow(); }, nudge: sl.nudge };
+}
+
+/* ---------- the five steps ---------- */
+var built = {}, builders = { chip: sceneChip, rv: sceneRv, adder: sceneAdder, pipe: scenePipe, ladder: sceneLadder, cache: sceneCache };
+function getScene(key) { if (!built[key]) { built[key] = builders[key](); stage.add(built[key]); } return built[key]; }
+function rows(sc) { return sc.rows(); }
+
+var STAGES = [
+  { id: 'chip', name: 'Chip', long: 'A real chip', key: 'chip', why: ZLV[0].why, hint: 'Zoom from package to die to core · hover a block',
+    explain: { title: 'A desktop CPU is a die of cores, shared cache and connections to the outside', sections: [
+      { h: 'What you see', p: ['The package is the part you hold. Under its metal lid, the heat spreader, sits the die: a thin piece of silicon with the circuits on it. The floor plan shows 8 cores in two rows, each with its own L2 cache. The strip between the rows is the L3 cache that all cores share. The right-hand column holds the memory controller, the system agent and the I/O and PCIe circuits.'] },
+      { h: 'How it works', p: ['Each core is a complete processor that runs its own stream of instructions. The memory controller talks to RAM, and PCIe links to graphics cards and SSDs. Zoom in to one core and you find the parts an instruction passes through: fetch with a branch predictor, decode, a register file, execution units for integer, floating-point and load/store work, and the L1 caches.'] },
+      { h: 'Typical numbers', p: ['A desktop part has ~4 to 16 cores, a clock of ~3 to 5 GHz and ~billions of transistors on a die of ~100 to 400 mm². Figures vary by product. The layout is a schematic of a typical design and not any real chip.'] }
+    ], tryit: ['Zoom from Package to Die to Core, then hover over a block to read what it does.'] },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Zoom', keys: '[ ]', min: 0, max: 200, step: 5, val: Math.round(sc.amount() * 100), fmt: function (v) { return ZLV[Math.min(2, Math.round(v / 100))].name; }, onInput: function (v) { sc.setAmount(v / 100); sg.pick(Math.round(v / 100), true); setWhy(ZLV[sc.level()].why); } });
+      var sg = seg(el, ZLV.map(function (l) { return { label: l.name }; }), function (it, i) { sc.setTarget(i); setWhy(ZLV[i].why); }, sc.level(), { title: 'Level' });
+      return { next: function () { sg.next(); }, nudge: function (d) { sl.nudge(d); }, tick: function () { sl.set(Math.round(sc.amount() * 100)); sg.pick(sc.level(), true); setWhy(ZLV[sc.level()].why); } };
+    }, stats: rows },
+  { id: 'instruction', name: 'Instruction', long: 'One real instruction', key: 'rv', why: 'Follow one <span class="y">32-bit word</span> through fetch, decode, execute and write-back. The program sums 1 to 5 into x1.', hint: 'Press Next phase, or let it play · space steps',
+    explain: { title: 'An instruction is a 32-bit number that the chip cuts into fields', sections: [
+      { h: 'What you see', p: ['The program adds 1 to 5 into register x1 using RISC-V RV32I, a real instruction set used in chips and in teaching. The top panel shows the instruction at the program counter (PC): its assembly text, its 32-bit machine word and the word split into fields. The opcode says what kind of instruction it is, rd is the destination register, rs1 and rs2 are the sources, and the immediate is a constant stored inside the instruction.'] },
+      { h: 'How it works', p: ['Fetch reads the word at PC. Decode splits the fields and reads the source registers. Execute runs the ALU: <code>add</code> adds and <code>bne</code> compares. Write-back stores the result in rd, or sets the PC. Each instruction is 4 bytes, so PC normally grows by 4. Here <code>bne</code> jumps back 8 bytes to <code>loop</code> until x2 reaches 6. Register x0 always reads 0.'] },
+      { h: 'In real life', p: ['x86 and ARM run the same loop with more complicated encodings, and x86 instructions even vary in length. A modern core also overlaps these four phases, as the pipeline step shows.'] }
+    ], tryit: ['Press Next phase through one pass of the loop. The bne is taken 4 times and falls through once, leaving x1 = 15.'] },
+    btn: function (sc) { return { label: 'Next phase', icon: ICON_NEXT, run: function () { sc.stepNow(); } }; },
+    mount: function (el, sc) { return runCtl(el, sc, 'phases/s'); }, stats: rows },
+  { id: 'adder', name: 'Adder', long: 'From switches to adding', key: 'adder', why: 'Pick a level, then flip the inputs. Watch the <span class="y">carry</span> move from bit to bit in the 4-bit adder.', hint: 'Choose a level, then flip the input buttons',
+    explain: { title: 'Switches make gates, and gates make an adder', sections: [
+      { h: 'What you see', p: ['A transistor is a switch that a voltage on its gate turns on or off. A few of them make a NAND gate, whose output is 0 only when both inputs are 1. NAND can build every other gate. An XOR gate outputs 1 when its inputs differ, and an AND gate outputs 1 when both inputs are 1.'] },
+      { h: 'How it works', p: ['A half adder adds two bits: XOR gives the sum bit and AND gives the carry. A full adder also takes a carry in, using two half adders and an OR gate. Chain four full adders, each passing its carry to the next bit, and you have a 4-bit ripple-carry adder. With 0101 + 0011 the carry passes through every bit before the answer 1000 is settled.'] },
+      { h: 'In real life', p: ['This is how the ALU does an <code>add</code> instruction. Real adders are 64 bits wide and use faster carry designs, because waiting for a ripple is slow. The Binary Numbers topic covers how bits stand for numbers.'] }
+    ], tryit: ['Open the 4-bit adder and watch the carry in 0101 + 0011 move left one bit at a time. Then turn A3 on: 13 + 3 = 16 gives a carry out.'] },
+    mount: function (el, sc) {
+      var box2 = document.createElement('div'), NAMES = ['Switch', 'NAND', 'Half', 'Full', '4-bit']; box2.className = 'grp'; box2.style.display = 'contents';
+      function gen() {
+        var lv = sc.level(), q, a = [], b = [];
+        box2.innerHTML = '';
+        if (lv < 4) { var ks = lv === 0 ? ['a'] : lv < 3 ? ['a', 'b'] : ['a', 'b', 'c']; toggles(box2, 'Inputs', ks.map(function (k) { return { name: lv === 0 ? 'Gate' : k === 'c' ? 'Cin' : k.toUpperCase(), get: function () { return sc.get(k); }, flip: function () { sc.toggle(k); } }; })); }
+        else { for (q = 3; q >= 0; q--) { (function (i) { a.push({ name: 'A' + i, get: function () { return sc.bit('A', i); }, flip: function () { sc.toggle('A', i); } }); b.push({ name: 'B' + i, get: function () { return sc.bit('B', i); }, flip: function () { sc.toggle('B', i); } }); })(q); } toggles(box2, 'Number A', a); toggles(box2, 'Number B', b); }
+      }
+      var sg = seg(el, NAMES.map(function (s) { return { label: s }; }), function (it, i) { sc.setLevel(i); gen(); }, sc.level(), { title: 'Level' });
+      el.appendChild(box2); gen();
+      return { next: function () { sg.next(); } };
+    }, stats: rows },
+  { id: 'pipeline', name: 'Pipeline', long: 'Why it is fast: the pipeline', key: 'pipe', why: 'Pipelined, a new instruction starts <span class="y">every cycle</span>. After the first result, one finishes per cycle.', hint: 'Compare the two modes, then set the branch to wrong',
+    explain: { title: 'A pipeline finishes one instruction per cycle once it is full', sections: [
+      { h: 'What you see', p: ['Each row is an instruction and each column is one clock cycle. The colours are five stages: IF fetch, ID decode, EX execute, MEM memory access and WB write-back. One at a time, 6 instructions take 5 × 6 = 30 cycles. Pipelined, a new instruction enters each cycle, so they take 6 + 4 = 10 cycles. The first result appears after 5 cycles and then one arrives every cycle.'] },
+      { h: 'Branches', p: ['The branch predictor guesses which way the beq goes and fetching continues down that path. When the guess is wrong, found in EX, the two instructions behind the branch are flushed and fetching restarts from the right place. Here that costs 2 cycles, so the program takes 12.'] },
+      { h: 'Simplified', p: ['Real CPUs have ~10 to 20 or more stages, finish several instructions per cycle and can run them out of order. These six are independent. Instructions that depend on each other can force stalls.'] }
+    ], tryit: ['Set the branch to Predicted wrong in Pipelined mode and watch rows 4 and 5 turn into flushed bubbles.'] },
+    btn: function (sc) { return { label: 'Replay', icon: ICON_RESTART, run: function () { sc.replay(); } }; },
+    mount: function (el, sc) {
+      seg(el, [{ label: 'One at a time', v: 0 }, { label: 'Pipelined', v: 1 }], function (it) { sc.setMode(it.v); }, sc.mode(), { title: 'Mode' });
+      seg(el, [{ label: 'Predicted right', v: 0 }, { label: 'Predicted wrong', v: 1 }], function (it) { sc.setWrong(it.v); }, sc.wrong(), { title: 'Branch I3' });
+      var sl = slider(el, { title: 'Cycle', keys: '[ ]', min: 0, max: 100, val: 0, fmt: function (v) { return Math.round(v / 100 * sc.total()); }, onInput: function (v) { sc.setProgress(v / 100); } });
+      return { next: function () { sc.replay(); }, nudge: function (d) { sl.nudge(d); }, tick: function () { sl.set(Math.round(sc.progress() * 100)); } };
+    }, stats: rows },
+  { id: 'memory', name: 'Memory', long: 'Why it is fast: the cache', key: 'ladder', why: 'Each level is <span class="y">bigger and slower</span>. A cache keeps recent lines close, so ordered reads mostly hit.', hint: 'Pick a rung, then try the cache demo',
+    explain: { title: 'Each memory level is bigger and slower, and the cache hides it', sections: [
+      { h: 'The ladder', p: ['The bars compare approximate access times on a log scale, so each step up is about 10 times longer. Typical values: registers well under 1 ns, L1 ~1 ns, L2 ~3 to 5 ns, L3 ~10 to 20 ns, RAM ~60 to 100 ns, SSD ~tens of microseconds. If 1 ns were 1 second, L1 takes about a second, RAM about a minute and a half, and an SSD hours to a day.'] },
+      { h: 'The cache demo', p: ['A cache keeps copies of recently used lines. Reading an array in order, one miss loads a whole line and the next reads are hits. Jumping by 4 numbers lands on a different line each time, and the line is gone before the loop returns, so every read misses. This demo has 4 lines of 4 numbers, and ordered reading hits 75% of the time. Real lines are 64 bytes.'] },
+      { h: 'Cores', p: ['More cores do not speed up a single read. By Amdahl’s law, a job with 20% serial work gains at most about 3.3 times from 8 cores.'] }
+    ], tryit: ['Open the cache demo, run In order, then run Jumping around and compare the hit rates.'] },
+    btn: function (sc) { return STAGES[4].key === 'cache' ? { label: 'Next read', icon: ICON_NEXT, run: function () { sc.stepNow(); } } : null; },
+    mount: function (el, sc) {
+      var s = STAGES[4], inner = document.createElement('div'); inner.style.display = 'contents';
+      var vg = seg(el, [{ label: 'Memory ladder', v: 'ladder' }, { label: 'Cache demo', v: 'cache' }], function (it) { s.key = it.v; enter(4); }, s.key === 'cache' ? 1 : 0, { title: 'View' });
+      el.appendChild(inner);
+      if (s.key === 'ladder') {
+        var rg = seg(inner, LAD.map(function (l) { return { label: l.k }; }), function (it, i) { sc.select(i); }, sc.sel(), { title: 'Rung' });
+        seg(inner, [{ label: 'Delay' }, { label: '1 ns = 1 s' }], function (it, i) { sc.setMode(i); }, sc.mode(), { title: 'Show' });
+        return { next: function () { rg.next(); } };
+      }
+      seg(inner, [{ label: 'In order', v: 0 }, { label: 'Jumping around', v: 1 }], function (it) { sc.setPattern(it.v); }, sc.pattern(), { title: 'Read the array' });
+      var rc = runCtl(inner, sc, 'reads/s'); return rc;
+    }, stats: rows }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0, goFn = null;
+function renderStats(r) {
+  var el = $('stats');
+  if (el.children.length !== r.length) el.innerHTML = r.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  r.forEach(function (x, i) {
+    var c = el.children[i], b = c.lastChild, v = String(x[1]);
+    c.className = 'stat ' + (x[2] || ''); c.firstChild.textContent = x[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+var stageBtns = STAGES.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function enter(i) {
+  var s = STAGES[i], sc = getScene(s.key), c = $('sc-ctl');
+  stage.show(sc); cur = i; tipEl.classList.remove('on');
+  $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STAGES.length;
+  setWhy(s.key === 'chip' ? ZLV[sc.level()].why : s.key === 'cache' ? 'A tiny cache in action. <span class="y">Green</span> is a hit, <span class="y">red</span> is a miss that goes to RAM. Compare the two reading patterns.' : s.why);
+  c.innerHTML = ''; ctl = s.mount ? s.mount(c, sc) || null : null;
+  var gb = s.btn ? s.btn(sc) : null, goB = $('go'); goB.hidden = !gb; goFn = gb ? gb.run : null; if (gb) goB.innerHTML = gb.icon + gb.label;
+  renderStats(s.stats(sc));
+  stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+  hint(s.hint);
+  try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+}
+function go(i, instant) {
+  i = clamp(i, 0, STAGES.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  if (instant || cur < 0) { enter(i); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { enter(i); v.style.opacity = 0; }, 190);
+}
+$('go').addEventListener('click', function () { if (goFn) goFn(); });
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Studio backdrop on' : 'Studio backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.long + '</h3><h2>' + x.title + '</h2>' +
+    x.sections.map(function (c) { return '<h3>' + c.h + '</h3>' + c.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #go, #explain')) sfx('ui'); });
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range', onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-5]$/.test(k)) go(+k - 1);
+  else if (k === ' ' && !onBtn && ctl && ctl.next) { e.preventDefault(); ctl.next(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0, speed = calm ? 0.3 : 1;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000) * speed; last = now; tt += dt;
+  var s = STAGES[cur], sc = getScene(s.key);
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats(sc)); if (ctl && ctl.tick) ctl.tick(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+function fromHash() { var n = STAGES.map(function (s) { return s.id; }).indexOf((location.hash || '').slice(1)); return n >= 0 ? n : 0; }
+window.addEventListener('hashchange', function () { var n = fromHash(); if (n !== cur) go(n); });
+go(fromHash(), true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Binary Numbers: Counting with Two Digits</title>
+<meta name="description" content="See why decimal starts a new column after 9, sort a pile of dots by tens and by doubles, then flip bits to see how two digits can write any number.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<style>
+/* layout only for the row of bit switches; colours and type come from shared/ui.css */
+.seg.bits { display: grid; grid-template-columns: repeat(var(--n, 8), minmax(0, 1fr)); border-radius: 16px; overflow: visible; }
+.seg.bits button { flex-direction: column; gap: 0; height: auto; min-height: 44px; min-width: 38px; padding: 4px 0; justify-content: center; }
+.seg.bits button span { font: 600 15px var(--mono); }
+@media (max-width: 900px) { .grp.bitsg { flex: 1 1 100%; } .grp.bitsg.half { flex: 1 1 42%; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D model of number systems: a decimal counter, a pile of dots sorted two ways, and a row of binary switches"><canvas id="gl"></canvas><div id="loading">Warming up…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Computer Science</span><span id="tagStage">Step 1 of 6</span></div>
+        <h1>Counting with <em>two digits</em></h1>
+        <p>A number system writes any amount with a few digits and a row of columns. Decimal has ten digits and binary has two. Start with why decimal needs a new column, then see the same idea with two digits.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1">
+      <div class="grp"><span class="lab">Step <em>← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn" id="go" type="button" hidden></button>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#computer-science" title="All Computer Science concepts" aria-label="All Computer Science concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Room backdrop (B)" aria-label="Room backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="Keys and notes (?)" aria-label="Keys and notes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Keys and notes</h2>
+    <p><b>Switches.</b> Tap a switch in the 3D scene, press a button in the dock, or press <code>1</code>–<code>8</code> (left to right). In the Adding step, <code>1</code>–<code>4</code> flip number A and <code>5</code>–<code>8</code> flip number B.</p>
+    <p>In the Digits and Dots steps there are no switches: <code>[</code> <code>]</code> move the slider and <code>Space</code> plays the count or sorts the pile.</p>
+    <p><code>←</code> <code>→</code> step · <code>Space</code> main action · <code>[</code> <code>]</code> slider · <code>E</code> explain this step · <code>B</code> room backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p>Numbers here are unsigned whole numbers. The Hardware step is a schematic: its noise is invented for the demo, not measured from a real circuit.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/devroom.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- pure helpers (the number logic, kept free of the DOM) ---------- */
+/* pure:start */
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function bitsOf(v, n) { var a = [], i; for (i = n - 1; i >= 0; i--) a.push((v >> i) & 1); return a; }
+function valOf(bits) { var v = 0; bits.forEach(function (b) { v = v * 2 + b; }); return v; }
+function binStr(v, n) { return bitsOf(v, n).join(''); }
+function binSum(v, n) { var p = []; bitsOf(v, n).forEach(function (b, i) { if (b) p.push(String(1 << (n - 1 - i))); }); return p.length ? p.join(' + ') : '0'; }
+function decSum(v) { var p = [], h = Math.floor(v / 100), t = Math.floor(v / 10) % 10, o = v % 10; if (h) p.push(h + '×100'); if (t) p.push(t + '×10'); if (o) p.push(o + '×1'); return p.length ? p.join(' + ') : '0'; }
+/* column addition. a, b: bit arrays, most significant first. cin[j] is the carry into column j (0 = rightmost); cin[n] is the carry out. */
+function addBits(a, b, n) { var s = [], cin = [0], c = 0, i, t; for (i = 0; i < n; i++) { t = a[n - 1 - i] + b[n - 1 - i] + c; s[n - 1 - i] = t & 1; c = t >> 1; cin.push(c); } return { s: s, cin: cin, out: c }; }
+function popcount(x) { var n = 0; while (x) { n += x & 1; x >>= 1; } return n; }
+function digitDiff(a, b) { var x = String(1000 + a).slice(1), y = String(1000 + b).slice(1), i, n = 0; for (i = 0; i < 3; i++) if (x.charAt(i) !== y.charAt(i)) n++; return n; }
+/* odometer wheels (hundreds, tens, ones) in digit units; a wheel only turns while the wheel to its right passes 9 to 0 */
+function wheelPos(d) { return [Math.floor(d / 100) + clamp(d % 100 - 99, 0, 1), Math.floor(d / 10) + clamp(d % 10 - 9, 0, 1), d]; }
+/* a symbol with L levels sits at j/(L-1) of the full swing; the reader picks the nearest level */
+function levelV(j, L) { return j / (L - 1); }
+function decodeV(v, L) { return clamp(Math.round(v * (L - 1)), 0, L - 1); }
+/* how many columns run out of digits when prev goes up by one: 9 gives 1, 19 gives 1, 99 gives 2, 12 gives 0 */
+function carryCols(prev) { var c = 0, p = prev; while (p % 10 === 9) { c++; p = Math.floor(p / 10); } return c; }
+/* the odometer demo skips from 21 to 97 so the 99 to 100 roll is reachable without a long wait */
+function nextAuto(n) { return n >= 21 && n < 97 ? 97 : n >= 101 ? 0 : n + 1; }
+/* a pile sorted into tens (decimal) and into the biggest doubles that fit, each size used at most once (binary) */
+var SIZES = [16, 8, 4, 2, 1];
+function tensSplit(n) { return { tens: Math.floor(n / 10), ones: n % 10 }; }
+function doubleSplit(n) { var left = n; return SIZES.map(function (s) { if (left >= s) { left -= s; return 1; } return 0; }); }
+function dblSum(n) { var u = doubleSplit(n), p = [], on = false; u.forEach(function (b, i) { if (b) on = true; if (on) p.push(b ? String(SIZES[i]) : '0'); }); return p.join(' + '); }
+function dblWrite(n) { return doubleSplit(n).join('').replace(/^0+(?=.)/, ''); }
+function tenSum(n) { var t = tensSplit(n), p = []; if (t.tens) p.push(t.tens + (t.tens === 1 ? ' ten' : ' tens')); if (t.ones || !t.tens) p.push(t.ones + (t.ones === 1 ? ' one' : ' ones')); return p.join(' + '); }
+/* pure:end */
+
+function mulberry(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function sstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+var soft = VLStage.soft, label = VLStage.label;
+var dummy = new T.Object3D();
+var LIME = '#c8f03c', CYAN = '#7fe3ff', CORAL = '#ff6b86', AMBER = '#ffb454', MUTE = '#99a097', INK = '#f1f3ee';
+var PLACE = [128, 64, 32, 16, 8, 4, 2, 1];
+
+/* ---------- scene parts ---------- */
+/* text that changes: runs = [[text, color], ...], drawn centred and shrunk to fit */
+function dyn(wu, hu, o) {
+  o = o || {};
+  var c = document.createElement('canvas'), pw = 1024, ph = Math.round(pw * hu / wu), x, tex, m, key = '';
+  c.width = pw; c.height = ph; x = c.getContext('2d'); tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter;
+  if (o.plane) m = new T.Mesh(new T.PlaneGeometry(wu, hu), new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  else { m = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false, fog: false })); m.scale.set(wu, hu, 1); m.renderOrder = 20; }
+  return { mesh: m, set: function (runs) {
+    var k = JSON.stringify(runs), fs = ph * 0.54, tw, px, r = ph / 2; if (k === key) return; key = k;
+    x.clearRect(0, 0, pw, ph);
+    x.beginPath(); x.moveTo(r, 1); x.lineTo(pw - r, 1); x.arc(pw - r, r, r - 1, -Math.PI / 2, Math.PI / 2); x.lineTo(r, ph - 1); x.arc(r, r, r - 1, Math.PI / 2, Math.PI * 1.5); x.closePath();
+    x.fillStyle = 'rgba(8,12,20,0.82)'; x.fill(); x.lineWidth = 2; x.strokeStyle = 'rgba(255,255,255,0.16)'; x.stroke();
+    do { x.font = '500 ' + fs + 'px ui-monospace, Menlo, Consolas, monospace'; tw = 0; runs.forEach(function (q) { tw += x.measureText(q[0]).width; }); fs -= 2; } while (tw > pw - 80 && fs > 12);
+    px = (pw - tw) / 2; x.textBaseline = 'middle';
+    runs.forEach(function (q) { x.fillStyle = q[1]; x.fillText(q[0], px, ph / 2 + 3); px += x.measureText(q[0]).width; });
+    tex.needsUpdate = true;
+  } };
+}
+/* one bit: a cube that sinks and goes dark for 0, rises and glows for 1. The digit is printed on its front. */
+function makeCap(hex, s, y0, rise) {
+  var g = new T.Group(), col = new T.Color(hex), dark = new T.Color('#232a31'), mat = soft(dark, 0), body = new T.Mesh(new T.BoxGeometry(s, s * 0.85, s), mat), cp = { g: g, body: body, lit: 0, tgt: 0, known: true, flash: 0 }, ghost = false;
+  g.add(body);
+  function dig(txt, color, bold) { var d = label(txt, { plane: true, bg: false, size: s * 0.6, color: color, bold: bold }); d.position.set(0, 0, s / 2 + 0.014); body.add(d); return d; }
+  var d0 = dig('0', '#8b96a0'), d1 = dig('1', '#10150a', true), dq = dig('?', '#6a7480');
+  cp.set = function (bit, known) { cp.tgt = bit ? 1 : 0; cp.known = known !== false; };
+  cp.ghost = function (v) { if (v !== ghost) { ghost = v; mat.transparent = v; mat.opacity = v ? 0.45 : 1; mat.needsUpdate = true; } };
+  cp.update = function (dt) {
+    cp.lit += (cp.tgt - cp.lit) * (calm ? 1 : Math.min(1, dt * 14)); cp.flash *= Math.max(0, 1 - dt * 4);
+    var l = cp.known ? cp.lit : 0;
+    mat.color.copy(dark).lerp(col, l); mat.emissive.copy(col).multiplyScalar(0.5 * l + cp.flash * 0.6);
+    body.position.y = y0 + rise * l;
+    d0.visible = cp.known && l < 0.5; d1.visible = cp.known && l >= 0.5; dq.visible = !cp.known;
+  };
+  return cp;
+}
+function box(w, h, d, color, x, y, z, parent) { var m = new T.Mesh(new T.BoxGeometry(w, h, d), soft(color, 0.04)); m.position.set(x, y, z); parent.add(m); return m; }
+function note(txt, x, y, parent, o) { var l = label(txt, o); l.position.set(x, y, 0.3); parent.add(l); return l; }
+/* odometer wheel texture: ten digits stacked around the rim, printed turned so they read upright on the front */
+function digitTex() {
+  var cw = 128, ch = 256, c = document.createElement('canvas'), x, k, tex; c.width = cw * 10; c.height = ch; x = c.getContext('2d');
+  x.fillStyle = '#1c232a'; x.fillRect(0, 0, c.width, c.height);
+  for (k = 0; k < 10; k++) {
+    x.fillStyle = '#34404a'; x.fillRect(k * cw, 0, 3, ch);
+    x.save(); x.translate((k + 0.5) * cw, ch / 2); x.rotate(Math.PI / 2); x.fillStyle = '#f1f3ee'; x.font = '700 112px ui-monospace, Menlo, Consolas, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(k), 0, 6); x.restore();
+  }
+  tex = new T.CanvasTexture(c); tex.wrapS = T.RepeatWrapping; tex.offset.x = 0.05; tex.anisotropy = 4; return tex;
+}
+
+/* ---------- scene: eight switches and a decimal odometer (steps 3 and 4) ---------- */
+function sceneBank() {
+  var root = new T.Group(), inner = new T.Group(), P = 1.7, value = 75, disp = 75, caps = [], dim = [], lit = [], picks = [], wheels = [], tipMeshes = [];
+  inner.position.y = -3.85; root.add(inner);
+  box(14.2, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner);
+  box(14.2, 8.4, 0.3, '#222c36', 0, 4.2, -1.75, inner);
+  box(7.0, 3.0, 2.0, '#2c3742', 0, 5.4, -0.58, inner);
+  var tex = digitTex();
+  [-2, 0, 2].forEach(function (x, i) {
+    var w = new T.Mesh(new T.CylinderGeometry(1.2, 1.2, 1.5, 40, 1, true).rotateZ(Math.PI / 2), soft('#ffffff', 0.55, { map: tex, emissiveMap: tex }));
+    w.position.set(x, 5.4, -0.1); inner.add(w); wheels.push(w);
+    note(['100', '10', '1'][i], x, 7.55, inner, { size: 0.36, color: MUTE });
+  });
+  note('×10', -1, 7.55, inner, { size: 0.3, color: MUTE, bg: false }); note('×10', 1, 7.55, inner, { size: 0.3, color: MUTE, bg: false });
+  PLACE.forEach(function (pv, c) {
+    var x = (c - 3.5) * P, hs = box(1.5, 0.5, 1.5, '#3f4c59', x, 0.25, 0.5, inner), cp = makeCap(LIME, 1.2, 0.7, 0.4);
+    cp.g.position.set(x, 0, 0.5); inner.add(cp.g); caps.push(cp);
+    [hs, cp.body].forEach(function (m) { m.userData.col = c; m.userData.tip = 'worth ' + pv + ' · tap to flip'; picks.push(m); });
+    dim.push(note(String(pv), x, 2.3, inner, { size: 0.36, color: MUTE })); lit.push(note(String(pv), x, 2.3, inner, { size: 0.36, color: LIME, bold: true }));
+    if (c) note('×2', x - P / 2, 2.3, inner, { size: 0.3, color: MUTE, bg: false });
+  });
+  var binP = dyn(13.2, 0.62, { plane: true }), decP = dyn(7.4, 0.56);
+  binP.mesh.position.set(0, -0.35, 1.91); inner.add(binP.mesh); decP.mesh.position.set(0, 3.15, 0.3); inner.add(decP.mesh);
+  var api = {
+    group: root, w: 7.8, h: 4.7, base: 2.85, picks: function () { return picks; }, tips: function () { return picks; },
+    setValue: function (v, snap) { v = clamp(v | 0, 0, 255); var old = bitsOf(value, 8), now = bitsOf(v, 8); now.forEach(function (b, c) { if (snap) caps[c].lit = b; else if (b !== old[c]) caps[c].flash = 1; }); value = v; if (snap) disp = v; },
+    update: function (t, dt) {
+      var bits = bitsOf(value, 8), wp;
+      caps.forEach(function (cp, c) { cp.set(bits[c]); cp.update(dt); dim[c].visible = !bits[c]; lit[c].visible = !!bits[c]; });
+      disp = (calm || Math.abs(value - disp) < 0.002) ? value : disp + (value - disp) * Math.min(1, dt * 10);
+      wp = wheelPos(disp); wheels.forEach(function (w, i) { w.rotation.x = wp[i] * Math.PI / 5; });
+      binP.set([['binary  ', MUTE], [binSum(value, 8), INK], ['  = ' + value, LIME]]);
+      decP.set([['decimal  ', MUTE], [decSum(value), INK], ['  = ' + value, LIME]]);
+    }
+  };
+  return api;
+}
+
+/* ---------- scene: a big decimal counter that runs out of digits (step 1) ---------- */
+function sceneDigits() {
+  var root = new T.Group(), inner = new T.Group(), value = 0, disp = 0, ev = null, wheels = [], lamps = [], flash = [0, 0, 0], X = [-3.1, 0, 3.1];
+  inner.position.y = -3.85; root.add(inner);
+  box(14.2, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner);
+  box(14.2, 8.4, 0.3, '#222c36', 0, 4.2, -1.75, inner);
+  box(10.4, 4.5, 2.6, '#2c3742', 0, 5.35, -0.9, inner);
+  var tex = digitTex();
+  X.forEach(function (x, i) {
+    var w = new T.Mesh(new T.CylinderGeometry(1.75, 1.75, 2.3, 48, 1, true).rotateZ(Math.PI / 2), soft('#ffffff', 0.55, { map: tex, emissiveMap: tex }));
+    w.position.set(x, 5.35, -0.1); inner.add(w); wheels.push(w);
+    lamps.push(box(2.5, 0.16, 0.2, '#2a323a', x, 3.0, 0.5, inner));
+    note(['hundreds', 'tens', 'ones'][i], x, 2.2, inner, { size: 0.46, bold: true });
+    note(['groups of 100', 'groups of 10', 'single things'][i], x, 1.5, inner, { size: 0.3, color: MUTE, bg: false });
+  });
+  var top = note('ten digits: 0 1 2 3 4 5 6 7 8 9', 0, 8.0, inner, { size: 0.36, color: MUTE }), teaser = note('what if you only had two digits?', 0, 8.0, inner, { size: 0.4, color: AMBER, bold: true });
+  var msg = dyn(13, 0.78); msg.mesh.position.set(0, 0.6, 0.3); inner.add(msg.mesh);
+  function lampColor(i) {
+    var j = 2 - i, c;
+    if (!ev) return null;
+    c = carryCols(ev.prev);
+    return j < c ? CORAL : j === c ? LIME : null;
+  }
+  function words() {
+    var c, v = value;
+    if (!ev) return v % 10 === 9 ? [[v + ' ', INK], ['has a 9 in the ones column. One more and it has no digit left.', AMBER]] : [[String(v) + '  ', INK], ['each column shows one digit, 0 to 9', MUTE]];
+    c = carryCols(ev.prev);
+    return [[ev.prev + ' + 1 = ' + ev.cur + '   ', INK], c === 0 ? ['the ones digit goes up by 1', MUTE] : c === 1 ? ['ones ran out of digits: back to 0, tens +1', AMBER] : ['ones and tens ran out: both back to 0, hundreds +1', AMBER]];
+  }
+  return {
+    group: root, w: 7.8, h: 4.7, base: 2.85, picks: function () { return []; }, tips: function () { return []; },
+    setValue: function (v, e, snap) { value = v; ev = e || null; flash = [1, 1, 1]; if (snap) disp = v; },
+    update: function (t, dt) {
+      var wp, k = calm ? 1 : Math.min(1, dt * 10);
+      disp = Math.abs(value - disp) < 0.002 ? value : disp + (value - disp) * k;
+      wp = wheelPos(disp); wheels.forEach(function (w, i) { w.rotation.x = wp[i] * Math.PI / 5; });
+      lamps.forEach(function (l, i) {
+        var col = lampColor(i); flash[i] *= Math.max(0, 1 - dt * 2.5);
+        l.material.color.set(col || '#2a323a').multiplyScalar(col ? 0.55 : 1); l.material.emissive.set(col || '#000000').multiplyScalar(col ? 0.12 + 0.25 * flash[i] : 0);
+        l.scale.y = col ? 1 + 1.4 * flash[i] : 1;
+      });
+      top.visible = value < 100; teaser.visible = value >= 100;
+      msg.set(words());
+    }
+  };
+}
+
+/* ---------- scene: one pile of dots, sorted by tens and by doubles (step 2) ---------- */
+var DOT_S = 0.44, DOT_MAX = 31, FRAME_COLS = [4, 2, 1, 1, 1];
+function sceneDots() {
+  var root = new T.Group(), inner = new T.Group(), N = 13, sorted = false, rnd = mulberry(11), pile = [], tries, PILE = new T.Color('#aab3a8'), WHITE = new T.Color('#f1f3ee'), AMB = new T.Color(AMBER), LIM = new T.Color(LIME);
+  inner.position.y = -3.85; root.add(inner);
+  box(15.6, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner); box(15.4, 8.4, 0.3, '#222c36', 0, 4.2, -1.75, inner);
+  /* a loose heap, the same for both boards; points keep a small gap so dots do not sit on each other */
+  for (tries = 0; pile.length < DOT_MAX; tries++) {
+    var a = rnd() * 6.283, r = Math.sqrt(rnd()), p = { x: Math.cos(a) * r * 2.5, y: 0.5 + Math.sin(a) * r * 1.9 };
+    if (tries > 400 || !pile.some(function (q) { return Math.hypot(q.x - p.x, q.y - p.y) < 0.4; })) pile.push(p);
+  }
+  function frameAt(x0, top, cols, rows) { return { x0: x0, top: top, cols: cols, rows: rows, w: cols * DOT_S + 0.2, h: rows * DOT_S + 0.2 }; }
+  function cell(f, c) { return { x: f.x0 + 0.1 + (c % f.cols + 0.5) * DOT_S, y: f.top - 0.1 - (Math.floor(c / f.cols) + 0.5) * DOT_S }; }
+  function makeBoard(side) {
+    var g = new T.Group(), b = { g: g, side: side, dots: [], frames: [], fo: [], plan: [] }, mesh, k;
+    g.position.set(side ? 3.9 : -3.9, 4.35, -1.45); inner.add(g);
+    box(7.4, 7.3, 0.1, '#2c3742', 0, 0, 0, g);
+    mesh = new T.InstancedMesh(new T.SphereGeometry(0.185, 14, 10), soft('#ffffff', 0.14), DOT_MAX); mesh.frustumCulled = false; g.add(mesh); b.mesh = mesh;
+    for (k = 0; k < DOT_MAX; k++) { b.dots.push({ x: pile[k].x, y: pile[k].y, z: 0.2, tx: pile[k].x, ty: pile[k].y, wait: 0, col: PILE.clone(), tc: PILE.clone() }); mesh.setColorAt(k, PILE); }
+    return b;
+  }
+  function addFrame(b, f, color) {
+    var m = new T.Mesh(new T.PlaneGeometry(f.w, f.h), new T.MeshBasicMaterial({ color: color, transparent: true, opacity: 0, depthWrite: false }));
+    m.position.set(f.x0 + f.w / 2, f.top - f.h / 2, 0.08); b.g.add(m); b.frames.push(m); b.plan.push(f); b.fo.push(0); return f;
+  }
+  var L = makeBoard(0), R = makeBoard(1), fL = [], fR = [], x = 0, tw;
+  [0, 1, 2].forEach(function (k) { fL.push(addFrame(L, frameAt(-2.75, 2.2 - k * 1.3, 5, 2), AMBER)); });
+  fL.push(addFrame(L, frameAt(0.35, 2.2, 5, 2), '#f1f3ee'));
+  tw = FRAME_COLS.reduce(function (s, c) { return s + c * DOT_S + 0.2; }, 0) + 4 * 0.3; x = -tw / 2;
+  SIZES.forEach(function (s, k) { var f = frameAt(x, 2.2, FRAME_COLS[k], s / FRAME_COLS[k]); fR.push(addFrame(R, f, LIME)); x += f.w + 0.3; });
+  var tL = dyn(6.8, 0.56), tR = dyn(6.8, 0.56), eL = dyn(6.8, 0.5), eR = dyn(6.8, 0.5), wL = dyn(6.8, 0.6), wR = dyn(6.8, 0.6);
+  [[tL, 3.2, L], [tR, 3.2, R], [eL, -2.4, L], [eR, -2.4, R], [wL, -3.05, L], [wR, -3.05, R]].forEach(function (q) { q[0].mesh.position.set(0, q[1], 0.35); q[2].g.add(q[0].mesh); });
+  note('tens', -1.55, 2.7, L.g, { size: 0.34, color: MUTE, bg: false }); note('ones', 1.55, 2.7, L.g, { size: 0.34, color: MUTE, bg: false });
+  note('ten at a time, the rest stay loose', 0, -1.55, L.g, { size: 0.28, color: MUTE, bg: false });
+  note('each size doubles the one to its right', 0, -1.45, R.g, { size: 0.26, color: MUTE, bg: false });
+  var sz = [], bitOn = [], bitOff = [];
+  SIZES.forEach(function (s, k) {
+    var f = fR[k], cx = f.x0 + f.w / 2;
+    sz.push(note(String(s), cx, -0.1, R.g, { size: 0.36, bold: true }));
+    bitOn.push(note('1', cx, -0.78, R.g, { size: 0.36, color: LIME, bold: true })); bitOff.push(note('0', cx, -0.78, R.g, { size: 0.36, color: MUTE }));
+  });
+  note('1 = group used, 0 = not used', 0, -1.85, R.g, { size: 0.26, color: MUTE, bg: false });
+  function retarget(snap) {
+    var t = tensSplit(N), bits = doubleSplit(N), k, c, fill = 0, d;
+    function aim(b, k2, x2, y2, col) { var q = b.dots[k2]; q.tx = x2; q.ty = y2; q.tc.copy(col); q.wait = snap || calm ? 0 : k2 * 0.03; }
+    for (k = 0; k < DOT_MAX; k++) {
+      aim(L, k, pile[k].x, pile[k].y, PILE); aim(R, k, pile[k].x, pile[k].y, PILE);
+      if (!sorted || k >= N) continue;
+      c = k < 10 * t.tens ? cell(fL[Math.floor(k / 10)], k % 10) : cell(fL[3], k - 10 * t.tens);
+      aim(L, k, c.x, c.y, k < 10 * t.tens ? AMB : WHITE);
+    }
+    if (sorted) SIZES.forEach(function (s, sk) { for (c = 0; bits[sk] && c < s; c++) { d = cell(fR[sk], c); aim(R, fill, d.x, d.y, LIM); fill++; } });
+    if (snap) [L, R].forEach(function (b) { b.dots.forEach(function (q) { q.x = q.tx; q.y = q.ty; q.col.copy(q.tc); }); });
+  }
+  function texts() {
+    var t = tensSplit(N), bits = doubleSplit(N);
+    tL.set([[N + (N === 1 ? ' dot' : ' dots') + ', groups of ten', AMBER]]); tR.set([[N + (N === 1 ? ' dot' : ' dots') + ', groups of doubles', LIME]]);
+    eL.set(sorted ? [[tenSum(N), INK]] : [['not sorted yet', MUTE]]); eR.set(sorted ? [[dblSum(N), INK]] : [['not sorted yet', MUTE]]);
+    wL.set(sorted ? [['written  ', MUTE], [String(N), AMBER]] : [['', MUTE]]); wR.set(sorted ? [['written  ', MUTE], [dblWrite(N), LIME]] : [['', MUTE]]);
+    SIZES.forEach(function (s, k) { sz[k].visible = sorted; bitOn[k].visible = sorted && !!bits[k]; bitOff[k].visible = sorted && !bits[k]; });
+  }
+  retarget(true); texts();
+  return {
+    group: root, w: 8.0, h: 4.7, base: 2.85, picks: function () { return []; }, tips: function () { return []; },
+    setN: function (n) { var old = N; N = n; for (var k = old; k < n; k++) { L.dots[k].x = R.dots[k].x = pile[k].x; L.dots[k].y = R.dots[k].y = pile[k].y; } retarget(false); texts(); },
+    sort: function (s, snap) { sorted = s; retarget(!!snap); texts(); }, sorted: function () { return sorted; }, n: function () { return N; },
+    update: function (t, dt) {
+      var k = calm ? 1 : 1 - Math.exp(-dt * 6), t2 = tensSplit(N), bits = doubleSplit(N), wantL = [t2.tens > 0, t2.tens > 1, t2.tens > 2, t2.ones > 0];
+      [L, R].forEach(function (b) {
+        b.dots.forEach(function (d, j) {
+          var dist;
+          if (j >= N) { dummy.position.set(0, 0, -50); dummy.scale.setScalar(0.001); dummy.updateMatrix(); b.mesh.setMatrixAt(j, dummy.matrix); return; }
+          if (d.wait > 0) d.wait -= dt; else { d.x += (d.tx - d.x) * k; d.y += (d.ty - d.y) * k; d.col.lerp(d.tc, k); }
+          dist = Math.hypot(d.tx - d.x, d.ty - d.y); d.z = 0.2 + Math.min(0.5, dist * 0.12);
+          dummy.position.set(d.x, d.y, d.z); dummy.scale.setScalar(1); dummy.updateMatrix(); b.mesh.setMatrixAt(j, dummy.matrix); b.mesh.setColorAt(j, d.col);
+        });
+        b.mesh.instanceMatrix.needsUpdate = true; b.mesh.instanceColor.needsUpdate = true;
+        b.frames.forEach(function (m, j) {
+          var on = b.side ? !!bits[j] : wantL[j], want = !sorted ? 0 : on ? 0.2 : (b.side ? 0.05 : 0);
+          b.fo[j] += (want - b.fo[j]) * Math.min(1, dt * 6); m.material.opacity = b.fo[j]; m.visible = b.fo[j] > 0.004;
+        });
+      });
+    }
+  };
+}
+
+/* ---------- scene: adding two 4-bit numbers (step 4) ---------- */
+var PRE = [{ label: '7 + 1', a: 7, b: 1 }, { label: '5 + 6', a: 5, b: 6 }, { label: '9 + 9', a: 9, b: 9 }, { label: '15 + 1', a: 15, b: 1 }];
+function sceneAdd() {
+  var root = new T.Group(), inner = new T.Group(), XJ = function (j) { return (2 - j) * 2.3; }, a = 7, b = 1, m4 = true, walking = false, done = 4;
+  var CA = [], CB = [], CC = [], CR = [], picks = [], j, all;
+  inner.position.y = -1.3; root.add(inner);
+  box(16.6, 0.7, 3.6, '#34414e', 0, -3.35, 0, inner); box(16, 9.3, 0.3, '#222c36', 0, 1.65, -1.3, inner); box(10.6, 0.07, 0.1, '#6a7480', 0, -0.95, 0.1, inner);
+  var hl = new T.Mesh(new T.PlaneGeometry(2.0, 9.0), new T.MeshBasicMaterial({ color: H(LIME, 1.2), transparent: true, opacity: 0.1, depthWrite: false, blending: T.AdditiveBlending })); hl.position.set(0, 1.65, -1.1); inner.add(hl);
+  function put(cp, j2, y) { cp.g.position.set(XJ(j2), y, 0.2); inner.add(cp.g); }
+  for (j = 0; j < 4; j++) {
+    var wv = 1 << j; CA[j] = makeCap(LIME, 1.4, 0, 0.12); CB[j] = makeCap(LIME, 1.4, 0, 0.12); put(CA[j], j, 2.1); put(CB[j], j, 0.2);
+    [[CA[j], 'a', 'A'], [CB[j], 'b', 'B']].forEach(function (q) { q[0].body.userData = { row: q[1], col: 3 - j, tip: 'number ' + q[2] + ', worth ' + wv + ' · tap to flip' }; picks.push(q[0].body); });
+    if (j) { CC[j] = makeCap(AMBER, 0.95, 0, 0.1); put(CC[j], j, 3.95); }
+  }
+  for (j = 0; j < 5; j++) { CR[j] = makeCap(j === 4 ? CORAL : CYAN, 1.4, 0, 0.12); put(CR[j], j, -2.1); }
+  var plate = [1, 2, 4, 8, 16].map(function (v, k) { return note(String(v), XJ(k), 5.35, inner, { size: 0.36, color: MUTE }); });
+  note('worth', -6.8, 5.35, inner, { size: 0.3, color: MUTE, bg: false }); note('carry', -6.8, 3.95, inner, { size: 0.34, color: AMBER }); note('A', -6.8, 2.1, inner, { size: 0.4 }); note('+ B', -6.8, 0.2, inner, { size: 0.4 }); note('= sum', -6.8, -2.1, inner, { size: 0.4 });
+  var gone = note('dropped', XJ(4), 3.95, inner, { size: 0.34, color: CORAL });
+  var dA = dyn(2.1, 0.62), dB = dyn(2.1, 0.62), dS = dyn(2.1, 0.62);
+  [[dA, 2.1], [dB, 0.2], [dS, -2.1]].forEach(function (q) { q[0].mesh.position.set(6.95, q[1], 0.3); inner.add(q[0].mesh); });
+  function calc() { var r = addBits(bitsOf(a, 4), bitsOf(b, 4), 4), sum = a + b; return { a: a, b: b, sum: sum, bits: r.s, cin: r.cin, cout: r.out, overflow: sum > 15, shown: m4 ? sum & 15 : sum, m4: m4 }; }
+  function apply() {
+    var r = calc(), A = bitsOf(a, 4), B = bitsOf(b, 4), d = walking ? done : 4, k, show4 = !m4 || !!(r.cout && d >= 4);
+    for (k = 0; k < 4; k++) { CA[k].set(A[3 - k]); CB[k].set(B[3 - k]); CR[k].set(r.bits[3 - k], k < d); if (k) CC[k].set(r.cin[k], k <= d); }
+    CR[4].set(r.cout, d >= 4); CR[4].ghost(m4); CR[4].g.visible = show4; plate[4].visible = show4; gone.visible = m4 && r.overflow && d >= 4;
+    hl.visible = walking && d >= 1 && d <= 4; if (hl.visible) hl.position.x = XJ(d - 1);
+    dA.set([['= ', MUTE], [String(a), INK]]); dB.set([['= ', MUTE], [String(b), INK]]);
+    dS.set(d < 4 ? [['= ?', MUTE]] : [['= ', MUTE], [String(r.shown), m4 && r.overflow ? CORAL : LIME]]);
+  }
+  all = CA.concat(CB, CC.slice(1), CR);
+  apply();
+  return {
+    group: root, w: 8.7, h: 5.0, base: 3.3, picks: function () { return picks; }, tips: function () { return picks; }, calc: calc, apply: apply,
+    nums: function (x, y) { a = x; b = y; apply(); }, setM4: function (v) { m4 = v; apply(); },
+    setWalk: function (w, d) { walking = w; done = d; apply(); }, walk: function () { return { walking: walking, done: done }; },
+    flash: function (k) { CR[k].flash = 1; if (k) CC[k].flash = 1; },
+    update: function (t, dt) { all.forEach(function (cp) { cp.update(dt); }); }
+  };
+}
+
+/* ---------- scene: two levels versus ten, with noise (step 6, schematic) ---------- */
+function sceneSignal() {
+  var root = new T.Group(), N = 20, PS = 8, X0 = -7, X1 = 7, YL = -2.2, YH = 2.8, DX = (X1 - X0) / N, seed = 3, noise = 0.12, L = 2, i;
+  var seq2 = [], seq10 = [], R = [], sm = [], errs = 0, rnd;
+  function yOf(v) { return YL + v * (YH - YL); }
+  box(19.2, 0.6, 3.2, '#34414e', 0, -5.2, 0, root); box(18.4, 10, 0.3, '#222c36', 0, 0.1, -1.0, root);
+  var rails = new T.LineSegments(new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(new Float32Array(10 * 6), 3)), new T.LineBasicMaterial({ color: H(CYAN, 0.5), transparent: true, opacity: 0.55 })); rails.frustumCulled = false; root.add(rails);
+  var thr = new T.InstancedMesh(new T.BoxGeometry(1, 1, 1), new T.MeshBasicMaterial({ color: H(CORAL, 1.1) }), 9); root.add(thr);
+  var clean = new T.Line(new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(new Float32Array(N * 6), 3)), new T.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.6 })); clean.frustumCulled = false; root.add(clean);
+  var trace = new T.Line(new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(new Float32Array(N * PS * 3), 3)), new T.LineBasicMaterial({ color: H(CYAN, 1.5) })); trace.frustumCulled = false; root.add(trace);
+  var marks = new T.InstancedMesh(new T.SphereGeometry(0.16, 12, 10), new T.MeshBasicMaterial(), N); root.add(marks);
+  var cur = new T.Mesh(new T.PlaneGeometry(0.1, 6.4), new T.MeshBasicMaterial({ color: H(LIME, 1.8), transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending })); cur.position.set(X0, 0.3, 0.1); cur.visible = !calm; root.add(cur);
+  var rows = document.createElement('canvas'); rows.width = 1400; rows.height = 170; var rx = rows.getContext('2d'), rtex = new T.CanvasTexture(rows); rtex.minFilter = T.LinearFilter;
+  var rp = new T.Mesh(new T.PlaneGeometry(14, 1.7), new T.MeshBasicMaterial({ map: rtex, transparent: true, depthWrite: false })); rp.position.set(0, -3.75, -0.8); root.add(rp);
+  note('one wire: voltage over time · schematic', 0, 4.5, root, { size: 0.34, color: '#c4c9c1' }); note('noise is invented for this demo', 0, 3.95, root, { size: 0.28, color: AMBER, bg: false });
+  note('sent', -8.1, -3.35, root, { size: 0.34, color: MUTE, bg: false }); note('read', -8.1, -4.15, root, { size: 0.34, color: MUTE, bg: false });
+  var lab2 = [note('1 high', -8.0, yOf(1), root, { size: 0.3 }), note('0 low', -8.0, yOf(0), root, { size: 0.3 })], lab10 = [];
+  for (i = 0; i < 10; i++) lab10.push(note(String(i), -7.7, yOf(i / 9), root, { size: 0.26, color: MUTE }));
+  var tl2 = note('decision line', 5.6, yOf(0.5) + 0.5, root, { size: 0.34, color: CORAL }), tl10 = note('nine decision lines', 5.2, yOf(1) + 0.6, root, { size: 0.34, color: CORAL });
+  function draw() {
+    var seq = L === 2 ? seq2 : seq10, ps = trace.geometry.attributes.position, pc = clean.geometry.attributes.position, rl = rails.geometry.attributes.position, k, v, dec, bad, y, x0, c1 = H(LIME, 1.05), c2 = H(CORAL, 1.25), sent = '', read = [];
+    errs = 0;
+    for (i = 0; i < N * PS; i++) { v = levelV(seq[Math.floor(i / PS)], L) + noise * sm[i]; ps.setXYZ(i, X0 + (i + 0.5) * DX / PS, yOf(clamp(v, -0.25, 1.25)), 0); }
+    for (i = 0; i < N; i++) {
+      x0 = X0 + i * DX; y = yOf(levelV(seq[i], L)); pc.setXYZ(2 * i, x0, y, 0); pc.setXYZ(2 * i + 1, x0 + DX, y, 0);
+      k = i * PS + 4; v = levelV(seq[i], L) + noise * sm[k]; dec = decodeV(v, L); bad = dec !== seq[i]; if (bad) errs++;
+      dummy.position.set(X0 + (k + 0.5) * DX / PS, yOf(clamp(v, -0.25, 1.25)), 0.05); dummy.scale.setScalar(bad ? 1.6 : 1); dummy.updateMatrix(); marks.setMatrixAt(i, dummy.matrix); marks.setColorAt(i, bad ? c2 : c1);
+      read.push([dec, bad]);
+    }
+    for (k = 0; k < L; k++) { y = yOf(k / (L - 1)); rl.setXYZ(2 * k, X0, y, -0.7); rl.setXYZ(2 * k + 1, X1, y, -0.7); }
+    for (k = 0; k < L - 1; k++) { dummy.position.set(0, yOf((k + 0.5) / (L - 1)), -0.6); dummy.scale.set(X1 - X0, L === 2 ? 0.05 : 0.025, 0.03); dummy.updateMatrix(); thr.setMatrixAt(k, dummy.matrix); }
+    ps.needsUpdate = pc.needsUpdate = rl.needsUpdate = thr.instanceMatrix.needsUpdate = marks.instanceMatrix.needsUpdate = marks.instanceColor.needsUpdate = true; thr.count = L - 1; rails.geometry.setDrawRange(0, L * 2);
+    lab2.forEach(function (l) { l.visible = L === 2; }); lab10.forEach(function (l) { l.visible = L === 10; }); tl2.visible = L === 2; tl10.visible = L === 10;
+    rx.clearRect(0, 0, 1400, 170); rx.font = '600 54px ui-monospace, Menlo, Consolas, monospace'; rx.textAlign = 'center'; rx.textBaseline = 'middle';
+    seq.forEach(function (s, q) { rx.fillStyle = '#c4c9c1'; rx.fillText(String(s), (q + 0.5) * 70, 45); rx.fillStyle = read[q][1] ? CORAL : LIME; rx.fillText(String(read[q][0]), (q + 0.5) * 70, 125); });
+    rtex.needsUpdate = true;
+  }
+  function shuffle(s) {
+    var r = mulberry(s), raw = []; seed = s; seq2 = []; seq10 = [];
+    for (i = 0; i < N; i++) { seq2.push(r() < 0.5 ? 0 : 1); seq10.push(Math.floor(r() * 10)); }
+    for (i = 0; i < N * PS; i++) raw.push(r() * 2 - 1);
+    for (i = 0; i < N * PS; i++) sm[i] = 0.5 * raw[i] + 0.25 * (raw[Math.max(0, i - 1)] + raw[Math.min(N * PS - 1, i + 1)]);
+    draw();
+  }
+  shuffle(3);
+  return {
+    group: root, w: 9.9, h: 5.4, base: 3.8, picks: function () { return []; }, tips: function () { return []; },
+    reshuffle: function () { shuffle(seed + 1); }, setNoise: function (v) { noise = v; draw(); }, setLevels: function (v) { L = v; draw(); },
+    errors: function () { return errs; }, noise: function () { return noise; }, levels: function () { return L; }, count: N,
+    update: function (t) { if (!calm) cur.position.x = X0 + ((t * 0.12) % 1) * (X1 - X0); }
+  };
+}
+
+/* ---------- stage: renderer, camera, the studio environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'computer-science', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null, down = null;
+function pick(sc, cx, cy) {
+  var r = canvas.getBoundingClientRect(), list = sc.picks();
+  if (!list.length) return null;
+  ndc.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
+  var hit = ray.intersectObjects(list, false)[0]; return hit ? hit.object : null;
+}
+canvas.addEventListener('pointerdown', function (e) { tipEl.classList.remove('on'); down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerup', function (e) {
+  var d = down; down = null; if (!d || !ok || cur < 0) return;
+  if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || performance.now() - d.t > 600) return;
+  var o = pick(getScene(STAGES[cur].key), e.clientX, e.clientY); if (o && ctl && ctl.tap) ctl.tap(o.userData);
+});
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var o = pick(sc, ptr.x, ptr.y), r = canvas.getBoundingClientRect();
+  if (o && o.userData.tip) { tipEl.textContent = o.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<span></span>'; b.lastChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); }); wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start);
+  return { pick: pick, next: function () { pick((cur + 1) % items.length); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  inp.addEventListener('pointerdown', function () { inp.dataset.drag = '1'; }); inp.addEventListener('pointerup', function () { inp.dataset.drag = ''; });
+  el.appendChild(group); paint();
+  return { set: function (v) { if (inp.dataset.drag) return; inp.value = v; paint(); }, nudge: function (d) { inp.value = clamp(+inp.value + d * (o.step || 1) * (o.jump || 5), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+/* a row of on/off switches in the dock: the digit shows the state, and so does the lime fill */
+function bitRow(el, title, keys, labels, onFlip, half) {
+  var group = document.createElement('div'), row = document.createElement('div'), bs;
+  group.className = 'grp bitsg' + (half ? ' half' : ''); group.innerHTML = '<span class="lab">' + title + ' <em>' + keys + '</em></span>';
+  row.className = 'seg bits'; row.style.setProperty('--n', labels.length); row.setAttribute('role', 'group'); row.setAttribute('aria-label', title);
+  bs = labels.map(function (t, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Bit worth ' + t); b.title = 'Bit worth ' + t;
+    b.innerHTML = '<i>' + t + '</i><span>0</span>'; b.addEventListener('click', function () { onFlip(i); }); row.appendChild(b); return b;
+  });
+  group.appendChild(row); el.appendChild(group);
+  return { paint: function (arr) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', arr[i] ? 'true' : 'false'); b.lastChild.textContent = arr[i]; }); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+
+/* ---------- mini charts (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+function mtext(t, x, y, col, px, al) { mx.font = '400 ' + (px || 20) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = col || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function rrect(x, y, w, h, r, fill) { r = Math.min(r, w / 2, h / 2); mx.beginPath(); mx.moveTo(x + r, y); mx.arcTo(x + w, y, x + w, y + h, r); mx.arcTo(x + w, y + h, x, y + h, r); mx.arcTo(x, y + h, x, y, r); mx.arcTo(x, y, x + w, y, r); mx.closePath(); mx.fillStyle = fill; mx.fill(); }
+
+/* ---------- shared state across steps ---------- */
+var num = { v: 75 }, cnt = { run: false, acc: 0, max: 15, rate: 4, last: null }, dg = { v: 0, ev: null, run: false, acc: 0, hold: 0 }, dd = { n: 13, auto: 0 };
+function setNum(sc, v) { num.v = clamp(Math.round(v), 0, 255); sc.setValue(num.v); }
+function flipBit(sc, c) { num.v ^= 1 << (7 - c); sc.setValue(num.v); sfx((num.v >> (7 - c)) & 1 ? 'on' : 'off'); }
+var built = {}, builders = { digits: sceneDigits, dots: sceneDots, bank: sceneBank, add: sceneAdd, signal: sceneSignal };
+function getScene(key) { if (!built[key]) { built[key] = builders[key](); stage.add(built[key]); if (key === 'bank') built[key].setValue(num.v, true); } return built[key]; }
+
+/* ---------- steps ---------- */
+function colText(r, j) {
+  var cin = r.cin[j], a = (r.a >> j) & 1, b = (r.b >> j) & 1, t = a + b + cin, worth = 1 << j;
+  return 'Column ' + worth + ': ' + a + ' + ' + b + (cin ? ' + carry 1' : '') + ' = ' + t + '. ' + (t > 1 ? 'In binary ' + t + ' is written ' + t.toString(2) + ', so <span class="y">write ' + (t & 1) + ' and carry 1.</span>' : '<span class="y">It fits in one digit:</span> write ' + t + '.');
+}
+function whyAdd(sc) {
+  var r = sc.calc(), w = sc.walk();
+  if (!w.walking) return r.m4 && r.overflow ? r.sum + ' needs 5 bits but this machine keeps 4. <span class="y">The leftmost bit is dropped</span>, so it reads ' + r.shown + '.' : 'In binary <span class="y">1 + 1 = 10</span>: write 0, carry 1 to the next column. Press the button to walk the carries.';
+  return w.done < 1 ? 'Start at the right-hand column and move left. <span class="y">Press Next column.</span>' : colText(r, w.done - 1);
+}
+function dgSet(sc, v, stepped) {
+  var prev = dg.v; v = clamp(Math.round(v), 0, 120);
+  if (v !== prev) dg.ev = stepped && v === prev + 1 ? { prev: prev, cur: v } : null;
+  dg.v = v; sc.setValue(v, dg.ev);
+}
+function dgLast() { var e = dg.ev, c; if (!e) return 'none yet'; c = carryCols(e.prev); return c === 0 ? 'ones +1' : c === 1 ? 'ones to 0, tens +1' : 'ones, tens to 0'; }
+var STAGES = [
+  { id: 'digits', name: 'Digits', key: 'digits', why: 'Watch the <span class="y">ones column</span>. After 9 it has no digit left, so it goes back to 0 and the tens column adds 1.', hint: 'Jump to 9, 19 or 99 and press Add 1 · Space plays or pauses',
+    chart: { t: 'Digits in each column', k: '0 to 9' }, goLabel: function () { return dg.run ? 'Pause' : 'Play'; }, go: function () { dg.run = !dg.run; },
+    explain: { title: 'A new column starts after nine', sections: [
+      { h: 'What you see', p: ['The counter has three columns: ones, tens and hundreds. Each column shows one digit. We write numbers with ten digits: 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9.'] },
+      { h: 'How it works', p: ['The ones column uses its digits in order. At 9 it has none left, so it goes back to 0 and the tens column adds 1. That gives 10.', 'The same thing happens from 19 to 20: the ones column resets and the tens column moves from 1 to 2. At 99 both the ones and the tens columns are out of digits. Both reset to 0 and the hundreds column adds 1, which gives 100.'] },
+      { h: 'Common mix-up', p: ['There is no single digit for ten. It is written as 1 in the tens column and 0 in the ones column.'] },
+      { h: 'Next', p: ['The count skips from 21 to 97 so you do not wait. The next step sorts a pile of dots, then writes it with only two digits.'] }],
+      tryit: ['Press the 9 to 10 button, then Add 1, and watch which column resets.', 'Repeat with 19 to 20 and 99 to 100.'] },
+    pre: function () { dg.run = !calm; dg.hold = 0.8; dg.acc = 0; },
+    enter: function (sc) { sc.setValue(dg.v, dg.ev, true); },
+    mount: function (el, sc) {
+      function advance(auto) {
+        var p = dg.v, n = auto ? nextAuto(p) : (p >= 120 ? 0 : p + 1), c = n === p + 1 ? carryCols(p) : 0;
+        dgSet(sc, n, true); sfx(c > 1 ? 'thump' : c ? 'ping' : 'step'); dg.acc = 0;
+        if (auto) { if (n === 97) hint('Skipping ahead to 97'); if (n % 10 === 9 || c) dg.hold = 1.5; else if (n === 0) dg.hold = 0.8; }
+      }
+      var sl = slider(el, { title: 'Number', keys: '[ ]', min: 0, max: 120, jump: 1, val: dg.v, onInput: function (v) { dg.run = false; dgSet(sc, v, true); sfx('tick'); } });
+      var presets = [9, 19, 99], pg = seg(el, presets.map(function (v) { return { label: v + ' to ' + (v + 1), v: v }; }), function (it) { dg.run = false; dgSet(sc, it.v, false); sfx('tick'); }, null, { title: 'Jump to' });
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'btn ghost'; add.textContent = 'Add 1'; add.addEventListener('click', function () { dg.run = false; advance(false); }); el.appendChild(add);
+      var c = { next: function () { dg.run = !dg.run; hint(dg.run ? 'Playing' : 'Paused'); }, nudge: function (d) { dg.run = false; sl.nudge(d); },
+        frame: function (dt) { if (!dg.run) return; if (dg.hold > 0) { dg.hold -= dt; return; } dg.acc += dt * 2; if (dg.acc >= 1) advance(true); },
+        tick: function () { sl.set(dg.v); pg.pick(presets.indexOf(dg.v), true); } };
+      c.tick(); return c;
+    },
+    stats: function () { var d = dg.v % 10; return [['Count', String(dg.v), 'hot'], ['Ones digit', d === 9 ? '9, the last digit' : String(d)], ['Last step', dgLast()]]; },
+    draw: function () {
+      var e = dg.ev, c = e ? carryCols(e.prev) : -1, cw = 47, r, k, d;
+      [['hundreds', 2], ['tens', 1], ['ones', 0]].forEach(function (q, r) {
+        var j = q[1], y = 12 + r * 50, dig = Math.floor(dg.v / Math.pow(10, j)) % 10, hot = e ? (j < c ? CORAL : j === c ? LIME : '#ffffff') : '#ffffff';
+        mtext(q[0], 98, y + 26, '#9ea8c2', 14, 'right');
+        for (k = 0; k < 10; k++) { rrect(108 + k * cw, y, cw - 3, 36, 5, k === dig ? hot : 'rgba(255,255,255,0.08)'); mtext(String(k), 108 + k * cw + (cw - 3) / 2, y + 25, k === dig ? '#11160a' : '#6f7894', 16, 'center'); }
+      });
+      mtext('a column that passes 9 goes back to 0 and the next column adds 1', 300, 178, '#6f7894', 13, 'center');
+    } },
+  { id: 'dots', name: 'Dots', key: 'dots', why: 'Both boards hold the same pile. Look at the sizes on the right: <span class="y">each group is double the last.</span>', hint: 'Slide the number of dots · press Sort the pile',
+    chart: { t: 'Same pile, two groupings', k: 'out of 31' }, goLabel: function (sc) { return sc.sorted() ? 'Scatter again' : 'Sort the pile'; }, go: function (sc) { dd.auto = 0; sc.sort(!sc.sorted()); sfx('pop'); },
+    explain: { title: 'The same pile, grouped two ways', sections: [
+      { h: 'What you see', p: ['Both boards hold the same pile of dots. The left board sorts them into groups of ten and keeps the leftovers loose. The right board sorts them into groups of 16, 8, 4, 2 and 1, biggest first, and uses each size at most once.'] },
+      { h: 'How it works', p: ['With 13 dots, the left board makes 1 group of ten and has 3 loose dots, so it writes 13. The right board takes 8, then 4, skips 2 because only 1 dot is left, then takes 1. That is 8 + 4 + 0 + 1, written 1101.', 'Look at the sizes on the right: 1, 2, 4, 8, 16. Each one is exactly double the one before. Decimal groups by tens. Binary groups by doubles.'] },
+      { h: 'Common mix-up', p: ['1101 here does not mean one thousand one hundred and one. Each digit says whether that group size was used, so it reads 8 + 4 + 0 + 1 = 13.'] },
+      { h: 'Next', p: ['Each group size is a switch that is either used (1) or not used (0). The next step shows those switches.'] }],
+      tryit: ['Press the 13 button and read both writings.', 'Then try 16, which takes one group of 16, and 31, which uses every size.'] },
+    enter: function (sc) { if (sc.n() !== dd.n) sc.setN(dd.n); sc.sort(false, true); dd.auto = calm ? 0.01 : 0.9; },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Dots', keys: '[ ]', min: 1, max: DOT_MAX, jump: 1, val: dd.n, onInput: function (v) { dd.n = v; sc.setN(v); sfx('tick'); } });
+      var presets = [7, 13, 16, 31], pg = seg(el, presets.map(function (v) { return { label: String(v), v: v }; }), function (it) { dd.n = it.v; sc.setN(it.v); sfx('tick'); }, null, { title: 'Try' });
+      var c = { next: function () { $('go').click(); }, nudge: function (d) { sl.nudge(d); },
+        frame: function (dt) { if (dd.auto > 0) { dd.auto -= dt; if (dd.auto <= 0 && !sc.sorted()) { sc.sort(true); sfx('pop'); } } },
+        tick: function () { sl.set(dd.n); pg.pick(presets.indexOf(dd.n), true); } };
+      c.tick(); return c;
+    },
+    stats: function () { var n = dd.n; return [['Pile', n + (n === 1 ? ' dot' : ' dots')], ['By tens', tenSum(n)], ['Written', n + ' and ' + dblWrite(n), 'hot']]; },
+    draw: function () {
+      var n = dd.n, s = 572 / DOT_MAX, t = tensSplit(n), u = doubleSplit(n), x = 14, k;
+      mtext('groups of ten: ' + tenSum(n), 14, 30, AMBER, 15);
+      for (k = 0; k < t.tens; k++) { rrect(14 + k * 10 * s, 40, 10 * s - 2, 30, 5, AMBER); }
+      if (t.ones) rrect(14 + t.tens * 10 * s, 40, t.ones * s - 2, 30, 5, '#f1f3ee');
+      mtext('groups of doubles: ' + dblSum(n), 14, 108, LIME, 15);
+      SIZES.forEach(function (z, i) { if (!u[i]) return; rrect(x, 118, z * s - 2, 30, 5, LIME); if (z * s > 22) mtext(String(z), x + z * s / 2 - 1, 139, '#11160a', 15, 'center'); x += z * s; });
+      mtext('0', 14, 178, '#6f7894', 13); mtext('31', 586, 178, '#6f7894', 13, 'right'); mtext(n + ' dots', 300, 178, '#fff', 15, 'center');
+    } },
+  { id: 'places', name: 'Places', key: 'bank', why: 'Each binary column is worth <span class="y">twice</span> the one to its right. A number is the worths of the lit columns added up.', hint: 'Tap the switches, press 1–8, or drag the slider',
+    chart: { t: 'Column worths added up', k: 'out of 255' },
+    explain: { title: "Each column is worth double the one on its right", sections: [
+      { h: "What you see", p: ["Eight switches stand for eight columns. A lit switch is a 1 and a dark switch is a 0. The number above each switch is its worth: 1, 2, 4, 8, 16, 32, 64 and 128. The odometer shows the same number in decimal."] },
+      { h: "How it works", p: ["A binary number is the worths of the lit switches added up. Switch on 64, 8, 2 and 1 and you get 64 + 8 + 2 + 1 = 75, written 01001011. These worths are the group sizes from the Dots step, and each one is double the one on its right. A binary digit is called a bit."] },
+      { h: "In real life", p: ["Eight bits make one byte. A byte has 256 patterns, which here stand for 0 to 255. Computers also reuse the patterns for negative numbers (called two’s complement), which gives -128 to 127.", "Long bit strings are often written in hexadecimal. One hex digit stands for 4 bits, so 0100 1011 is 4B, which is 75."] }],
+      tryit: ["Switch on 64, 8, 2 and 1 and read 75.", "Then drag the slider to 255 and watch all eight switches turn on."] },
+    mount: function (el, sc) {
+      var row = bitRow(el, 'Switches', '1–8', PLACE, function (c) { flipBit(sc, c); }), pg;
+      var sl = slider(el, { title: 'Number', keys: '[ ]', min: 0, max: 255, val: num.v, onInput: function (v) { setNum(sc, v); sfx('tick'); } });
+      var presets = [5, 75, 170, 255]; pg = seg(el, presets.map(function (v) { return { label: String(v), v: v }; }), function (it) { setNum(sc, it.v); }, null, { title: 'Try' });
+      var c = { key: function (n) { flipBit(sc, n); }, tap: function (u) { flipBit(sc, u.col); }, nudge: function (d) { sl.nudge(d); }, next: function () { pg.next(); },
+        tick: function () { row.paint(bitsOf(num.v, 8)); sl.set(num.v); pg.pick(presets.indexOf(num.v), true); } };
+      sc.setValue(num.v); c.tick(); return c;
+    },
+    stats: function () { return [['Binary', binStr(num.v, 8), 'hot'], ['Decimal', String(num.v)], ['Switches on', popcount(num.v) + ' of 8']]; },
+    draw: function () {
+      var cum = 0, v = num.v, W = 572;
+      rrect(14, 62, W, 34, 8, 'rgba(255,255,255,0.08)');
+      PLACE.forEach(function (pv, c) {
+        if (!(v & pv)) return;
+        var w = pv / 255 * W, xx = 14 + cum / 255 * W; mx.fillStyle = c % 2 ? LIME : '#a9cf2e'; mx.fillRect(xx, 62, Math.max(w - 1.5, 1.5), 34);
+        if (w > 44) mtext(String(pv), xx + w / 2, 85, '#11160a', 15, 'center'); cum += pv;
+      });
+      mtext('0', 14, 118, '#6f7894', 14); mtext('255', 586, 118, '#6f7894', 14, 'right'); mtext(binSum(v, 8) + ' = ' + v, 300, 160, '#fff', 17, 'center');
+    } },
+  { id: 'counting', name: 'Binary count', key: 'bank', why: 'The right-hand bit flips on every count, the next every 2 counts, then 4, then 8: <span class="y">each column flips half as often.</span>', hint: 'Space plays or pauses · tap a switch to take over',
+    chart: { t: 'Bit pattern', k: 'one row per column' }, goLabel: function () { return cnt.run ? 'Pause' : 'Play'; }, go: function () { cnt.run = !cnt.run; },
+    explain: { title: "Counting in binary rolls over after every 1", sections: [
+      { h: "What you see", p: ["Press Play. The switches count in binary and the odometer counts the same numbers in decimal. In the chart, each row is one switch and a lit square means 1."] },
+      { h: "How it works", p: ["Decimal rolls over after 9, because 9 is its biggest digit. Binary has only 0 and 1, so it rolls over after 1: 1 + 1 gives 10, which is two.", "So the right-hand switch changes on every count, the next one every 2 counts, then every 4, then every 8. Each column changes half as often as the one on its right, which makes the stripes. Several switches can change at once. Going from 7 to 8 is 0111 to 1000, four switches, just as 99 to 100 changes three decimal digits."] },
+      { h: "Range", p: ["Four bits count from 0 to 15, which is 1111. One more step needs a fifth bit: 10000, which is 16."] }],
+      tryit: ["Slow the speed right down and watch the 8 switch stay off for eight counts, then stay on for eight."] },
+    pre: function () { cnt.acc = 0; cnt.last = null; cnt.run = !calm; if (num.v > cnt.max) num.v = 0; },
+    mount: function (el, sc) {
+      function advance() { var p = num.v; num.v = p >= cnt.max ? 0 : p + 1; sc.setValue(num.v); cnt.last = { bits: popcount(p ^ num.v), digits: digitDiff(p, num.v) }; sfx('step'); }
+      function take() { cnt.run = false; }
+      var row = bitRow(el, 'Switches', '1–8', PLACE, function (c) { take(); flipBit(sc, c); });
+      var sp = slider(el, { title: 'Speed', keys: '[ ]', min: 1, max: 24, jump: 2, val: cnt.rate, fmt: function (v) { return v / 2 + ' / s'; }, onInput: function (v) { cnt.rate = v; } });
+      var rg = seg(el, [{ label: '0 to 15', v: 15 }, { label: '0 to 255', v: 255 }], function (it) { cnt.max = it.v; if (num.v > cnt.max) { num.v = 0; sc.setValue(0); } cnt.last = null; }, cnt.max === 15 ? 0 : 1, { title: 'Count' });
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'btn ghost'; add.textContent = 'Add 1'; add.addEventListener('click', function () { take(); advance(); }); el.appendChild(add);
+      sc.setValue(num.v);
+      var c = { key: function (n) { take(); flipBit(sc, n); }, tap: function (u) { take(); flipBit(sc, u.col); }, next: function () { cnt.run = !cnt.run; hint(cnt.run ? 'Playing' : 'Paused'); }, nudge: function (d) { sp.nudge(d); },
+        frame: function (dt) { if (!cnt.run) return; cnt.acc += dt * cnt.rate / 2; while (cnt.acc >= 1) { cnt.acc -= 1; advance(); } }, tick: function () { row.paint(bitsOf(num.v, 8)); } };
+      c.tick(); return c;
+    },
+    stats: function () { var l = cnt.last, n = cnt.max > 15 ? 8 : 4; return [['Decimal', String(num.v), 'hot'], ['Binary', binStr(num.v, n)], ['Changed', l ? l.bits + (l.bits === 1 ? ' bit, ' : ' bits, ') + l.digits + (l.digits === 1 ? ' digit' : ' digits') : 'none yet']]; },
+    draw: function () {
+      var big = cnt.max > 15, cols = big ? 32 : 16, rows = big ? 5 : 4, start = big ? Math.floor(num.v / 32) * 32 : 0, cw = 500 / cols, ch = big ? 26 : 34, r, k, cx = num.v - start;
+      for (r = 0; r < rows; r++) {
+        var bit = rows - 1 - r, y = 10 + r * (ch + 4); mtext(String(1 << bit), 72, y + ch * 0.68, '#9ea8c2', 14, 'right');
+        for (k = 0; k < cols; k++) rrect(84 + k * cw, y, cw - 2, ch, 3, ((start + k) >> bit) & 1 ? LIME : 'rgba(255,255,255,0.08)');
+      }
+      mx.strokeStyle = '#fff'; mx.lineWidth = 2; mx.strokeRect(83 + cx * cw, 8, cw, rows * (ch + 4) + 2);
+      mtext('counts ' + start + ' to ' + (start + cols - 1) + (big ? ' (five lowest bits)' : ''), 84, 184, '#6f7894', 13);
+    } },
+  { id: 'adding', name: 'Adding', key: 'add', why: '', hint: 'Flip bits in A and B · try 15 + 1 on a 4-bit machine',
+    chart: { t: 'A + B', k: 'against the 4-bit limit' }, goLabel: function (sc) { var w = sc.walk(); return !w.walking ? 'Walk the carries' : w.done < 4 ? 'Next column' : 'Finish'; },
+    go: function (sc) {
+      var w = sc.walk(), n = !w.walking ? 0 : w.done + 1, r = sc.calc();
+      if (n > 4) { sc.setWalk(false, 4); } else { sc.setWalk(true, n); if (n) { var j = n - 1, t = ((r.a >> j) & 1) + ((r.b >> j) & 1) + r.cin[j]; sc.flash(j); sfx(t > 1 ? 'ping' : 'step'); if (j === 3 && r.cout && r.m4) sfx('thump'); } }
+      setWhy(whyAdd(sc));
+    },
+    explain: { title: "Adding in binary: carry when a column passes 1", sections: [
+      { h: "What you see", p: ["Numbers A and B are four switches each, and the bottom row is the sum. Amber switches show carries. The Machine control sets how many bits the answer can hold."] },
+      { h: "How it works", p: ["Add one column at a time from the right, as on paper. If a column adds up to more than the biggest digit, write the right-hand digit and carry 1 to the next column. In decimal the biggest digit is 9, so 5 + 5 = 10 writes 0 and carries 1.", "In binary the biggest digit is 1, so 1 + 1 = 10 writes 0 and carries 1. Try 7 + 1: 0111 + 0001 carries in every column and ends at 1000, which is 8."] },
+      { h: "Overflow", p: ["A real machine keeps a fixed number of bits. Four bits hold 0 to 15, so 15 + 1 = 10000 needs a fifth bit that a 4-bit machine does not have. It drops that bit and shows 0000. This is called overflow. A car odometer does the same when 999999 rolls to 000000."] }],
+      tryit: ["Pick 15 + 1, press Walk the carries, then switch the machine from 4-bit to 5-bit."] },
+    enter: function (sc) { sc.setWalk(false, 4); setWhy(whyAdd(sc)); },
+    mount: function (el, sc, st) {
+      var ra, rb, mg, pg;
+      function nums() { var r = sc.calc(); return [r.a, r.b]; }
+      function idle() { sc.setWalk(false, 4); setWhy(whyAdd(sc)); }
+      function flipAB(row, col) { var n = nums(), k = 3 - col, on; if (row === 'a') n[0] ^= 1 << k; else n[1] ^= 1 << k; on = (n[row === 'a' ? 0 : 1] >> k) & 1; sc.nums(n[0], n[1]); idle(); sfx(on ? 'on' : 'off'); }
+      ra = bitRow(el, 'Number A', '1–4', [8, 4, 2, 1], function (c) { flipAB('a', c); }, true); rb = bitRow(el, 'Number B', '5–8', [8, 4, 2, 1], function (c) { flipAB('b', c); }, true);
+      mg = seg(el, [{ label: '4-bit', v: true }, { label: '5-bit', v: false }], function (it) { sc.setM4(it.v); if (it.v && sc.calc().overflow) sfx('thump'); setWhy(whyAdd(sc)); }, sc.calc().m4 ? 0 : 1, { title: 'Machine' });
+      pg = seg(el, PRE, function (it) { sc.nums(it.a, it.b); idle(); }, null, { title: 'Try' });
+      var c = { key: function (n) { flipAB(n < 4 ? 'a' : 'b', n % 4); }, tap: function (u) { flipAB(u.row, u.col); }, next: function () { $('go').click(); },
+        tick: function () { var r = sc.calc(); ra.paint(bitsOf(r.a, 4)); rb.paint(bitsOf(r.b, 4)); var i = -1; PRE.forEach(function (p, k) { if (p.a === r.a && p.b === r.b) i = k; }); pg.pick(i, true); } };
+      c.tick(); return c;
+    },
+    stats: function (sc) { var r = sc.calc(); return [['A + B', r.a + ' + ' + r.b], ['Result', binStr(r.shown, r.m4 ? 4 : 5) + ' = ' + r.shown, r.m4 && r.overflow ? 'amber' : 'hot'], ['Overflow', r.m4 ? (r.overflow ? 'yes, ' + r.sum + ' > 15' : 'no') : 'none, 5 bits fit']]; },
+    draw: function (sc) {
+      var r = sc.calc(), s = 572 / 30, lx = 14 + 15 * s;
+      rrect(14, 62, 572, 34, 8, 'rgba(255,255,255,0.08)'); if (r.a) rrect(14, 62, Math.max(r.a * s, 4), 34, 6, LIME); if (r.b) rrect(14 + r.a * s, 62, Math.max(r.b * s, 4), 34, 6, CYAN);
+      mx.fillStyle = CORAL; mx.fillRect(lx, 48, 2.5, 62); mtext('4-bit limit 15', lx - 6, 40, CORAL, 14, 'right');
+      mtext('A ' + r.a, 14, 130, LIME, 15); mtext('B ' + r.b, 100, 130, CYAN, 15); mtext('sum ' + r.sum, 586, 130, r.sum > 15 ? CORAL : '#fff', 17, 'right');
+      mtext(binStr(r.a, 4) + ' + ' + binStr(r.b, 4) + ' = ' + binStr(r.sum, 5), 300, 170, '#9ea8c2', 15, 'center');
+    } },
+  { id: 'hardware', name: 'Hardware', key: 'signal', why: 'A wire only has to be <span class="y">high or low</span>, so wobble rarely matters. Ten levels crowd together and blur.', hint: 'Raise the noise · switch to ten levels',
+    chart: { t: 'Noise vs safe margin', k: '% of full swing' }, goLabel: 'New noise', go: function (sc) { sc.reshuffle(); sfx('tick'); },
+    explain: { title: "Two levels are easy for a wire to tell apart", sections: [
+      { h: "What you see", p: ["The wire sends 20 symbols in a row. The white line is what was sent, the blue trace is what arrives after noise, and the red lines are the decision lines the reader uses. The rows under the scene show what was sent and what was read."] },
+      { h: "How it works", p: ["In a computer a bit is a voltage on a wire: low (about 0 V) for 0 and higher for 1. The high voltage depends on the chip and is often between about 1 V and 5 V. The reader only decides whether the signal is above or below the halfway line.", "Real signals wobble from heat, nearby wires and power supply ripple. With two levels the wobble can reach about half of the full swing before a bit is misread. With ten levels in the same swing the margin is about 1/18 of it (~5.6%), nine times smaller."] },
+      { h: "In real life", p: ["Some flash memory stores several bits per cell using 4, 8 or 16 levels, with extra error correction. This picture is a schematic and the noise is invented."] }],
+      tryit: ["Set the noise to about 12%: two levels stay clean while ten levels start to misread.", "Then raise it to 60% and even two levels fail."] },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Noise', keys: '[ ]', min: 0, max: 60, val: Math.round(sc.noise() * 100), fmt: function (v) { return '±' + v + ' %'; }, onInput: function (v) { sc.setNoise(v / 100); } });
+      var sg = seg(el, [{ label: '2 levels (binary)', v: 2 }, { label: '10 levels (decimal digits)', v: 10 }], function (it) { sc.setLevels(it.v); }, sc.levels() === 2 ? 0 : 1, { title: 'Signal' });
+      return { next: function () { $('go').click(); }, nudge: function (d) { sl.nudge(d); }, key: function (n) { if (n < 2) sg.pick(n); } };
+    },
+    stats: function (sc) { var L = sc.levels(); return [['Levels', String(L)], ['Safe noise', '±' + (L === 2 ? '50' : '~5.6') + ' %'], ['Misread', sc.errors() + ' of ' + sc.count, sc.errors() ? 'coral' : 'hot']]; },
+    draw: function (sc) {
+      var s = 572 / 60, nx = 14 + sc.noise() * 100 * s;
+      mtext('two levels: safe up to ±50 %', 14, 38, CYAN, 15); rrect(14, 48, 50 * s, 24, 5, CYAN);
+      mtext('ten levels: safe up to ±~5.6 %', 14, 102, AMBER, 15); rrect(14, 112, Math.max(100 / 18 * s, 4), 24, 5, AMBER);
+      mx.fillStyle = CORAL; mx.fillRect(nx - 1.5, 44, 3, 100); mtext('noise ±' + Math.round(sc.noise() * 100) + ' %', nx > 480 ? nx - 8 : nx + 8, 172, CORAL, 15, nx > 480 ? 'right' : 'left');
+    } }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+function paintGo() { var s = STAGES[cur], g = $('go'); if (!s || !s.go) { g.hidden = true; return; } var t = typeof s.goLabel === 'function' ? s.goLabel(getScene(s.key)) : s.goLabel; g.hidden = false; if (g.textContent !== t) g.textContent = t; }
+var stageBtns = STAGES.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STAGES.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STAGES[i], sc; if (s.pre) s.pre(); sc = getScene(s.key);
+    stage.show(sc); cur = i; tipEl.classList.remove('on');
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STAGES.length; setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; s.state = s.state || {}; if (s.enter) s.enter(sc, s.state);
+    ctl = s.mount(c, sc, s.state) || null; paintGo();
+    renderStats(s.stats(sc, s.state));
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+$('go').addEventListener('click', function () { var s = STAGES[cur]; if (s.go) { s.go(getScene(s.key), s.state); paintGo(); } });
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Room backdrop on' : 'Room backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' +
+    x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #go, #explain')) sfx('ui'); });
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range', onBtn = e.target && e.target.closest && e.target.closest('button, a');
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-8]$/.test(k)) { if (ctl && ctl.key) ctl.key(+k - 1); }
+  else if (k === ' ' && !onBtn && ctl && ctl.next) { e.preventDefault(); ctl.next(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STAGES[cur], sc = getScene(s.key);
+  if (ctl && ctl.frame) ctl.frame(dt);
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats(sc, s.state)); if (ctl && ctl.tick) ctl.tick(); paintGo(); mx.clearRect(0, 0, MW, MH); s.draw(sc, s.state); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var names = STAGES.map(function (s) { return s.id; }), i0 = names.indexOf((location.hash || '').slice(1));
+window.addEventListener('hashchange', function () { var j = names.indexOf((location.hash || '').slice(1)); if (j >= 0) go(j); });
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

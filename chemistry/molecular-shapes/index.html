@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Molecular Shapes — Why Molecules Bend</title>
+<meta name="description" content="An interactive VSEPR model: electron groups repel and spread out, and lone pairs take more room than bonds, so they bend molecules into their shapes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<style>
+/* an impossible X/E combination is greyed out and cannot be pressed */
+.seg button:disabled { opacity: 0.28; cursor: not-allowed; }
+.seg button:disabled:hover { background: none; color: var(--ink-2); }
+/* long shape names such as trigonal bipyramidal need more of the row than the shared default */
+@media (min-width: 901px) { .stat b { max-width: 80%; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D model of a molecule on a stand"><canvas id="gl"></canvas><div id="loading">Setting up the bench…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Chemistry</span><span id="tagStage">Step 1 of 3</span></div>
+        <h1>Why molecules <em>bend</em></h1>
+        <p>Electron groups around an atom repel each other and spread out as far as they can. Lone pairs push harder than bonds, and that is what bends a molecule.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1">
+      <div class="grp"><span class="lab">Step <em>1–3 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#chemistry" title="All Chemistry concepts" aria-label="All Chemistry concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Backdrop (B)" aria-label="Backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="How it works (?)" aria-label="How it works"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Why molecules bend</h2>
+    <p>This is the <b>VSEPR</b> model (valence shell electron pair repulsion). Count the electron groups around a central atom, and they arrange themselves as far apart as possible. A group is a lone pair or a whole bond, so a double or triple bond counts once. The shape name describes where the <b>atoms</b> end up.</p>
+    <h3>1 · Groups</h3>
+    <p>Two to six groups, all bonding. The angle between neighbours shrinks as groups are added: 180°, 120°, ~109.5°, then 90° (with 120° too for five).</p>
+    <h3>2 · Lone pairs</h3>
+    <p>Swap bonds for lone pairs in AXnEm notation. Lone pairs are drawn as soft lobes. Greyed-out buttons are combinations this page does not model.</p>
+    <h3>3 · Real molecules</h3>
+    <p>Eight real molecules loaded into the model, with their measured angles. Approximate values carry a <code>~</code>.</p>
+    <h3>Limits</h3>
+    <p>VSEPR predicts the arrangement, not energies, and it is less reliable for transition metal compounds. The model is drawn at the ideal angles, so it does not show the small squeeze that lone pairs cause. Atom sizes, colours and bond lengths are schematic and not to scale.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>3</code> or <code>←</code> <code>→</code> step · <code>Space</code> next option · <code>[</code> <code>]</code> previous or next · <code>E</code> explain this step · <code>A</code> angle labels · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Schematic and educational.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/chemlab.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- helpers ---------- */
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* shared look from the stage: matte shaded finish and readable in-scene text */
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', CORAL = '#ff6b86', LIME = '#c8f03c';
+
+/* ---------- geometry (pure maths, plain arrays) ----------
+ * Each group count has one arrangement of directions. The lone-pair order says which slots a lone pair takes first:
+ * equatorial spots of a trigonal bipyramid, and opposite (trans) spots of an octahedron.
+ * Axes are tilted so no group points straight down at the stand and flat shapes open toward the camera. */
+/* MATH START */
+var TILT = 50 * Math.PI / 180, SA = Math.sin(TILT), CA = Math.cos(TILT);
+var AXD = [0, CA, -SA], BXD = [0, SA, CA], R1 = 1 / Math.sqrt(3), R2 = Math.SQRT2 / Math.sqrt(3);
+function neg(v) { return [-v[0], -v[1], -v[2]]; }
+function roty(v, deg) { var p = deg * Math.PI / 180, c = Math.cos(p), s = Math.sin(p); return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c]; }
+/* a turn about the vertical axis so no two groups line up behind each other from the default view */
+function turn(list) { return list.map(function (v) { return roty(v, 35); }); }
+function eqd(deg) { var p = deg * Math.PI / 180; return [Math.sin(p), Math.cos(p) * BXD[1], Math.cos(p) * BXD[2]]; }
+var GEO = {
+  2: { dirs: [[1, 0, 0], [-1, 0, 0]], lone: [] },
+  3: { dirs: [[0, 1, 0], [-Math.sqrt(3) / 2, -0.5, 0], [Math.sqrt(3) / 2, -0.5, 0]], lone: [0] },
+  4: { dirs: turn([[-R2, R1, 0], [R2, R1, 0], [0, -R1, R2], [0, -R1, -R2]]), lone: [3, 2] },
+  5: { dirs: turn([AXD, neg(AXD), eqd(120), eqd(240), eqd(0)]), lone: [2, 3, 4] },
+  6: { dirs: turn([AXD, neg(AXD), [1, 0, 0], [-1, 0, 0], BXD, neg(BXD)]), lone: [0, 1] }
+};
+var MAXE = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 2 };
+var SHAPE = { '2,0': 'linear', '3,0': 'trigonal planar', '2,1': 'bent', '4,0': 'tetrahedral', '3,1': 'trigonal pyramidal', '2,2': 'bent', '5,0': 'trigonal bipyramidal', '4,1': 'seesaw', '3,2': 'T-shaped', '2,3': 'linear', '6,0': 'octahedral', '5,1': 'square pyramidal', '4,2': 'square planar' };
+function valid(x, e) { var n = x + e; return x >= 2 && e >= 0 && n >= 2 && n <= 6 && e <= MAXE[n]; }
+function angDeg(a, b) { var d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; return Math.acos(clamp(d, -1, 1)) * 180 / Math.PI; }
+function fmtAng(a) { var r = Math.round(a * 10) / 10; return (r % 1 ? r.toFixed(1) : String(r)) + '°'; }
+/* slot indices that carry a bond, and which carry a lone pair */
+function slots(x, e) {
+  var g = GEO[x + e], lone = g.lone.slice(0, e), bonds = [], i;
+  for (i = 0; i < x + e; i++) if (lone.indexOf(i) < 0) bonds.push(i);
+  return { bonds: bonds, lone: lone };
+}
+/* every distinct angle between two bonds, largest first */
+function idealAngles(x, e) {
+  var g = GEO[x + e], b = slots(x, e).bonds, seen = {}, out = [], i, j, a, key;
+  for (i = 0; i < b.length; i++) for (j = i + 1; j < b.length; j++) { a = angDeg(g.dirs[b[i]], g.dirs[b[j]]); key = Math.round(a * 10); if (!seen[key]) { seen[key] = 1; out.push(a); } }
+  return out.sort(function (p, q) { return q - p; });
+}
+/* one bond pair per distinct angle (the one nearest the camera), skipping 180 unless it is the only one */
+function pickArcs(x, e) {
+  var g = GEO[x + e], b = slots(x, e).bonds, best = {}, keys = [], i, j, a, key, m, score, out;
+  for (i = 0; i < b.length; i++) for (j = i + 1; j < b.length; j++) {
+    a = angDeg(g.dirs[b[i]], g.dirs[b[j]]); key = Math.round(a * 10);
+    m = [g.dirs[b[i]][0] + g.dirs[b[j]][0], g.dirs[b[i]][1] + g.dirs[b[j]][1], g.dirs[b[i]][2] + g.dirs[b[j]][2]]; score = (m[1] * 0.3 - Math.abs(m[2])) / Math.max(Math.hypot(m[0], m[1], m[2]), 1e-6);
+    if (!best[key]) { best[key] = { i: b[i], j: b[j], deg: a, score: score }; keys.push(key); } else if (score > best[key].score + 1e-9) best[key] = { i: b[i], j: b[j], deg: a, score: score };
+  }
+  keys.sort(function (p, q) { return q - p; });
+  out = keys.filter(function (k) { return k < 1795; });
+  if (!out.length) out = keys;
+  return out.slice(0, 3).map(function (k) { return best[k]; });
+}
+function notation(x, e) { return 'AX' + x + (e ? 'E' + (e > 1 ? e : '') : ''); }
+/* MATH END */
+
+/* ---------- scene: one molecule on a stand ---------- */
+var ELEM = {
+  H: { col: '#f4f4f0', r: 0.3, n: 'hydrogen' }, B: { col: '#e8a8a0', r: 0.5, n: 'boron' }, C: { col: '#5c6370', r: 0.5, n: 'carbon' },
+  N: { col: '#5b7cf0', r: 0.5, n: 'nitrogen' }, O: { col: '#e5534b', r: 0.5, n: 'oxygen' }, F: { col: '#7ad35a', r: 0.42, n: 'fluorine' },
+  P: { col: '#f0903a', r: 0.62, n: 'phosphorus' }, S: { col: '#e8d84a', r: 0.62, n: 'sulfur' }, Cl: { col: '#38b866', r: 0.58, n: 'chlorine' },
+  Xe: { col: '#5bc8d6', r: 0.72, n: 'xenon' }
+};
+var GEN_C = { col: '#ffb454', r: 0.62, n: '' }, GEN_O = { col: CYAN, r: 0.42, n: '' };
+function sceneMolecule() {
+  var root = new T.Group(), mol = new T.Group(), RB = 2.2, FLOOR = -3.6, YAX = new T.Vector3(0, 1, 0), q = new T.Quaternion(), tipMeshes = [], i;
+  root.add(mol);
+  /* stand: a rod from the work surface up to the central atom */
+  var plate = new T.Mesh(new T.CylinderGeometry(1.25, 1.35, 0.14, 40), soft('#7d8798', 0.06)); plate.position.y = FLOOR + 0.08; root.add(plate);
+  var collar = new T.Mesh(new T.CylinderGeometry(0.22, 0.34, 0.4, 20), soft('#98a2b4', 0.06)); collar.position.y = FLOOR + 0.3; root.add(collar);
+  var rodTop = -0.5, rodBot = FLOOR + 0.4, rod = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, rodTop - rodBot, 12), soft('#98a2b4', 0.06)); rod.position.y = (rodTop + rodBot) / 2; root.add(rod);
+
+  var sph = new T.SphereGeometry(1, 28, 20), cyl = new T.CylinderGeometry(1, 1, 1, 12);
+  /* teardrop lobe, tip at the nucleus, fat end out in space: a lone pair is wider than a bond */
+  var prof = [], u;
+  for (u = 0; u <= 1.0001; u += 0.04) prof.push(new T.Vector2(0.68 * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(Math.min(u, 1), 1.4))), 0.8), 0.3 + u * 1.65));
+  var lobeGeo = new T.LatheGeometry(prof, 28);
+  var cMat = soft(GEN_C.col, 0.12), oMat = soft(GEN_O.col, 0.12), sMat = soft('#cfd6e8', 0.1);
+  var lMat = soft('#b57ae6', 0.45, { transparent: true, opacity: 0.5, depthWrite: false, side: T.DoubleSide });
+  var dotMat = new T.MeshBasicMaterial({ color: H('#f4e9ff', 1.3) });
+  var center = new T.Mesh(sph, cMat); center.scale.setScalar(GEN_C.r); mol.add(center); tipMeshes.push(center);
+  var S = [];
+  for (i = 0; i < 6; i++) {
+    var s = { dir: new T.Vector3(0, 1, 0), tdir: new T.Vector3(0, 1, 0), bond: 0, tBond: 0, lobe: 0, tLobe: 0 };
+    s.stick = new T.Mesh(cyl, sMat); s.atom = new T.Mesh(sph, oMat); s.lobeM = new T.Mesh(lobeGeo, lMat);
+    [-1, 1].forEach(function (sg) { var d = new T.Mesh(sph, dotMat); d.scale.setScalar(0.075); d.position.set(sg * 0.2, 1.2, 0); s.lobeM.add(d); });
+    s.stick.userData.tip = 'bonding pair · shared electrons'; s.lobeM.userData.tip = 'lone pair · takes more room than a bond';
+    s.stick.visible = s.atom.visible = s.lobeM.visible = false;
+    mol.add(s.stick); mol.add(s.atom); mol.add(s.lobeM); tipMeshes.push(s.stick, s.atom, s.lobeM); S.push(s);
+  }
+  /* angle arcs and their labels, built once the shape has settled */
+  var arcMat = new T.MeshBasicMaterial({ color: H(LIME, 1.5) }), arcs = [], arcLabels = [], pending = [], settled = true, ready = false, showAngles = true, lblCache = {}, titleLbl = null;
+  function cached(text, o) { var k = text + '|' + (o.color || ''); if (!lblCache[k]) { lblCache[k] = label(text, o); lblCache[k].visible = false; mol.add(lblCache[k]); } return lblCache[k]; }
+  function clearArcs() { arcs.forEach(function (m) { mol.remove(m); m.geometry.dispose(); }); arcs = []; arcLabels.forEach(function (l) { l.visible = false; }); arcLabels = []; }
+  function arcPoints(a, b, r) {
+    var dot = clamp(a.dot(b), -1, 1), ang = Math.acos(dot), p = new T.Vector3(), pts = [], n = 24, k, c, sn;
+    if (dot < -0.999) { p.set(a.y, -a.x, 0); if (p.lengthSq() < 1e-4) p.set(0, 1, 0); p.normalize(); if (p.y < 0) p.negate(); } else p.copy(b).addScaledVector(a, -dot).normalize();
+    for (k = 0; k <= n; k++) { c = Math.cos(ang * k / n); sn = Math.sin(ang * k / n); pts.push(new T.Vector3().copy(a).multiplyScalar(c * r).addScaledVector(p, sn * r)); }
+    var mid = new T.Vector3().copy(a).multiplyScalar(Math.cos(ang / 2)).addScaledVector(p, Math.sin(ang / 2));
+    return { pts: pts, mid: mid };
+  }
+  function buildArcs() {
+    clearArcs(); settled = true; if (!showAngles) return;
+    pending.forEach(function (a) {
+      var r = arcPoints(S[a.i].tdir, S[a.j].tdir, 1.25), m = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(r.pts), 24, 0.035, 6), arcMat);
+      mol.add(m); arcs.push(m);
+      var l = cached(fmtAng(a.deg), { size: 0.3, color: LIME }); l.position.copy(r.mid).multiplyScalar(1.85); l.visible = true; arcLabels.push(l);
+    });
+  }
+  function setTitle(text) {
+    if (titleLbl) titleLbl.visible = false;
+    titleLbl = cached(text, { size: 0.36, color: '#dbe4ee' }); titleLbl.position.set(0, 3.0, 0); titleLbl.visible = true;
+  }
+  function applyElem(c, o) {
+    c = c || GEN_C; o = o || GEN_O;
+    cMat.color.set(c.col); cMat.emissive.set(c.col).multiplyScalar(0.12); oMat.color.set(o.col); oMat.emissive.set(o.col).multiplyScalar(0.12);
+    center.scale.setScalar(c.r); center.userData.tip = c.n ? 'central atom · ' + c.n : 'central atom (A)';
+    S.forEach(function (s) { s.atom.scale.setScalar(o.r); s.atom.userData.tip = o.n ? o.n + ' atom' : 'bonded atom (X)'; });
+    S.forEach(function (s) { s.outR = o.r; });
+  }
+  applyElem();
+  var api = {
+    group: root, w: 3.5, h: 3.5, base: 1.9,
+    tips: function () { return tipMeshes.filter(function (m) { return m.visible; }); },
+    setAngles: function (on) { showAngles = !!on; if (settled) buildArcs(); },
+    anglesOn: function () { return showAngles; },
+    setTitle: setTitle,
+    /* x bonding pairs, e lone pairs; c and o are optional elements for the central and bonded atoms */
+    setModel: function (x, e, c, o, instant) {
+      if (!valid(x, e)) return;
+      var g = GEO[x + e], sl = slots(x, e), n = x + e;
+      applyElem(c ? ELEM[c] : null, o ? ELEM[o] : null);
+      S.forEach(function (s, k) {
+        var act = k < n, isLone = sl.lone.indexOf(k) >= 0;
+        if (act) { if (s.bond + s.lobe < 0.02 || instant) s.dir.fromArray(g.dirs[k]); s.tdir.fromArray(g.dirs[k]); }
+        s.tBond = act && !isLone ? 1 : 0; s.tLobe = act && isLone ? 1 : 0;
+        if (instant) { s.bond = s.tBond; s.lobe = s.tLobe; }
+      });
+      pending = pickArcs(x, e); clearArcs(); settled = false;
+    },
+    update: function (t, dt) {
+      var k = calm ? 1 : 1 - Math.exp(-dt * 7), off = 0, d;
+      S.forEach(function (s, idx) {
+        s.dir.lerp(s.tdir, k); if (s.dir.lengthSq() < 1e-4) s.dir.copy(s.tdir); s.dir.normalize();
+        s.bond += (s.tBond - s.bond) * k; s.lobe += (s.tLobe - s.lobe) * k;
+        if (Math.abs(s.bond - s.tBond) < 0.003) s.bond = s.tBond; if (Math.abs(s.lobe - s.tLobe) < 0.003) s.lobe = s.tLobe;
+        if (s.tBond + s.tLobe > 0) { d = s.dir.distanceTo(s.tdir) + Math.abs(s.bond - s.tBond) + Math.abs(s.lobe - s.tLobe); if (d > off) off = d; }
+        q.setFromUnitVectors(YAX, s.dir);
+        var b = s.bond, l = s.lobe;
+        s.stick.visible = s.atom.visible = b > 0.01; s.lobeM.visible = l > 0.01;
+        if (b > 0.01) {
+          var L = RB * b; s.stick.position.copy(s.dir).multiplyScalar(L / 2); s.stick.scale.set(0.085, L, 0.085); s.stick.quaternion.copy(q);
+          s.atom.position.copy(s.dir).multiplyScalar(L); s.atom.scale.setScalar(s.outR * b);
+        }
+        if (l > 0.01) { s.lobeM.quaternion.copy(q); s.lobeM.scale.setScalar(l * (calm ? 1 : 1 + 0.03 * Math.sin(t * 1.8 + idx))); }
+      });
+      if (!settled && off < 0.004) { S.forEach(function (s) { if (s.tBond + s.tLobe > 0) s.dir.copy(s.tdir); }); buildArcs(); if (ready) sfx('blip'); }
+    }
+  };
+  api.setModel(2, 0, null, null, true); buildArcs(); ready = true;
+  return api;
+}
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'chemistry', fallbackText: 'This model needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null;
+canvas.addEventListener('pointerdown', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var r = canvas.getBoundingClientRect(); ndc.set((ptr.x - r.left) / r.width * 2 - 1, -((ptr.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var hit = ray.intersectObjects(sc.tips(), false)[0];
+  if (hit && hit.object.userData.tip) { tipEl.textContent = hit.object.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<span></span>'; b.firstChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start);
+  return { pick: pick, dis: function (i, v) { bs[i].disabled = !!v; }, cur: function () { return cur; } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+/* angle labels switch, shared by every step */
+var angSeg = null;
+function anglesSeg(el, sc) {
+  angSeg = seg(el, [{ label: 'On', v: true }, { label: 'Off', v: false }], function (it) { sc.setAngles(it.v); }, sc.anglesOn() ? 0 : 1, { title: 'Angle labels <em>A</em>' });
+}
+
+/* ---------- mini charts (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+function mtext(t, x, y, col, px, al) { mx.font = '400 ' + (px || 20) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = col || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function rrect(x, y, w, h, r, fill) { r = Math.min(r, w / 2, h / 2); mx.beginPath(); mx.moveTo(x + r, y); mx.arcTo(x + w, y, x + w, y + h, r); mx.arcTo(x + w, y + h, x, y + h, r); mx.arcTo(x, y + h, x, y, r); mx.arcTo(x, y, x + w, y, r); mx.closePath(); mx.fillStyle = fill; mx.fill(); }
+/* four groups: real angles against the ideal tetrahedral angle, on a number line (dots, so no truncated bars) */
+var FAMILY = [{ k: '2,2', name: 'H2O', v: 104.5 }, { k: '3,1', name: 'NH3', v: 107 }, { k: '4,0', name: 'CH4', v: 109.5 }];
+function drawFamily(selKey) {
+  var x0 = 40, x1 = 570, lo = 100, hi = 112, X = function (v) { return lerp(x0, x1, (v - lo) / (hi - lo)); }, y = 112;
+  mx.strokeStyle = 'rgba(255,255,255,0.25)'; mx.lineWidth = 2; mx.beginPath(); mx.moveTo(x0, y); mx.lineTo(x1, y); mx.stroke();
+  [100, 104, 108, 112].forEach(function (v) { mx.beginPath(); mx.moveTo(X(v), y - 5); mx.lineTo(X(v), y + 5); mx.stroke(); mtext(v + '°', X(v), y + 28, '#8a93ad', 17, 'center'); });
+  mx.setLineDash([5, 5]); mx.strokeStyle = LIME; mx.lineWidth = 1.5; mx.beginPath(); mx.moveTo(X(109.5), 34); mx.lineTo(X(109.5), y); mx.stroke(); mx.setLineDash([]);
+  mtext('ideal 109.5°', X(109.5) - 8, 28, LIME, 17, 'right');
+  FAMILY.forEach(function (f) {
+    var on = f.k === selKey; mx.beginPath(); mx.arc(X(f.v), y, on ? 11 : 7, 0, 7); mx.fillStyle = on ? CORAL : CYAN; mx.fill();
+    mtext(f.name, X(f.v), y - 22, on ? '#fff' : '#b4bccf', 19, f.v > 109 ? 'right' : 'center');
+  });
+  mtext('measured, ~ approximate', 14, 184, '#9ea8c2', 16);
+}
+
+/* ---------- steps ---------- */
+var built = null;
+function getScene() { if (!built) { built = sceneMolecule(); stage.add(built); } return built; }
+var SPACE = [];
+(function () { for (var n = 2; n <= 6; n++) for (var e = 0; e <= 3; e++) if (valid(n - e, e)) SPACE.push([n - e, e]); })();
+var EXAMPLE = { '2,0': 'CO2 · 180°', '3,0': 'BF3 · 120°', '2,1': 'SO2 · ~119°', '4,0': 'CH4 · ~109.5°', '3,1': 'NH3 · ~107°', '2,2': 'H2O · ~104.5°', '5,0': 'PCl5', '4,1': 'SF4', '3,2': 'ClF3', '2,3': 'XeF2 · 180°', '6,0': 'SF6 · 90°', '5,1': 'BrF5', '4,2': 'XeF4 · 90°' };
+var MOLS = [
+  { f: 'CO2', c: 'C', o: 'O', x: 2, e: 0, name: 'carbon dioxide', real: '180°' },
+  { f: 'BF3', c: 'B', o: 'F', x: 3, e: 0, name: 'boron trifluoride', real: '120°' },
+  { f: 'CH4', c: 'C', o: 'H', x: 4, e: 0, name: 'methane', real: '~109.5°' },
+  { f: 'NH3', c: 'N', o: 'H', x: 3, e: 1, name: 'ammonia', real: '~107°' },
+  { f: 'H2O', c: 'O', o: 'H', x: 2, e: 2, name: 'water', real: '~104.5°' },
+  { f: 'PCl5', c: 'P', o: 'Cl', x: 5, e: 0, name: 'phosphorus pentachloride', real: '90° and 120°' },
+  { f: 'SF6', c: 'S', o: 'F', x: 6, e: 0, name: 'sulfur hexafluoride', real: '90°' },
+  { f: 'XeF4', c: 'Xe', o: 'F', x: 4, e: 2, name: 'xenon tetrafluoride', real: '90°' }
+];
+function angText(x, e) { return idealAngles(x, e).map(fmtAng).join(' · '); }
+function cycle(i, d, n) { return (i + d + n) % n; }
+
+var STAGES = [
+  { id: 'groups', name: 'Groups', why: 'Groups repel, so they spread out. <span class="y">More groups, smaller angles.</span>', hint: 'Pick a group count · drag to orbit',
+    chart: { t: 'Smallest ideal angle', k: 'by group count' },
+    explain: { title: 'Why electron groups spread out', body: [
+      'Around a central atom, every <b>electron group</b> (a lone pair, or a whole single, double or triple bond) is a cloud of negative charge. Like charges repel, so the groups settle as far apart as they can. Counting groups is the first move of the <b>VSEPR</b> model.',
+      'Two groups end up 180° apart (linear). Three spread to 120° in a flat triangle. Four point to the corners of a tetrahedron, ~109.5° apart. Five make a trigonal bipyramid: three equatorial groups 120° apart, and two axial groups at 90° to them. Six point along the axes of an octahedron, 90° apart.',
+      'Here every group is a bond, so the atoms sit where the groups are. A double bond counts as one group, so CO2 (two double bonds) has two groups and is linear. VSEPR is a simple model: it predicts main-group shapes well but gives no energies and is less reliable for transition metals.'], tryit: 'Step the group count from 2 to 6 and watch the angle labels shrink as each group gets less room.' },
+    mount: function (el, sc, st) {
+      var sg = seg(el, [2, 3, 4, 5, 6].map(function (n) { return { label: String(n), v: n }; }), function (it) { st.n = it.v; sc.setModel(it.v, 0); sc.setTitle(SHAPE[it.v + ',0']); }, st.n - 2, { title: 'Electron groups <em>[ ]</em>' });
+      anglesSeg(el, sc);
+      return { next: function () { sg.pick(cycle(sg.cur(), 1, 5)); }, nudge: function (d) { sg.pick(clamp(sg.cur() + d, 0, 4)); } };
+    },
+    enter: function (sc, st) { st.n = st.n || 4; sc.setModel(st.n, 0); sc.setTitle(SHAPE[st.n + ',0']); },
+    stats: function (sc, st) { return [['Groups', String(st.n), 'hot'], ['Shape', SHAPE[st.n + ',0']], ['Ideal angle', angText(st.n, 0)]]; },
+    draw: function (sc, st) {
+      var vals = [180, 120, 109.5, 90, 90];
+      vals.forEach(function (v, i) {
+        var n = i + 2, h = v / 180 * 110, x = 14 + i * 115 + 29, on = n === st.n, top = h;
+        /* five groups have two ideal angles: the faint bar marks 120 and the solid one 90 */
+        if (n === 5) { top = 120 / 180 * 110; rrect(x, 150 - top, 56, top, 5, 'rgba(127,227,255,0.14)'); }
+        rrect(x, 150 - h, 56, h, 5, on ? CYAN : 'rgba(127,227,255,0.3)');
+        mtext(n === 5 ? '90/120\u00b0' : fmtAng(v), x + 28, 143 - top, on ? '#fff' : '#b4bccf', 18, 'center'); mtext(n + ' groups', x + 28, 174, on ? CYAN : '#8a93ad', 16, 'center');
+      });
+    } },
+  { id: 'lonepairs', name: 'Lone pairs', why: 'A lone pair takes more room than a bond. It <span class="y">squeezes the bonds</span> and sets the shape you see.', hint: 'Swap bonds for lone pairs · greyed options do not exist',
+    chart: { t: 'Squeezed angles', k: 'four groups' },
+    explain: { title: 'Lone pairs take more room', body: [
+      'A <b>lone pair</b> belongs to the central atom alone, so it is held closer in and spreads out wider than a bonding pair. The shape name only describes the <b>atoms</b>, but lone pairs still count as groups and still push. In AXnEm notation, A is the central atom, X a bonded atom and E a lone pair.',
+      'Start from the arrangement for the total group count, then swap bonds for lone pairs. Three groups with one lone pair (AX2E) is bent. Four groups give pyramidal (AX3E) and bent (AX2E2). In a trigonal bipyramid, lone pairs take the equatorial spots, giving seesaw (AX4E), T-shaped (AX3E2) and linear (AX2E3). In an octahedron they sit opposite each other, giving square pyramidal (AX5E) and square planar (AX4E2).',
+      'Because lone pairs repel more than bonding pairs, real bond angles are somewhat smaller than the ideal: ~107° in NH3 and ~104.5° in H2O, against 109.5° for a perfect tetrahedron. The model is drawn at the ideal angles. Greyed-out buttons are combinations this page does not model.'], tryit: 'Hold four groups in total: go from AX4 to AX3E to AX2E2. The groups stay tetrahedral, but the visible shape goes from tetrahedron to pyramid to bent.' },
+    mount: function (el, sc, st) {
+      var xs, es;
+      function refresh() {
+        var n;
+        xs.pick(st.x - 2, true); es.pick(st.e, true);
+        for (n = 2; n <= 6; n++) xs.dis(n - 2, !valid(n, st.e));
+        for (n = 0; n <= 3; n++) es.dis(n, !valid(st.x, n));
+        sc.setModel(st.x, st.e); sc.setTitle(SHAPE[st.x + ',' + st.e]);
+      }
+      xs = seg(el, [2, 3, 4, 5, 6].map(function (n) { return { label: String(n), v: n }; }), function (it) { if (valid(it.v, st.e)) { st.x = it.v; } refresh(); }, null, { title: 'Bonding pairs <em>X</em>' });
+      es = seg(el, [0, 1, 2, 3].map(function (n) { return { label: String(n), v: n }; }), function (it) { if (valid(st.x, it.v)) { st.e = it.v; } refresh(); }, null, { title: 'Lone pairs <em>E</em>' });
+      anglesSeg(el, sc);
+      function step(d) { var i = 0; SPACE.forEach(function (p, k) { if (p[0] === st.x && p[1] === st.e) i = k; }); var p = SPACE[cycle(i, d, SPACE.length)]; st.x = p[0]; st.e = p[1]; refresh(); sfx('ui'); }
+      refresh();
+      return { next: function () { step(1); }, nudge: function (d) { step(d); } };
+    },
+    enter: function (sc, st) { if (st.x == null) { st.x = 3; st.e = 1; } },
+    stats: function (sc, st) { var k = st.x + ',' + st.e; return [['Notation', notation(st.x, st.e), 'hot'], ['Shape', SHAPE[k]], ['Ideal angle', angText(st.x, st.e)], ['Example', EXAMPLE[k]]]; },
+    draw: function (sc, st) { drawFamily(st.x + ',' + st.e); } },
+  { id: 'molecules', name: 'Real molecules', why: 'Real molecules fit the model. The scene shows <span class="y">ideal angles</span>; measured ones sit a little lower with lone pairs.', hint: 'Pick a molecule · A toggles angle labels',
+    chart: { t: 'Squeezed angles', k: 'four groups' },
+    explain: { title: 'Checking the model against real molecules', body: [
+      'Each chip loads a real molecule into the model, with its formula, notation and shape. Methane (CH4) has four bonds and no lone pairs, so it is a clean tetrahedron at ~109.5°. Ammonia (NH3) has the same four groups, but one is a lone pair, giving a pyramid with angles of ~107°. Water (H2O) has two lone pairs, so it is bent, at ~104.5°.',
+      'The idea reaches past four groups. PCl5 is a trigonal bipyramid, SF6 an octahedron, and XeF4 puts its two lone pairs opposite each other so the four fluorine atoms form a flat square. Measured angles depend a little on phase and method, so inexact ones carry a ~.',
+      'Shape also decides polarity. Each polar bond has its own dipole, but in a symmetric molecule like CO2 the two dipoles point opposite ways and cancel. In bent H2O they do not cancel, so water is polar. Atom sizes and colours here are schematic, not to scale.'], tryit: 'Compare CH4, NH3 and H2O in turn. The chart marks where each real angle falls under the ideal 109.5°.' },
+    mount: function (el, sc, st) {
+      var grid = document.createElement('div'), btns = []; grid.className = 'chips';
+      function refresh() {
+        var m = MOLS[st.i];
+        btns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === st.i ? 'true' : 'false'); });
+        sc.setModel(m.x, m.e, m.c, m.o); sc.setTitle(m.f + ' · ' + SHAPE[m.x + ',' + m.e]);
+      }
+      MOLS.forEach(function (m, j) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'chip b'; b.title = m.name; b.setAttribute('aria-pressed', 'false');
+        b.innerHTML = '<span></span><i></i>'; b.children[0].textContent = m.f; b.children[1].textContent = SHAPE[m.x + ',' + m.e];
+        b.addEventListener('click', function () { st.i = j; refresh(); }); grid.appendChild(b); btns.push(b);
+      });
+      el.appendChild(grid); angSeg = null; refresh();
+      return { next: function () { st.i = cycle(st.i, 1, MOLS.length); refresh(); sfx('ui'); }, nudge: function (d) { st.i = cycle(st.i, d, MOLS.length); refresh(); sfx('ui'); } };
+    },
+    enter: function (sc, st) { if (st.i == null) st.i = 4; },
+    stats: function (sc, st) { var m = MOLS[st.i]; return [['Molecule', m.f + ' · ' + notation(m.x, m.e), 'hot'], ['Shape', SHAPE[m.x + ',' + m.e]], ['Real angle', m.real, 'coral']]; },
+    draw: function (sc, st) { var m = MOLS[st.i]; drawFamily(m.x + m.e === 4 ? m.x + ',' + m.e : ''); } }
+];
+STAGES.forEach(function (s) { s.state = {}; });
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+var stageBtns = STAGES.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STAGES.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STAGES[i], sc = getScene();
+    if (cur < 0) stage.show(sc);
+    cur = i; tipEl.classList.remove('on');
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STAGES.length; setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; if (s.enter) s.enter(sc, s.state);
+    ctl = s.mount(c, sc, s.state) || null;
+    renderStats(s.stats(sc, s.state));
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Backdrop on' : 'Backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain, .chip')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start the sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key;
+  if (k === 'ArrowRight') { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft') { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-3]$/.test(k)) go(+k - 1);
+  else if (k === ' ' && ctl && ctl.next && !(e.target && e.target.tagName === 'BUTTON')) { e.preventDefault(); ctl.next(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'a' || k === 'A') { var asc = getScene(), aon = !asc.anglesOn(); asc.setAngles(aon); if (angSeg) angSeg.pick(aon ? 0 : 1, true); hint(aon ? 'Angle labels on' : 'Angle labels off'); }
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+function fromHash() { var ids = STAGES.map(function (s) { return s.id; }), i = ids.indexOf((location.hash || '').slice(1)); return i; }
+window.addEventListener('hashchange', function () { var i = fromHash(); if (i >= 0) go(i); });
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STAGES[cur], sc = getScene();
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats(sc, s.state)); mx.clearRect(0, 0, MW, MH); s.draw(sc, s.state); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var i0 = fromHash();
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

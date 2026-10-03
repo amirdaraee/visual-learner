@@ -31,7 +31,8 @@ Add one object to `topics` in `topics.json`:
 | Field | Rule |
 | --- | --- |
 | `id` | unique across the file, kebab-case, matches the folder name |
-| `category` | an existing category `id` |
+| `category` | the PRIMARY category: an existing category `id`. It sets the folder (`<category>/<id>/`), the 3D environment and the back link |
+| `also` | optional list of other category ids the topic is shown under too (not the primary one). Use it when a topic really belongs to more than one subject, such as Binary Numbers in Computer Science, Math and Electronics |
 | `title` | a name, not a sentence |
 | `summary` | one sentence, at most 160 characters |
 | `path` | folder path ending in `/`, must contain `index.html` when `status` is `live` |
@@ -40,13 +41,17 @@ Add one object to `topics` in `topics.json`:
 | `status` | `live` or `soon` |
 | `added` | `YYYY-MM-DD` |
 
+**One topic, several subjects.** A topic has exactly one home (`category`) and any number of extra listings (`also`). It is built once, in the primary category's folder and environment, and the landing page shows its card under every subject it is listed in. Pick the primary by asking "which subject's room should this be in?".
+
+**Preview images.** A category and a topic can have an optional `preview`: a JPEG path such as `assets/previews/biology.jpg`, shown at the top of its card on the landing page. A card without one gets a tinted tile with the subject's icon. To make one: open the topic at 1200 x 750 and pick a stage that reads well. Turn the backdrop off (the environment button), hide the interface (the eye button, and the tool buttons), so only the model is left. Crop to an 800 x 500 region around the model (16:10, the card's proportions) and save it as a JPEG at about 80% quality (aim for under 150 KB) in `assets/previews/`. Focus on the model, not the room. Retake it when a shared environment or the interface style changes enough to make it look dated. Use a real capture of the topic, never a mock-up.
+
 New categories go in `categories` with an `id`, `name`, `blurb`, `accent` colour (hex) and `environment` (the name of an environment in `shared/environments.js`, mirrored in `ENV.CATEGORY_ENV`). See [ENVIRONMENTS.md](ENVIRONMENTS.md).
 
 ## Page requirements
 
 **Structure**
 - One `index.html`, with a `<title>` and a meta description.
-- A link back to the landing page: `href="../../index.html"` (adjust the depth if you nest deeper).
+- A link back to the landing page, opened on your subject: `href="../../index.html#biology"` (use your own category id; adjust the depth if you nest deeper).
 - Relative links only. The site is served under `/visual-learner/`.
 
 **Libraries**
@@ -97,6 +102,8 @@ Because every topic goes through `shared/stage.js` and `shared/environments.js`,
 The full contract, look rules, how to change an environment safely and how to add one for a new category are in [ENVIRONMENTS.md](ENVIRONMENTS.md). Read it before changing anything in `shared/`.
 
 Your scenes follow the subject contract (`group`, `w`, `h`, `base`, `update`). Use the shared look for shaded objects: matte, no reflections, a little self-glow. Text inside the scene goes on a dark backing so it stays readable.
+
+Write every explanation and note to [WRITING.md](WRITING.md): plain voice, the right level for the card, the section structure, no filler.
 
 ## Interface style
 

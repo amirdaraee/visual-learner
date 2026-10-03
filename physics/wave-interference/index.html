@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Wave Interference — Two Ripples</title>
+<meta name="description" content="Two ripples on a schematic water tank: change the spacing and the wavelength, and see where the waves add and where they cancel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D water tank with two wave sources"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Filling the tank…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Physics</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>Two <em>ripples</em></h1>
+        <p>Waves from two sources add up. Where crest meets crest the water moves strongly. Where crest meets trough it stays calm. Only the spacing and the wavelength decide where.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn" id="go" type="button" aria-keyshortcuts="Space"></button>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#physics" title="All Physics concepts" aria-label="All Physics concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Studio backdrop (B)" aria-label="Studio backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Two ripples</h2>
+    <p>Two sources shake the water at the same rate and in step. At every point the two waves add. The result depends on the <b>path difference</b> Δ = |r₁ − r₂| in wavelengths: whole numbers add up, half-odd numbers cancel.</p>
+    <h3>What is simplified</h3>
+    <p>The tank is a <b>schematic</b> water surface. Heights are exaggerated, lengths are in arbitrary tank units (u), the wave speed is held fixed, and the edges absorb the waves instead of reflecting them. Real water ripples also lose height to friction and travel at a speed that depends on wavelength.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>Space</code> pause · <code>[</code> <code>]</code> wavelength · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset. In the Probe step, click or tap the water.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and schematic. Nothing here is measured data.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/physicslab.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- maths (pure, no THREE; kept together so it can be tested on its own) ---------- */
+/* maths:begin */
+var TAU = Math.PI * 2, R0 = 0.9;
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function sstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+/* a circular wave in a flat tank spreads its energy round a circle, so its height falls like 1/sqrt(r); clamped near the source */
+function amp(r) { return Math.sqrt(R0 / Math.max(r, R0)); }
+/* the path difference |r1 - r2| can never exceed the spacing d, so lines exist only while |m or m+1/2| * lambda <= d */
+function loudCount(d, lam) { return 2 * Math.floor(d / lam + 1e-9) + 1; }
+function quietCount(d, lam) { return 2 * Math.floor(d / lam + 0.5 + 1e-9); }
+/* size of the sum of two waves a1 and a2 whose path difference is dl wavelengths */
+function sumAmp(a1, a2, dl) { return Math.sqrt(Math.max(0, a1 * a1 + a2 * a2 + 2 * a1 * a2 * Math.cos(TAU * dl))); }
+function judge(dl) {
+  var m = Math.round(dl), h = Math.floor(dl) + 0.5;
+  if (Math.abs(dl - m) <= 0.08) return { kind: 'loud', m: m };
+  if (Math.abs(dl - h) <= 0.08) return { kind: 'quiet', m: h };
+  return { kind: 'mid', m: 0 };
+}
+/* r1 - r2 grows steadily along any row, so a bisection finds where a row crosses the line r1 - r2 = target */
+function solveX(v, target, s1, s2, lo, hi) {
+  function f(x) { return Math.hypot(x - s1.x, v - s1.v) - Math.hypot(x - s2.x, v - s2.v); }
+  for (var i = 0; i < 40; i++) { var mid = (lo + hi) / 2; if (f(mid) < target) lo = mid; else hi = mid; }
+  return (lo + hi) / 2;
+}
+/* the line r1 - r2 = s, with the sources on a row at v = cv and x1 < x2: a hyperbola, or a ray when |s| = d, clipped to the square [-S, S] */
+function hyperbola(s, x1, x2, cv, S) {
+  var d = x2 - x1, cx = (x1 + x2) / 2, a = Math.abs(s) / 2, sg = s >= 0 ? 1 : -1, b = Math.sqrt(Math.max(0, d * d / 4 - a * a)), pts = [], i, t, p;
+  if (b < 1e-4) return [[cx + sg * a, cv], [sg * S, cv]];
+  var tm = Math.min(9, Math.asinh(12 / b));
+  for (i = 0; i <= 200; i++) { t = -tm + 2 * tm * i / 200; pts.push([cx + sg * a * Math.cosh(t), cv + b * Math.sinh(t)]); }
+  return clipSquare(pts, S);
+}
+function clipSquare(pts, S) {
+  var out = [], i, p, q;
+  function inside(r) { return Math.abs(r[0]) <= S && Math.abs(r[1]) <= S; }
+  function edge(r, o) {
+    var k = 1, dx = o[0] - r[0], dv = o[1] - r[1];
+    if (dx) k = Math.min(k, ((dx > 0 ? S : -S) - r[0]) / dx); if (dv) k = Math.min(k, ((dv > 0 ? S : -S) - r[1]) / dv);
+    return [r[0] + dx * k, r[1] + dv * k];
+  }
+  for (i = 0; i < pts.length; i++) {
+    p = pts[i];
+    if (inside(p)) { if (!out.length && i > 0) out.push(edge(p, pts[i - 1])); out.push(p); }
+    else if (out.length) { out.push(edge(pts[i - 1], p)); break; }
+  }
+  return out;
+}
+/* time-averaged intensity at a point from two sources: 1/2 (a1 + a2 e^i...) squared */
+function intensity(r1, r2, A1, A2, k) { var a1 = A1 * amp(r1), a2 = A2 * amp(r2); return 0.5 * (a1 * a1 + a2 * a2 + 2 * a1 * a2 * Math.cos(k * (r1 - r2))); }
+/* maths:end */
+
+function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+function num(n, p) { return n.toFixed(p == null ? 2 : p); }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', CORAL = '#ff6b86', GOLD = '#ffc857', LIME = '#c8f03c', VIOLET = '#b99cff';
+
+/* ---------- the tank: a displaced grid, two sources, overlays ---------- */
+var S = 4, N = 128, HS = 0.13, WV = 1.4, TILT = 0.85, ROW = -1.6, LEDGE = 0.34;
+var speedK = calm ? 0.3 : 1, paused = false, overlayOn = true;
+
+/* flat ribbons lying on the water: lines are lists of [x, v] points, width w, drawn in one mesh */
+function Ribbons(maxVerts, color, opacity, y) {
+  var pos = new Float32Array(maxVerts * 3), idx = new Uint16Array(maxVerts * 3), g = new T.BufferGeometry();
+  g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setIndex(new T.BufferAttribute(idx, 1));
+  var m = new T.Mesh(g, new T.MeshBasicMaterial({ color: color, transparent: true, opacity: opacity, side: T.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+  m.frustumCulled = false; m.renderOrder = 5;
+  return {
+    mesh: m,
+    set: function (lines, w) {
+      var nv = 0, ni = 0;
+      lines.forEach(function (pts) {
+        if (pts.length < 2 || nv + pts.length * 2 > maxVerts) return;
+        var base = nv, p, a, b, dx, dv, len;
+        for (p = 0; p < pts.length; p++) {
+          a = pts[Math.max(0, p - 1)]; b = pts[Math.min(pts.length - 1, p + 1)];
+          dx = b[0] - a[0]; dv = b[1] - a[1]; len = Math.hypot(dx, dv) || 1;
+          var nx = -dv / len * w / 2, nv2 = dx / len * w / 2;
+          pos.set([pts[p][0] + nx, y, -(pts[p][1] + nv2), pts[p][0] - nx, y, -(pts[p][1] - nv2)], nv * 3); nv += 2;
+        }
+        for (p = 0; p < pts.length - 1; p++) { var q = base + p * 2; idx.set([q, q + 1, q + 2, q + 1, q + 3, q + 2], ni); ni += 6; }
+      });
+      g.setDrawRange(0, ni); g.attributes.position.needsUpdate = true; g.index.needsUpdate = true;
+    }
+  };
+}
+
+function sceneTank() {
+  var root = new T.Group(), tank = new T.Group(), fixed = new T.Group(), tipMeshes = [], i, j;
+  root.add(tank); root.add(fixed); tank.rotation.x = TILT; tank.position.z = 0.225;
+
+  /* water: one grid, height and colour computed on the CPU each frame, light baked into vertex colour so ripples read as relief */
+  var NV = (N + 1) * (N + 1), pos = new Float32Array(NV * 3), nor = new Float32Array(NV * 3), col = new Float32Array(NV * 3), gx = new Float32Array(NV), gz = new Float32Array(NV), idx = new Uint16Array(N * N * 6), q = 0;
+  for (j = 0; j <= N; j++) for (i = 0; i <= N; i++) { var n = j * (N + 1) + i; gx[n] = -S + 2 * S * i / N; gz[n] = -S + 2 * S * j / N; pos[n * 3] = gx[n]; pos[n * 3 + 2] = gz[n]; nor[n * 3 + 1] = 1; }
+  for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, c = a + N + 1; idx.set([a, c, a + 1, a + 1, c, c + 1], q); q += 6; }
+  var wg = new T.BufferGeometry();
+  wg.setAttribute('position', new T.BufferAttribute(pos, 3)); wg.setAttribute('normal', new T.BufferAttribute(nor, 3)); wg.setAttribute('color', new T.BufferAttribute(col, 3)); wg.setIndex(new T.BufferAttribute(idx, 1));
+  var water = new T.Mesh(wg, new T.MeshBasicMaterial({ vertexColors: true })); water.frustumCulled = false; tank.add(water);
+  var hit = new T.Mesh(new T.PlaneGeometry(2 * S, 2 * S).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ visible: false })); tank.add(hit);
+
+  /* tray: floor, bezel on all four sides, a ledge in front for the label and one behind for the measuring strip */
+  var slabM = soft('#10364b', 0.25), bezelM = soft('#2c3748', 0.18);
+  function box(w, h, d, x, y, z, m) { var b = new T.Mesh(new T.BoxGeometry(w, h, d), m); b.position.set(x, y, z); tank.add(b); return b; }
+  box(8.8, 0.3, 10.65, 0, -LEDGE - 0.15, -0.225, slabM);
+  box(0.4, 2 * LEDGE, 8, -4.2, 0, 0, bezelM); box(0.4, 2 * LEDGE, 8, 4.2, 0, 0, bezelM);
+  box(8.8, 2 * LEDGE, 1.1, 0, 0, 4.55, bezelM); box(8.8, 2 * LEDGE, 1.55, 0, 0, -4.775, bezelM);
+  var cap = label('schematic water surface', { size: 0.26, color: '#aebbd0', bg: false, plane: true }); cap.rotation.x = -Math.PI / 2; cap.position.set(0, LEDGE + 0.005, 4.55); tank.add(cap);
+  var cap2 = label('intensity along the far edge', { size: 0.3, color: '#aebbd0', bg: false, plane: true }); cap2.rotation.x = -Math.PI / 2; cap2.position.set(0, LEDGE + 0.005, -5.3); tank.add(cap2);
+
+  /* measuring strip: bright where the far edge is moving strongly, dark where it stays calm */
+  var SW = 256, sc = document.createElement('canvas'); sc.width = SW; sc.height = 4; var sx = sc.getContext('2d'), stex = new T.CanvasTexture(sc); stex.minFilter = T.LinearFilter;
+  var frame = new T.Mesh(new T.PlaneGeometry(8.2, 0.64).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#070b12', depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); frame.position.set(0, LEDGE + 0.004, -4.8); frame.renderOrder = 1; tank.add(frame);
+  var strip = new T.Mesh(new T.PlaneGeometry(8, 0.5).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ map: stex, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); strip.position.set(0, LEDGE + 0.006, -4.8); strip.renderOrder = 2; strip.userData.tip = 'Relative intensity at the far edge: bright is loud, dark is calm'; tank.add(strip); tipMeshes.push(strip);
+  var prof = new Float32Array(SW);
+
+  /* sources, probe, overlays */
+  var marks = [LIME, VIOLET].map(function (c, k) {
+    var g = new T.Group(), m = new T.Mesh(new T.CylinderGeometry(0.2, 0.27, 0.55, 20), soft(c, 0.5)); m.userData.tip = 'Source ' + 'AB'[k] + ': bobs up and down at the wave frequency'; g.add(m); tipMeshes.push(m);
+    var l = label('AB'[k], { size: 0.34 }); l.position.y = 0.85; g.add(l); tank.add(g); return g;
+  });
+  var loudR = new Ribbons(9000, GOLD, 0.95, 0.3), quietR = new Ribbons(9000, CORAL, 0.95, 0.3);
+  tank.add(loudR.mesh); tank.add(quietR.mesh);
+  var ruler = new Ribbons(40, '#ffffff', 0.9, 0.42); tank.add(ruler.mesh);
+  var pathA = new Ribbons(8, LIME, 0.95, 0.42), pathB = new Ribbons(8, VIOLET, 0.95, 0.42); tank.add(pathA.mesh); tank.add(pathB.mesh);
+  var rayR = new Ribbons(16, '#ffffff', 0.8, 0.42), tri = new Ribbons(16, GOLD, 1, 0.44); tank.add(rayR.mesh); tank.add(tri.mesh);
+  var probe = new T.Group(), pDot = new T.Mesh(new T.SphereGeometry(0.17, 16, 12), new T.MeshBasicMaterial({ color: '#ffffff' })), pRing = new T.Mesh(new T.RingGeometry(0.3, 0.38, 32).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8, depthWrite: false }));
+  pDot.position.y = 0.5; pRing.position.y = 0.38; probe.add(pDot); probe.add(pRing); tank.add(probe);
+
+  /* a pedestal so the tilted tank stands in the room rather than floating */
+  var steel = soft('#4b5563', 0.1), ped = new T.Mesh(new T.CylinderGeometry(0.35, 0.45, 6.2, 16), steel); ped.position.y = -3.7; fixed.add(ped);
+  var foot = new T.Mesh(new T.CylinderGeometry(1.5, 1.7, 0.22, 28), steel); foot.position.y = -6.7; fixed.add(foot);
+
+  /* state */
+  var mode = 'one', lam = 1.3, d = 3.2, phase = 0, dirty = true, shapeDirty = true;
+  var s1 = { x: 0, v: 0 }, s2 = { x: 0, v: 0 }, a2 = 0, px = -1.2, pv = 1.5, theta = 0.5, moving = false;
+  var tp = { c: new T.Color(), lo: [0.03, 0.14, 0.27], mid: [0.17, 0.5, 0.72], hi: [0.82, 0.95, 1] };
+  var LX = -0.5, LY = 0.8, LZ = 0.35, LL = Math.hypot(LX, LY, LZ); LX /= LL; LY /= LL; LZ /= LL;
+
+  function fillWater() {
+    var k = TAU / lam, ph = phase, p, u, ux, uz, dx, dz, r, rr, aa, arg, cs, sn, dr, nx, nz, nl, t, sh, c0, c1, f, x, z;
+    var srcs = [[s1.x, -s1.v, 1], [s2.x, -s2.v, a2]];
+    for (p = 0; p < NV; p++) {
+      x = gx[p]; z = gz[p]; u = 0; ux = 0; uz = 0;
+      for (j = 0; j < 2; j++) {
+        if (srcs[j][2] < 0.002) continue;
+        dx = x - srcs[j][0]; dz = z - srcs[j][1]; r = Math.sqrt(dx * dx + dz * dz); if (r < 1e-4) r = 1e-4;
+        rr = r < R0 ? R0 : r; aa = srcs[j][2] * Math.sqrt(R0 / rr); arg = k * r - ph; cs = Math.cos(arg); sn = Math.sin(arg);
+        dr = (r < R0 ? 0 : -aa / (2 * r)) * cs - aa * k * sn;
+        u += aa * cs; ux += dr * dx / r; uz += dr * dz / r;
+      }
+      pos[p * 3 + 1] = HS * u;
+      nx = -HS * ux; nz = -HS * uz; nl = Math.sqrt(nx * nx + 1 + nz * nz); nor[p * 3] = nx / nl; nor[p * 3 + 1] = 1 / nl; nor[p * 3 + 2] = nz / nl;
+      t = clamp(0.5 + 0.5 * u / 1.25, 0, 1); sh = 0.5 + 0.7 * Math.max(0, (nx * LX + LY + nz * LZ) / nl);
+      if (t < 0.5) { f = t * 2; c0 = tp.lo; c1 = tp.mid; } else { f = (t - 0.5) * 2; c0 = tp.mid; c1 = tp.hi; }
+      col[p * 3] = Math.min(1, (c0[0] + (c1[0] - c0[0]) * f) * sh); col[p * 3 + 1] = Math.min(1, (c0[1] + (c1[1] - c0[1]) * f) * sh); col[p * 3 + 2] = Math.min(1, (c0[2] + (c1[2] - c0[2]) * f) * sh);
+    }
+    wg.attributes.position.needsUpdate = true; wg.attributes.normal.needsUpdate = true; wg.attributes.color.needsUpdate = true;
+  }
+  /* strip and the normalised profile used by the chart */
+  function fillStrip() {
+    var k = TAU / lam, mx = 1e-6, x, i;
+    for (i = 0; i < SW; i++) { x = -S + 2 * S * (i + 0.5) / SW; prof[i] = intensity(Math.hypot(x - s1.x, S - s1.v), Math.hypot(x - s2.x, S - s2.v), 1, a2, k); if (prof[i] > mx) mx = prof[i]; }
+    for (i = 0; i < SW; i++) { prof[i] /= mx; var b = Math.pow(prof[i], 0.8); sx.fillStyle = 'rgb(' + Math.round(10 + 215 * b) + ',' + Math.round(20 + 225 * b) + ',' + Math.round(34 + 221 * b) + ')'; sx.fillRect(i, 0, 1, 4); }
+    stex.needsUpdate = true;
+  }
+  function fillLines() {
+    var dd = s2.x - s1.x, m, loud = [], quiet = [];
+    if (a2 < 0.5 || dd < 0.05) { loudR.set([], 0); quietR.set([], 0); return; }
+    for (m = -Math.floor(dd / lam + 1e-9); m <= Math.floor(dd / lam + 1e-9); m++) loud.push(hyperbola(m * lam, s1.x, s2.x, s1.v, S));
+    for (m = -Math.floor(dd / lam + 0.5 + 1e-9); m < Math.floor(dd / lam + 0.5 + 1e-9); m++) quiet.push(hyperbola((m + 0.5) * lam, s1.x, s2.x, s1.v, S));
+    loudR.set(loud, 0.07); quietR.set(quiet, 0.07);
+  }
+  function rays() {
+    var u = [Math.sin(theta), Math.cos(theta)], far = Math.sin(theta) >= 0 ? s1 : s2, near = far === s1 ? s2 : s1, ln = Math.abs((s2.x - s1.x) * Math.sin(theta)), lines = [], t;
+    [s1, s2].forEach(function (s) {
+      t = 40; if (u[1] > 1e-3) t = Math.min(t, (S - s.v) / u[1]); if (u[0] > 1e-3) t = Math.min(t, (S - s.x) / u[0]); else if (u[0] < -1e-3) t = Math.min(t, (-S - s.x) / u[0]);
+      lines.push([[s.x, s.v], [s.x + u[0] * t, s.v + u[1] * t]]);
+    });
+    /* the right triangle: the gold side from the farther source is d sin(theta), the thin side closes it at the other source */
+    var F = [far.x + u[0] * ln, far.v + u[1] * ln]; lines.push([[near.x, near.v], F]);
+    rayR.set(lines, 0.06); tri.set([[[far.x, far.v], F]], 0.14);
+  }
+  function probeInfo() {
+    var r1 = Math.hypot(px - s1.x, pv - s1.v), r2 = Math.hypot(px - s2.x, pv - s2.v), dl = Math.abs(r1 - r2) / lam, a1 = amp(r1), b1 = amp(r2) * a2, tot = a1 + b1, jd = judge(dl);
+    return { r1: r1, r2: r2, dl: dl, a1: a1, a2: b1, j: jd, share: tot > 0 ? sumAmp(a1, b1, dl) / tot : 0 };
+  }
+  function setProbe(x, v) { px = clamp(x, -S, S); pv = clamp(v, -S, S); dirty = true; }
+  function targets() { return mode === 'one' ? [[0, 0], [0, 0], 0] : [[-d / 2, ROW], [d / 2, ROW], 1]; }
+
+  var api = {
+    group: root, w: 5.2, h: 5.7, base: 4.6,
+    lam: function () { return lam; }, d: function () { return d; }, phase: function () { return phase; }, theta: function () { return theta; },
+    mode: function () { return mode; }, px: function () { return px; }, pv: function () { return pv; }, prof: function () { return prof; },
+    settle: function () { var tg = targets(); s1.x = tg[0][0]; s1.v = tg[0][1]; s2.x = tg[1][0]; s2.v = tg[1][1]; a2 = tg[2]; shapeDirty = true; },
+    setMode: function (m) { mode = m; shapeDirty = true; tri.mesh.visible = rayR.mesh.visible = m === 'far'; pathA.mesh.visible = pathB.mesh.visible = probe.visible = m === 'probe'; ruler.mesh.visible = m === 'one'; strip.visible = frame.visible = cap2.visible = m !== 'one'; marks[1].visible = m !== 'one'; },
+    setLam: function (v) { lam = v; shapeDirty = true; }, setD: function (v) { d = v; shapeDirty = true; },
+    setTheta: function (v) { theta = v; shapeDirty = true; }, setProbe: setProbe, info: probeInfo, hitMesh: hit, tank: tank,
+    setOverlay: function (on) { loudR.mesh.visible = quietR.mesh.visible = on; },
+    /* move the probe along its row to the nearest loud or quiet line */
+    snap: function (kind) {
+      var pi = probeInfo(), dl = pi.dl, tgt, lim = d / lam + 1e-9, h;
+      if (kind === 'loud') tgt = Math.min(Math.round(dl), Math.floor(lim));
+      else {
+        h = Math.floor(dl) + 0.5;
+        while (h > lim && h > 0.5) h -= 1; if (h > lim) return false; tgt = h;
+      }
+      var sg = (px - (s1.x + s2.x) / 2) >= 0 ? 1 : -1;
+      setProbe(solveX(pv, sg * tgt * lam, s1, s2, -S, S), pv); return true;
+    },
+    update: function (t, dt) {
+      var tg = targets(), kk = 1 - Math.exp(-dt * 6);
+      var mv = Math.abs(s1.x - tg[0][0]) + Math.abs(s2.x - tg[1][0]) + Math.abs(s1.v - tg[0][1]) + Math.abs(a2 - tg[2]);
+      moving = mv > 0.002;
+      if (moving) {
+        s1.x += (tg[0][0] - s1.x) * kk; s1.v += (tg[0][1] - s1.v) * kk; s2.x += (tg[1][0] - s2.x) * kk; s2.v += (tg[1][1] - s2.v) * kk; a2 += (tg[2] - a2) * kk;
+        if (mv < 0.004) { s1.x = tg[0][0]; s1.v = tg[0][1]; s2.x = tg[1][0]; s2.v = tg[1][1]; a2 = tg[2]; }
+      }
+      if (!paused) phase = (phase + TAU * WV * speedK / lam * dt) % TAU;
+      if (!paused || moving || shapeDirty || dirty) fillWater();
+      if (moving || shapeDirty) { fillStrip(); fillLines(); }
+      if (moving || shapeDirty || dirty) {
+        marks[0].position.set(s1.x, 0.05, -s1.v); marks[1].position.set(s2.x, 0.05, -s2.v); marks[1].scale.setScalar(Math.max(0.0001, a2));
+        if (mode === 'probe') {
+          probe.position.set(px, 0, -pv); var r1 = [[s1.x, s1.v], [px, pv]], r2 = [[s2.x, s2.v], [px, pv]]; pathA.set([r1], 0.05); pathB.set([r2], 0.05);
+        }
+        if (mode === 'far') rays();
+      }
+      if (mode === 'one') {
+        var f = (phase / TAU) % 1, ra = lam * (Math.ceil(0.35 / lam - f) + f), rb = ra + lam;
+        ruler.set([[[ra, 0], [rb, 0]], [[ra, -0.22], [ra, 0.22]], [[rb, -0.22], [rb, 0.22]]], 0.06);
+        ruler.mesh.material.opacity = 0.95 * sstep((ra - 0.35) / 0.3) * (1 - sstep((ra - (0.35 + lam - 0.3)) / 0.3)) * sstep((3.95 - rb) / 0.4);
+      }
+      probe.children[1].scale.setScalar(1 + 0.15 * Math.sin(t * 4));
+      shapeDirty = dirty = false;
+    },
+    tips: function () { return tipMeshes; }
+  };
+  api.setMode('one'); api.setOverlay(true);
+  return api;
+}
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'physics', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+if (!ok) $('loading').style.display = 'none';
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null;
+canvas.addEventListener('pointerdown', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var r = canvas.getBoundingClientRect(); ndc.set((ptr.x - r.left) / r.width * 2 - 1, -((ptr.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var hitObj = ray.intersectObjects(sc.tips(), false)[0];
+  if (hitObj && hitObj.object.userData.tip) { tipEl.textContent = hitObj.object.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = (it.i ? '<i></i>' : '') + '<span></span>'; if (it.i) b.firstChild.textContent = it.i; b.lastChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start);
+  return { pick: pick };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  inp.addEventListener('pointerdown', function () { inp.dataset.drag = '1'; }); inp.addEventListener('pointerup', function () { inp.dataset.drag = ''; });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { if (inp.dataset.drag) return; inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.step || 1) * 2, o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+function mtext(t, x, y, col, px, al) { mx.font = '400 ' + (px || 20) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = col || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function curve(fn, x0, x1, n, mapY, col, lw) {
+  mx.beginPath(); for (var i = 0; i <= n; i++) { var u = i / n, x = lerp(x0, x1, u), y = mapY(fn(u)); if (i) mx.lineTo(x, y); else mx.moveTo(x, y); }
+  mx.strokeStyle = col; mx.lineWidth = lw || 2.5; mx.stroke();
+}
+function hline(y, col, x0, x1) { mx.strokeStyle = col; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(x0 == null ? 14 : x0, y); mx.lineTo(x1 == null ? 586 : x1, y); mx.stroke(); }
+
+/* ---------- steps ---------- */
+var built = null;
+function getScene() { if (!built) { built = sceneTank(); stage.add(built); } return built; }
+function lamSlider(el, sc) { return slider(el, { title: 'Wavelength', keys: '[ ]', min: 0.6, max: 2.4, step: 0.05, val: sc.lam(), fmt: function (v) { return 'λ = ' + num(v) + ' u'; }, onInput: function (v) { sc.setLam(v); } }); }
+function dSlider(el, sc) { return slider(el, { title: 'Spacing', min: 0.4, max: 6.4, step: 0.1, val: sc.d(), fmt: function (v) { return 'd = ' + num(v, 1) + ' u'; }, onInput: function (v) { sc.setD(v); } }); }
+function overlayChip(el, sc) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'chip b'; b.innerHTML = '<span>Interference lines</span><i>loud gold · quiet pink</i>'; b.setAttribute('aria-pressed', overlayOn ? 'true' : 'false');
+  b.addEventListener('click', function () { overlayOn = !overlayOn; b.setAttribute('aria-pressed', overlayOn ? 'true' : 'false'); sc.setOverlay(overlayOn); });
+  el.appendChild(b);
+}
+var PX0 = 36, PX1 = 584;
+var STEPS = [
+  { name: 'One source', hash: 'one', mode: 'one', explain: { title: 'One source, one wavelength', body: [
+      'A source bobbing at a steady rate sends ripples outward as rings. The distance from one crest to the next is the <b>wavelength</b> λ. The time between crests passing a spot is the <b>period</b> T, and the number per second is the <b>frequency</b> f = 1/T.',
+      'A crest travels one wavelength in one period, so the wave speed is <b>v = fλ</b>. Here the speed is held fixed, so a shorter wavelength means a higher frequency. Real water waves are more complicated, because their speed also depends on wavelength, so read this as a simplified model.',
+      'The rings thin out as they grow. In a flat tank the energy spreads round a circle, so the height falls roughly as <b>1/√r</b>. Heights are exaggerated, lengths are in arbitrary tank units (u), and the edges absorb the waves instead of reflecting them.'],
+    tryit: 'Drag the wavelength slider. The rings crowd together and the frequency rises while the speed stays put.' },
+    why: 'Ripples spread as rings. Crest to crest is one wavelength, and <span class="y">speed = frequency × wavelength.</span>', hint: 'Drag the wavelength · space pauses',
+    chart: { t: 'Height along one ray', k: 'schematic' },
+    mount: function (el, sc) { var l = lamSlider(el, sc); return { nudge: function (dr) { l.nudge(dr); } }; },
+    stats: function (sc) { var v = WV * speedK; return [['Wavelength λ', num(sc.lam()) + ' u', 'hot'], ['Frequency f', num(v / sc.lam()) + ' Hz'], ['Speed v = fλ', num(v) + ' u/s']]; },
+    draw: function (sc) {
+      var lam = sc.lam(), k = TAU / lam, ph = sc.phase(), R = 8, y = function (v) { return 95 - v * 52; }, i;
+      hline(95, 'rgba(255,255,255,0.12)');
+      for (i = 0; i * lam <= R; i++) { var tx = lerp(PX0, PX1, i * lam / R); mx.strokeStyle = 'rgba(255,255,255,0.14)'; mx.beginPath(); mx.moveTo(tx, 160); mx.lineTo(tx, 168); mx.stroke(); }
+      curve(function (u) { return amp(u * R); }, PX0, PX1, 80, y, 'rgba(127,227,255,0.35)', 1.5); curve(function (u) { return -amp(u * R); }, PX0, PX1, 80, y, 'rgba(127,227,255,0.35)', 1.5);
+      curve(function (u) { return amp(u * R) * Math.cos(k * u * R - ph); }, PX0, PX1, 240, y, CYAN, 3);
+      mtext('distance from the source →', PX0, 184, '#6f7894', 13); mtext('ticks: one λ each', PX1, 184, '#6f7894', 13, 'right');
+    } },
+  { name: 'Two sources', hash: 'two', mode: 'two', explain: { title: 'Two sources add', body: [
+      'Each source makes its own rings, and where they overlap the heights simply <b>add</b> (superposition, a good approximation for small ripples). At a point P the two waves have travelled different distances r₁ and r₂. The <b>path difference</b> is Δ = |r₁ − r₂|.',
+      'If Δ is a whole number of wavelengths, <b>Δ = mλ</b>, crest meets crest and the water moves strongly: <b>constructive</b>. If Δ is a half-odd number, <b>Δ = (m + ½)λ</b>, crest meets trough and they cancel: <b>destructive</b>. Points with the same Δ lie on a hyperbola with the two sources as its foci, which is why you see curved lines fanning out.',
+      'Δ can never exceed the spacing d, so only d/λ matters. There are 2⌊d/λ⌋ + 1 loud lines and 2⌊d/λ + ½⌋ quiet ones. When d/λ is exactly a half-odd number, the outermost quiet pair lies along the line through the sources. Quiet lines are close to calm, not perfectly: away from the centre line the two waves differ a little in height.'],
+    tryit: 'Widen the spacing slowly. A new pair of lines appears each time d/λ passes a multiple of ½, then swings in toward the middle.' },
+    why: 'Add a second source. <span class="y">Crest on crest is loud, crest on trough is calm.</span> Only d and λ set the pattern.', hint: 'Change d and λ · toggle the lines',
+    chart: { t: 'Intensity along the far edge', k: 'relative' },
+    mount: function (el, sc) { var l = lamSlider(el, sc); dSlider(el, sc); overlayOn = true; sc.setOverlay(true); overlayChip(el, sc); return { nudge: function (dr) { l.nudge(dr); } }; },
+    stats: function (sc) { return [['Spacing d / λ', num(sc.d() / sc.lam())], ['Loud lines', loudCount(sc.d(), sc.lam()), 'amber'], ['Quiet lines', quietCount(sc.d(), sc.lam()), 'coral']]; },
+    draw: function (sc) {
+      var p = sc.prof(), n = p.length; mx.beginPath(); mx.moveTo(PX0, 160);
+      for (var i = 0; i < n; i++) mx.lineTo(lerp(PX0, PX1, i / (n - 1)), 160 - p[i] * 124);
+      mx.lineTo(PX1, 160); mx.closePath(); mx.fillStyle = 'rgba(127,227,255,0.22)'; mx.fill();
+      mx.beginPath(); for (i = 0; i < n; i++) { var x = lerp(PX0, PX1, i / (n - 1)), y = 160 - p[i] * 124; if (i) mx.lineTo(x, y); else mx.moveTo(x, y); } mx.strokeStyle = CYAN; mx.lineWidth = 2.5; mx.stroke();
+      mtext('left edge', PX0, 184, '#6f7894', 13); mtext('far edge of the tank', 310, 184, '#6f7894', 13, 'center'); mtext('right edge', PX1, 184, '#6f7894', 13, 'right');
+    } },
+  { name: 'Probe', hash: 'probe', mode: 'probe', explain: { title: 'Reading one point', body: [
+      'Click or tap the water to place the probe. The two thin lines run from the probe to each source. Their lengths differ by Δ, shown in wavelengths.',
+      'Close to a whole number of wavelengths the two waves arrive in step and the heights add: <b>loud</b>. Close to a half-odd number they arrive opposite and cancel: <b>quiet</b>. On a wide screen the chart shows each wave at the probe and their sum in white.',
+      'The height readout is the size of the sum as a share of the most it could be, a₁ + a₂. From the formula, size = √(a₁² + a₂² + 2a₁a₂cos(2πΔ/λ)). It hits 100% when Δ is a whole number of wavelengths, and falls close to 0%, not exactly 0, near a quiet line, because the two waves are not quite the same size there.'],
+    tryit: 'Press Loud spot, then Quiet spot, and watch the white trace swell and flatten. Then change d and see the probe drift off its line.' },
+    why: 'Click the water. The probe compares its distance to each source: <span class="y">whole wavelengths add, half wavelengths cancel.</span>', hint: 'Click or tap the water to place the probe',
+    chart: { t: 'Waves at the probe', k: 'A lime · B violet · sum white' },
+    mount: function (el, sc, st) {
+      var l = lamSlider(el, sc); dSlider(el, sc); overlayOn = true; sc.setOverlay(true);
+      var px = slider(el, { title: 'Probe position', min: -4, max: 4, step: 0.05, val: sc.px(), fmt: function (v) { return num(v, 1) + ' u'; }, onInput: function (v) { sc.setProbe(v, sc.pv()); } }); st.px = px;
+      var sg = seg(el, [{ label: 'Loud spot', v: 'loud' }, { label: 'Quiet spot', v: 'quiet' }], function (it) {
+        if (!sc.snap(it.v)) hint('No quiet line at this spacing: d is under λ/2'); else sfx(it.v === 'loud' ? 'ping' : 'blip'); sg.pick(-1, true);
+      }, null, { title: 'Move the probe to the nearest' });
+      return { nudge: function (dr) { l.nudge(dr); }, tick: function () { px.set(num(sc.px(), 2)); } };
+    },
+    stats: function (sc) {
+      var f = sc.info(), j = f.j, res = j.kind === 'loud' ? 'Loud, m = ' + j.m : j.kind === 'quiet' ? 'Quiet, m + ½ = ' + num(j.m, 1) : 'In between';
+      return [['Path difference Δ', num(f.dl) + ' λ'], ['Result', res, j.kind === 'loud' ? 'amber' : j.kind === 'quiet' ? 'coral' : ''], ['Height', Math.round(f.share * 100) + ' % of max', 'hot']];
+    },
+    draw: function (sc) {
+      var f = sc.info(), k = TAU / sc.lam(), ph = sc.phase(), y = function (v) { return 92 - v * 38; }, base = function (a, r) { return function (u) { var p = ph - 4 * Math.PI * (1 - u); return a * Math.cos(k * r - p); }; };
+      hline(92, 'rgba(255,255,255,0.14)'); hline(92 - 1.9 * 38, 'rgba(255,255,255,0.05)'); hline(92 + 1.9 * 38, 'rgba(255,255,255,0.05)');
+      curve(base(f.a1, f.r1), PX0, PX1, 160, y, LIME, 2); curve(base(f.a2, f.r2), PX0, PX1, 160, y, VIOLET, 2);
+      curve(function (u) { return base(f.a1, f.r1)(u) + base(f.a2, f.r2)(u); }, PX0, PX1, 160, y, '#ffffff', 3);
+      mtext('time → (two periods)', PX0, 184, '#6f7894', 13); mtext('Δ = ' + num(f.dl) + ' λ', PX1, 184, f.j.kind === 'loud' ? GOLD : f.j.kind === 'quiet' ? CORAL : '#9ea8c2', 13, 'right');
+    } },
+  { name: 'Far field', hash: 'far', mode: 'far', explain: { title: 'Seen from far away', body: [
+      'Far from the sources, the two paths to a point run almost parallel. The extra distance the farther wave travels is then just <b>d sin θ</b>, where θ is the angle from the centre line. The right triangle at the sources shows it: the gold side is d sin θ.',
+      'Loud directions satisfy <b>d sin θ = mλ</b> and quiet ones <b>d sin θ = (m + ½)λ</b>. These are the straight lines the hyperbolas settle onto far away. The same rule describes light through two narrow slits, where λ is tiny, so the angles are small and sin θ ≈ θ = mλ/d.',
+      'It is an approximation that works when the point is much farther away than d. Closer in, use the exact path difference from the Probe step. Because sin θ cannot exceed 1, the largest loud order is m = ⌊d/λ⌋.'],
+    tryit: 'Shrink d to less than λ. Only the straight-ahead line is left, because no angle gives d sin θ = λ.' },
+    why: 'Far away the two paths are nearly parallel and differ by <span class="y">d sin θ.</span> Loud when that equals mλ.', hint: 'Swing the angle · try d below λ',
+    chart: { t: 'Path difference vs angle', k: 'd sin θ in λ' },
+    mount: function (el, sc) {
+      var l = lamSlider(el, sc); dSlider(el, sc);
+      slider(el, { title: 'Angle', min: -80, max: 80, step: 1, val: Math.round(sc.theta() * 180 / Math.PI), fmt: function (v) { return 'θ = ' + v + '°'; }, onInput: function (v) { sc.setTheta(v * Math.PI / 180); } });
+      overlayOn = false; sc.setOverlay(false); overlayChip(el, sc);
+      return { nudge: function (dr) { l.nudge(dr); } };
+    },
+    stats: function (sc) {
+      var x = Math.abs(sc.d() * Math.sin(sc.theta())) / sc.lam(), j = judge(x);
+      return [['d sin θ', num(x) + ' λ', 'hot'], ['Direction', j.kind === 'loud' ? 'Loud, m = ' + j.m : j.kind === 'quiet' ? 'Quiet, m + ½ = ' + num(j.m, 1) : 'In between', j.kind === 'loud' ? 'amber' : j.kind === 'quiet' ? 'coral' : ''], ['Highest loud order', Math.floor(sc.d() / sc.lam() + 1e-9)]];
+    },
+    draw: function (sc) {
+      var mxv = Math.max(1, sc.d() / sc.lam()), y = function (v) { return 90 - v / mxv * 70; }, m, ths = sc.theta(), cur = sc.d() * Math.sin(ths) / sc.lam();
+      for (m = -Math.floor(mxv + 1e-9); m <= Math.floor(mxv + 1e-9); m++) if (mxv < 8 || m % 2 === 0) hline(y(m), m ? 'rgba(255,200,87,0.3)' : 'rgba(255,255,255,0.2)');
+      if (mxv < 6) for (m = -Math.floor(mxv + 0.5 + 1e-9); m < Math.floor(mxv + 0.5 + 1e-9); m++) hline(y(m + 0.5), 'rgba(255,107,134,0.25)');
+      curve(function (u) { return sc.d() * Math.sin((u - 0.5) * Math.PI) / sc.lam(); }, PX0, PX1, 120, y, CYAN, 3);
+      var cx = lerp(PX0, PX1, ths / Math.PI + 0.5); mx.beginPath(); mx.arc(cx, y(cur), 6, 0, 7); mx.fillStyle = '#fff'; mx.fill();
+      mtext('−90°', PX0, 184, '#6f7894', 13); mtext('0°', 310, 184, '#6f7894', 13, 'center'); mtext('+90°', PX1, 184, '#6f7894', 13, 'right');
+      mtext('gold: loud · pink: quiet', PX0, 14, '#9ea8c2', 13);
+    } }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+/* speed lives in the top row of the dock so it stays with the pause button on every step */
+var speedSl = slider($('r1'), { title: 'Speed', min: 0.1, max: 2, step: 0.05, val: speedK, fmt: function (v) { return num(v) + '×'; }, onInput: function (v) { speedK = v; } });
+var narrow = window.matchMedia('(max-width: 900px)');
+/* on a phone the dock is short, so speed moves below the step controls instead of crowding the top row */
+function placeSpeed() { if (narrow.matches) $('sc-ctl').appendChild(speedSl.el); else $('r1').insertBefore(speedSl.el, $('go')); }
+if (narrow.addEventListener) narrow.addEventListener('change', placeSpeed); else narrow.addListener(placeSpeed);
+placeSpeed();
+function paintGo() {
+  $('go').innerHTML = '<svg viewBox="0 0 12 12" width="13" height="13" fill="currentColor" aria-hidden="true">' + (paused ? '<path d="M3 1.8l7 4.2-7 4.2z"/>' : '<path d="M2.6 1.8h2.6v8.4H2.6zM6.8 1.8h2.6v8.4H6.8z"/>') + '</svg>' + (paused ? 'Play' : 'Pause');
+}
+function togglePause() { paused = !paused; paintGo(); hint(paused ? 'Paused' : 'Playing'); }
+paintGo(); $('go').addEventListener('click', togglePause);
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    stage.show(sc); cur = i; tipEl.classList.remove('on'); sc.setMode(s.mode); if (instant) sc.settle();
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; s.state = s.state || {};
+    ctl = s.mount(c, sc, s.state) || null; placeSpeed();
+    renderStats(s.stats(sc, s.state));
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* click or tap places the probe; a drag still orbits the camera */
+var down = null;
+canvas.addEventListener('pointerdown', function (e) { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+canvas.addEventListener('pointerup', function (e) {
+  var d0 = down; down = null;
+  if (!ok || !d0 || cur < 0 || STEPS[cur].mode !== 'probe' || Math.hypot(e.clientX - d0.x, e.clientY - d0.y) > 6 || performance.now() - d0.t > 600) return;
+  var sc = getScene(), r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var h = ray.intersectObject(sc.hitMesh, false)[0]; if (!h) return;
+  var p = sc.tank.worldToLocal(h.point.clone()); sc.setProbe(p.x, -p.z);
+  var j = sc.info().j; sfx(j.kind === 'loud' ? 'ping' : j.kind === 'quiet' ? 'blip' : 'tick');
+});
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Studio backdrop on' : 'Studio backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #go, #explain, .chip')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range', onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-4]$/.test(k)) go(+k - 1);
+  else if (k === ' ' && !onBtn) { e.preventDefault(); togglePause(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > (s.mode === 'probe' ? 0.04 : 0.1)) { hudT = 0; renderStats(s.stats(sc, s.state)); if (ctl && ctl.tick) ctl.tick(); mx.clearRect(0, 0, MW, MH); s.draw(sc, s.state); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

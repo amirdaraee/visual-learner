@@ -33,7 +33,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, a:focus-vis
 #sweep { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; mix-blend-mode: screen; background: linear-gradient(105deg, transparent 40%, rgba(200, 240, 60, 0.1) 48%, rgba(255, 255, 255, 0.16) 50%, rgba(200, 240, 60, 0.07) 52%, transparent 60%); }
 #sweep.on { animation: sweep 0.9s ease-out; }
 @keyframes sweep { 0% { opacity: 1; transform: translateX(-70%); } 100% { opacity: 0; transform: translateX(70%); } }
-#loading { position: absolute; top: 47%; width: 100%; text-align: center; color: var(--mute); font-size: 14px; letter-spacing: 0.04em; transition: opacity 0.5s; }
+#loading { position: absolute; top: 47%; width: 100%; pointer-events: none; text-align: center; color: var(--mute); font-size: 14px; letter-spacing: 0.04em; transition: opacity 0.5s; }
 .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--mute); }
 
 /* ---- the pane: title, readout, chart and note in one sheet of smoked glass ---- */
@@ -154,7 +154,7 @@ dialog code { font: 500 11.5px var(--mono); background: var(--glass-hi); padding
   .ctl::-webkit-scrollbar { display: none; }
   .r1, .r3 { gap: 10px 12px; }
   .lab em, .btn em { display: none; }
-  .r1 .grp { flex: 1 1 100%; width: 100%; }
+  .r1 .grp, #sc-ctl .grp { flex: 1 1 100%; width: 100%; }
   .seg { width: 100%; }
   .seg button { flex: 1 1 0; min-width: 40px; height: 40px; padding: 0 6px; justify-content: center; }
   .seg button { min-width: 0; }

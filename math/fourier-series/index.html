@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d0c">
+<title>Fourier Series — Waves from Circles</title>
+<meta name="description" content="Stack spinning circles to build a square wave, a sawtooth or a triangle. Switch harmonics on and off, then watch the sum overshoot at a corner (the Gibbs phenomenon).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D model of a Fourier series: a chain of spinning circles drawing a wave"><canvas id="gl"></canvas><div id="loading">Setting up the board…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Math</span><span id="tagStage">Step 1 of 3</span></div>
+        <h1>Waves from <em>circles</em></h1>
+        <p>Any repeating wave is a sum of sine waves. Each sine is a circle spinning at a whole-number multiple of the base speed, and the height of the tip is the wave.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1">
+      <div class="grp"><span class="lab">Step <em>1–3 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn" id="go" type="button" hidden></button>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#math" title="All Math concepts" aria-label="All Math concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Studio backdrop (B)" aria-label="Studio backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="How it works (?)" aria-label="How it works"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Waves from circles</h2>
+    <p>A <b>Fourier series</b> writes a repeating wave as a sum of sine waves at the base frequency and its whole-number multiples (the harmonics). A point going round a circle at steady speed has a height that is a sine wave, so each harmonic is a circle, and the circles are chained: each one is centred on the rim of the one before.</p>
+    <h3>Recipes</h3>
+    <p><b>Square</b>: odd harmonics k, amplitude 4/(πk). <b>Sawtooth</b>: every harmonic n, amplitude 2/(πn), alternating sign. <b>Triangle</b>: odd harmonics k, amplitude 8/(π²k²), alternating sign.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>3</code> or <code>←</code> <code>→</code> step · <code>Space</code> pause or switch wave · <code>[</code> <code>]</code> slider · <code>E</code> explain this step · <code>B</code> studio backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Schematic. Circle radii are in true proportion to each other, but the time axis is stretched and the board is not to any physical scale. Error and overshoot readouts are computed from the sums shown.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/study.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE, PI = Math.PI;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- helpers ---------- */
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', LIME = '#c8f03c', AMBER = '#ffb454', CORAL = '#ff7a63';
+var PAL = ['#7fe3ff', '#c8f03c', '#ffb454', '#ff7a63', '#b794f6', '#46d6b4'];
+function ordinal(k) { var m = k % 100, s = (m > 10 && m < 14) ? 'th' : ['th', 'st', 'nd', 'rd'][k % 10] || 'th'; return k + s; }
+
+/* ---------- the maths (pure functions; each wave has jump or corner points at multiples of pi) ---------- */
+var WAVES = [
+  { name: 'Square', odd: true, power: 1 },
+  { name: 'Sawtooth', odd: false, power: 1 / 3 },
+  { name: 'Triangle', odd: true, power: 1 / 3 }
+];
+/* i-th term of the series, as a signed amplitude a on sin(k x) */
+function term(w, i) {
+  var k = WAVES[w].odd ? 2 * i + 1 : i + 1, a;
+  if (w === 0) a = 4 / (PI * k);
+  else if (w === 1) a = (k % 2 ? 1 : -1) * 2 / (PI * k);
+  else a = 8 / (PI * PI * k * k) * (((k - 1) / 2) % 2 === 0 ? 1 : -1);
+  return { k: k, a: a, i: i };
+}
+function termList(w, n) { var l = [], i; for (i = 0; i < n; i++) l.push(term(w, i)); return l; }
+function ideal(w, x) {
+  if (w === 0) { var s = Math.sin(x); return s > 0 ? 1 : s < 0 ? -1 : 0; }
+  if (w === 1) return (x - 2 * PI * Math.floor((x + PI) / (2 * PI))) / PI;
+  return 2 / PI * Math.asin(Math.sin(x));
+}
+function partial(list, x) { var s = 0, j; for (j = 0; j < list.length; j++) s += list[j].a * Math.sin(list[j].k * x); return s; }
+/* Parseval: the squared RMS error is the mean power of the harmonics left out */
+function rmsErr(w, list) { var p = 0; list.forEach(function (t) { p += t.a * t.a / 2; }); return Math.sqrt(Math.max(0, WAVES[w].power - p)); }
+function peakOf(list) { var m = 0, i, M = 720; for (i = 0; i < M; i++) m = Math.max(m, Math.abs(partial(list, 2 * PI * i / M))); return m; }
+/* biggest value of the partial sum next to the jump (square: at 0, sawtooth: at pi), as % of the 2-unit jump */
+function overshoot(w, n) {
+  var l = termList(w, n), best = -9, bu = 0, M = 600, umax = Math.min(PI, 6 / n), i;
+  for (i = 1; i <= M; i++) { var u = umax * i / M, f = w === 0 ? partial(l, u) : partial(l, PI - u); if (f > best) { best = f; bu = u; } }
+  return { peak: best, pct: Math.max(0, (best - 1) / 2 * 100) };
+}
+var overCache = {};
+function overCurve(w) { if (!overCache[w]) { var a = [], n; for (n = 1; n <= 50; n++) a.push(overshoot(w, n).pct); overCache[w] = a; } return overCache[w]; }
+
+/* ---------- scene: board, circle chain, wave trace, corner plot ---------- */
+var S = 1.4, XC = -5.8, X0 = -0.9, X1 = 9.2, KX = 1.15, NT = 700, MAXC = 25, OMEGA = 0.7, PLOT_W = 1.1, PLOT_X = 8.4, SC = 2.1;
+/* a trace drawn as two crossed ribbons so it keeps its body from any orbit angle */
+function ribbon(n, hw, color) {
+  var pos = new Float32Array(n * 2 * 3), idx = [], i, g = new T.BufferGeometry();
+  for (i = 0; i < n - 1; i++) { var a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  g.setIndex(idx); g.setAttribute('position', new T.BufferAttribute(pos, 3));
+  var m = new T.Mesh(g, new T.MeshBasicMaterial({ color: color, side: T.DoubleSide })); m.frustumCulled = false;
+  var g2 = new T.BufferGeometry(); g2.setIndex(idx); g2.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 2 * 3), 3));
+  var m2 = new T.Mesh(g2, m.material); m2.frustumCulled = false;
+  var grp = new T.Group(); grp.add(m); grp.add(m2);
+  grp.set = function (xs, ys, z, count) {
+    var c = count || n, p = g.attributes.position.array, p2 = g2.attributes.position.array, k, dx, dy, l, nx, ny;
+    for (k = 0; k < c; k++) {
+      var k0 = Math.max(0, k - 1), k1 = Math.min(c - 1, k + 1);
+      dx = xs[k1] - xs[k0]; dy = ys[k1] - ys[k0]; l = Math.sqrt(dx * dx + dy * dy) || 1; nx = -dy / l * hw; ny = dx / l * hw;
+      p[k * 6] = xs[k] + nx; p[k * 6 + 1] = ys[k] + ny; p[k * 6 + 2] = z; p[k * 6 + 3] = xs[k] - nx; p[k * 6 + 4] = ys[k] - ny; p[k * 6 + 5] = z;
+      p2[k * 6] = xs[k]; p2[k * 6 + 1] = ys[k]; p2[k * 6 + 2] = z + hw; p2[k * 6 + 3] = xs[k]; p2[k * 6 + 4] = ys[k]; p2[k * 6 + 5] = z - hw;
+    }
+    g.setDrawRange(0, Math.max(0, (c - 1) * 6)); g2.setDrawRange(0, Math.max(0, (c - 1) * 6));
+    g.attributes.position.needsUpdate = true; g2.attributes.position.needsUpdate = true;
+  };
+  grp.material = m.material;
+  return grp;
+}
+function lineObj(n, color, opacity) {
+  var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3));
+  var l = new T.Line(g, new T.LineBasicMaterial({ color: color, transparent: true, opacity: opacity })); l.frustumCulled = false; return l;
+}
+function dashed(color, opacity) {
+  var arr = [], i; for (i = 0; i < 40; i++) arr.push(i / 40, 0, 0, (i + 0.55) / 40, 0, 0);
+  var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(arr, 3));
+  var l = new T.LineSegments(g, new T.LineBasicMaterial({ color: color, transparent: true, opacity: opacity })); l.frustumCulled = false; return l;
+}
+function boardTexture() {
+  var c = document.createElement('canvas'); c.width = 1024; c.height = 332; var x = c.getContext('2d'), i;
+  x.fillStyle = '#243049'; x.fillRect(0, 0, 1024, 332);
+  x.strokeStyle = 'rgba(160,185,235,0.13)'; x.lineWidth = 1.5;
+  for (i = 0; i <= 20; i++) { x.beginPath(); x.moveTo(i * 51.2, 0); x.lineTo(i * 51.2, 332); x.stroke(); }
+  for (i = 0; i <= 6; i++) { x.beginPath(); x.moveTo(0, i * 55.3); x.lineTo(1024, i * 55.3); x.stroke(); }
+  var tx = new T.CanvasTexture(c); tx.anisotropy = 4; return tx;
+}
+
+function sceneFourier() {
+  var root = new T.Group(), tex = boardTexture(), i;
+  var board = new T.Mesh(new T.BoxGeometry(20.4, 6.6, 0.22), soft('#ffffff', 0.5, { map: tex, emissiveMap: tex })); board.position.z = -0.52; root.add(board);
+  var rim = new T.Mesh(new T.BoxGeometry(20.8, 0.18, 0.5), soft('#3a4968', 0.2)); rim.position.set(0, 3.39, -0.4); root.add(rim);
+  [-7.6, 7.6].forEach(function (x) { var leg = new T.Mesh(new T.BoxGeometry(1.2, 1.7, 0.7), soft('#3a4968', 0.2)); leg.position.set(x, -4.05, -0.45); root.add(leg); });
+
+  /* wave side */
+  var axis = ribbon(2, 0.012, H('#8d9bbd', 1)); axis.set([X0, X1], [0, 0], 0.03); root.add(axis);
+  var refs = [dashed('#8d9bbd', 0.55), dashed('#8d9bbd', 0.55)]; refs.forEach(function (r, q) { r.position.set(X0, (q ? -1 : 1) * S, 0.03); r.scale.x = X1 - X0; root.add(r); });
+  var ideaLine = lineObj(NT, '#9db0d8', 0.55); ideaLine.position.z = 0.05; root.add(ideaLine);
+  var ghosts = []; for (i = 0; i < 6; i++) { var gl = lineObj(NT, PAL[i], 0.85); gl.position.z = 0.07; gl.visible = false; root.add(gl); ghosts.push(gl); }
+  var trace = ribbon(NT, 0.034, H(LIME, 1.5)); root.add(trace);
+  var xs = new Float32Array(NT), ys = new Float32Array(NT);
+  var conn = ribbon(2, 0.014, H('#e8eefc', 0.9)); root.add(conn);
+  var bead0 = new T.Mesh(new T.SphereGeometry(0.1, 14, 10), new T.MeshBasicMaterial({ color: H(LIME, 1.8) })); root.add(bead0);
+
+  /* circle chain */
+  var chain = new T.Group(); root.add(chain);
+  var ringGeo = new T.TorusGeometry(1, 0.026, 8, 96), spokeGeo = new T.CylinderGeometry(0.02, 0.02, 1, 6), circles = [], tipMeshes = [];
+  for (i = 0; i < MAXC; i++) {
+    var rm = new T.Mesh(ringGeo, soft(CYAN, 0.8)), sp = new T.Mesh(spokeGeo, soft('#e8eefc', 0.7));
+    rm.userData.tip = ''; chain.add(rm); chain.add(sp); circles.push({ ring: rm, spoke: sp }); tipMeshes.push(rm);
+  }
+  var hub = new T.Mesh(new T.SphereGeometry(0.07, 12, 8), soft('#e8eefc', 0.6)); hub.position.set(XC, 0, 0.1); chain.add(hub);
+  var tipBead = new T.Mesh(new T.SphereGeometry(0.1, 14, 10), new T.MeshBasicMaterial({ color: H(LIME, 1.8) })); chain.add(tipBead);
+
+  /* corner plot extras */
+  var peakDot = new T.Mesh(new T.SphereGeometry(0.11, 14, 10), new T.MeshBasicMaterial({ color: H(AMBER, 2) })); root.add(peakDot);
+  var guide = ribbon(2, 0.016, H(AMBER, 1.5)); root.add(guide);
+  var peakLine = dashed(AMBER, 0.8); root.add(peakLine);
+  var lblCircles = label('spinning circles', { size: 0.42 }); lblCircles.position.set(XC, 3.0, 0.2); root.add(lblCircles);
+  var lblWave = label('sum = the wave', { size: 0.42, color: LIME }); lblWave.position.set(4.2, 3.0, 0.2); root.add(lblWave);
+  var lblTime = label('time →', { size: 0.38 }); lblTime.position.set(X1 - 0.7, -2.9, 0.2); root.add(lblTime);
+  var lblPeak = label('peak', { size: 0.4, color: AMBER }); root.add(lblPeak);
+  var lblIdeal = label('ideal level', { size: 0.38 }); lblIdeal.position.set(-PLOT_X + 1.3, SC + 0.5, 0.2); root.add(lblIdeal);
+
+  var W = 0, N = 5, CN = 8, mask = [1, 1, 1, 1, 1, 1], mode = 'wave', list = [], err = 0, peak = 0, over = { peak: 1, pct: 0 };
+  var phi = 0, paused = false, dirty = true, tipY = 0;
+
+  function setCircleStyle() {
+    circles.forEach(function (c, j) {
+      var t = list[j], on = !!t && mode !== 'corner'; c.ring.visible = c.spoke.visible = on; if (!on) return;
+      var col = mode === 'add' ? PAL[t.i % 6] : CYAN;
+      c.ring.material.color.set(col); c.ring.material.emissive.set(col).multiplyScalar(0.8);
+      c.spoke.material.color.set(mode === 'add' ? col : '#e8eefc'); c.spoke.material.emissive.set(mode === 'add' ? col : '#e8eefc').multiplyScalar(0.6);
+      c.ring.userData.tip = ordinal(t.k) + ' harmonic · spins ' + t.k + '× per cycle · radius ' + Math.abs(t.a).toFixed(3);
+    });
+  }
+  function rebuild() {
+    if (mode === 'wave') list = termList(W, N);
+    else if (mode === 'add') list = termList(W, 6).filter(function (t, q) { return mask[q]; });
+    else list = termList(W, CN);
+    err = rmsErr(W, list); peak = peakOf(list);
+    if (mode === 'corner') over = overshoot(W, CN);
+    ghosts.forEach(function (g, q) { g.visible = mode === 'add' && !!list[q]; if (list[q]) g.material.color.set(PAL[list[q].i % 6]); });
+    setCircleStyle();
+    var wv = mode !== 'corner', cr = mode === 'corner';
+    chain.visible = wv; trace.visible = true; conn.visible = axis.visible = wv; bead0.visible = wv;
+    refs.forEach(function (r) { r.visible = true; }); lblCircles.visible = lblWave.visible = lblTime.visible = wv;
+    peakDot.visible = guide.visible = peakLine.visible = lblPeak.visible = lblIdeal.visible = cr;
+    refs.forEach(function (r, q) { var x0 = cr ? -PLOT_X : X0, x1 = cr ? PLOT_X : X1; r.position.set(x0, (q ? -1 : 1) * (cr ? SC : S), 0.03); r.scale.x = x1 - x0; });
+    dirty = true;
+  }
+  function drawCorner() {
+    var q, u, f, c = W === 0 ? 0 : PI, bi = 0, bv = -9;
+    for (q = 0; q < NT; q++) {
+      u = -PLOT_W + 2 * PLOT_W * q / (NT - 1); f = partial(list, c + u);
+      xs[q] = u / PLOT_W * PLOT_X; ys[q] = f * SC; if (f > bv) { bv = f; bi = q; }
+    }
+    trace.set(xs, ys, 0.08);
+    var ux = [-PLOT_W, -1e-6, 1e-6, PLOT_W], pa = ideaLine.geometry.attributes.position.array;
+    for (q = 0; q < 4; q++) { pa[q * 3] = ux[q] / PLOT_W * PLOT_X; pa[q * 3 + 1] = ideal(W, c + ux[q]) * SC; pa[q * 3 + 2] = 0; }
+    ideaLine.geometry.setDrawRange(0, 4); ideaLine.geometry.attributes.position.needsUpdate = true;
+    peakDot.position.set(xs[bi], bv * SC, 0.1);
+    guide.set([xs[bi], xs[bi]], [SC, bv * SC], 0.1); guide.visible = bv > 1.005;
+    peakLine.position.set(-PLOT_X, bv * SC, 0.06); peakLine.scale.x = 2 * PLOT_X; peakLine.visible = bv > 1.005;
+    lblPeak.position.set(xs[bi] + (W === 0 ? 1.1 : -1.1), bv * SC + 0.5, 0.2);
+  }
+  function drawWave() {
+    var q, s, ph, j, p = 0, cx = XC, cy = 0, c;
+    for (q = 0; q < NT; q++) {
+      s = q / (NT - 1) * (X1 - X0); ph = phi - s / KX;
+      xs[q] = X0 + s; ys[q] = partial(list, ph) * S;
+      ideaLine.geometry.attributes.position.array[q * 3] = xs[q]; ideaLine.geometry.attributes.position.array[q * 3 + 1] = ideal(W, ph) * S; ideaLine.geometry.attributes.position.array[q * 3 + 2] = 0;
+      for (j = 0; j < ghosts.length; j++) if (ghosts[j].visible) { var ga = ghosts[j].geometry.attributes.position.array; ga[q * 3] = xs[q]; ga[q * 3 + 1] = list[j].a * Math.sin(list[j].k * ph) * S; ga[q * 3 + 2] = 0; }
+    }
+    ideaLine.geometry.setDrawRange(0, NT); ideaLine.geometry.attributes.position.needsUpdate = true;
+    ghosts.forEach(function (g) { if (g.visible) { g.geometry.attributes.position.needsUpdate = true; g.geometry.setDrawRange(0, NT); } });
+    trace.set(xs, ys, 0.08);
+    for (j = 0; j < MAXC; j++) {
+      c = circles[j]; var t = list[j]; if (!t) break;
+      var r = Math.abs(t.a) * S, th = t.k * phi + (t.a < 0 ? PI : 0), nx = cx + r * Math.cos(th), ny = cy + r * Math.sin(th), z = 0.12 + j * 0.008;
+      c.ring.position.set(cx, cy, z); c.ring.scale.set(r, r, r);
+      c.spoke.position.set((cx + nx) / 2, (cy + ny) / 2, z); c.spoke.rotation.z = Math.atan2(ny - cy, nx - cx) - PI / 2; c.spoke.scale.set(1, Math.max(r, 0.0001), 1);
+      cx = nx; cy = ny;
+    }
+    tipY = cy; tipBead.position.set(cx, cy, 0.4); bead0.position.set(X0, cy, 0.1);
+    conn.set([cx, X0], [cy, cy], 0.1);
+  }
+  var api = {
+    group: root, w: 10.4, h: 3.6, base: 3.3,
+    setMode: function (m) { mode = m; rebuild(); },
+    setWave: function (w) { W = w; rebuild(); }, setTerms: function (n) { N = n; rebuild(); }, setCorner: function (n) { CN = n; rebuild(); },
+    setMask: function (q, on) { mask[q] = on ? 1 : 0; rebuild(); },
+    mask: function () { return mask; }, wave: function () { return W; }, terms: function () { return N; }, cornerN: function () { return CN; },
+    listLen: function () { return list.length; }, err: function () { return err; }, peak: function () { return mode === 'corner' ? over.peak : peak; }, over: function () { return over; },
+    paused: function () { return paused; }, setPaused: function (v) { paused = v; }, tips: function () { return mode === 'corner' ? [] : tipMeshes; },
+    update: function (t, dt) {
+      api.w = window.innerWidth > 900 ? 10.4 : 11.8; /* leaves room for the camera sway on a narrow screen */
+      if (!paused) phi += dt * OMEGA;
+      if (mode === 'corner') { if (dirty) { drawCorner(); dirty = false; } peakDot.scale.setScalar(1 + 0.2 * Math.sin(t * 3)); return; }
+      drawWave(); dirty = false;
+    }
+  };
+  rebuild();
+  return api;
+}
+
+/* ---------- stage: renderer, camera, the Math studio environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'math', fallbackText: 'This model needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null;
+canvas.addEventListener('pointerdown', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var list = sc.tips(); if (!list.length) { tipEl.classList.remove('on'); return; }
+  var r = canvas.getBoundingClientRect(); ndc.set((ptr.x - r.left) / r.width * 2 - 1, -((ptr.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var hit = ray.intersectObjects(list.filter(function (m) { return m.visible; }), false)[0];
+  if (hit && hit.object.userData.tip) { tipEl.textContent = hit.object.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<span></span>'; b.lastChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start);
+  return { pick: pick, next: function () { pick((cur + 1) % items.length); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { nudge: function (d) { inp.value = clamp(+inp.value + d * (o.step || 1) * (o.big || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+
+/* ---------- mini charts (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+function mtext(t, x, y, col, px, al) { mx.font = '400 ' + (px || 20) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = col || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function rrect(x, y, w, h, r, fill) { r = Math.min(r, w / 2, h / 2); mx.beginPath(); mx.moveTo(x + r, y); mx.arcTo(x + w, y, x + w, y + h, r); mx.arcTo(x + w, y + h, x, y + h, r); mx.arcTo(x, y + h, x, y, r); mx.arcTo(x, y, x + w, y, r); mx.closePath(); mx.fillStyle = fill; mx.fill(); }
+
+/* ---------- steps ---------- */
+var scene = null;
+function getScene() { if (!scene) { scene = sceneFourier(); stage.add(scene); } return scene; }
+function f3(v) { return v.toFixed(3); }
+function waveSeg(el, sc, count, st) {
+  var items = WAVES.slice(0, count).map(function (w, i) { return { label: w.name, v: i }; });
+  return seg(el, items, function (it) { sc.setWave(it.v); if (st && st.after) st.after(); }, Math.min(sc.wave(), count - 1), { title: 'Wave <em>space</em>' });
+}
+
+var STAGES = [
+  { id: 'circles', name: 'Circles', mode: 'wave',
+    explain: { title: 'One circle, one sine wave', body: [
+      'A point going round a circle at steady speed has a height that rises and falls as a <b>sine wave</b>. Follow that height as time passes and you draw the curve on the right. A bigger circle gives a taller wave, and a faster circle gives a shorter one.',
+      'A <b>Fourier series</b> says a repeating wave (with finite jumps and slopes) can be built from sine waves at 1×, 2×, 3× and so on, the base frequency. Put each circle on the rim of the one before and the height of the last tip is the sum of all of them.',
+      'The recipe depends on the wave. A square wave needs only odd harmonics k, with radius 4/(πk). A sawtooth needs every harmonic n, radius 2/(πn), turning alternately in phase and upside down. A triangle uses odd k, radius 8/(π²k²), so its circles shrink very quickly. Sharper corners need more, smaller circles.'], tryit: 'Pick Square and drag the slider from 1 to 25 circles. Then try Triangle and see how few circles it needs.' },
+    why: 'Each circle sits on the rim of the one before. <span class="y">The height of the last tip</span> is the wave on the right.', hint: 'Drag the slider to add circles · space pauses',
+    chart: { t: 'Circle radii', k: 'to scale' }, goLabel: function (sc) { return sc.paused() ? 'Play' : 'Pause'; }, go: function (sc) { sc.setPaused(!sc.paused()); },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Circles', keys: '[ ]', min: 1, max: 25, val: sc.terms(), big: 1, fmt: function (v) { return v + (v === 1 ? ' circle' : ' circles'); }, onInput: function (v) { sc.setTerms(v); sfx('tick'); } });
+      var sg = waveSeg(el, sc, 3);
+      return { next: function () { sg.next(); }, nudge: function (d) { sl.nudge(d); } };
+    },
+    stats: function (sc) { return [['Circles', sc.terms(), 'hot'], ['Wave', WAVES[sc.wave()].name], ['RMS error', f3(sc.err())]]; },
+    draw: function (sc) {
+      var w = sc.wave(), n = sc.terms(), bw = 572 / 25, m0 = Math.abs(term(w, 0).a), i;
+      mx.strokeStyle = 'rgba(255,255,255,0.12)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(14, 160.5); mx.lineTo(586, 160.5); mx.stroke();
+      for (i = 0; i < 25; i++) { var h = Math.max(2, Math.abs(term(w, i).a) / m0 * 130); rrect(14 + i * bw + 1.5, 160 - h, bw - 3, h, 2, i < n ? CYAN : 'rgba(255,255,255,0.13)'); }
+      mtext('radius of each circle, largest first', 14, 182, '#9ea8c2', 18);
+    } },
+  { id: 'add-up', name: 'Add up', mode: 'add',
+    explain: { title: 'A wave is a recipe of harmonics', body: [
+      'Each circle contributes one <b>harmonic</b>: a sine wave at a whole-number multiple of the base frequency. Its radius is its amplitude. The coloured ghost waves are the harmonics on their own, and the bright line is their sum.',
+      'Switch off the 1st harmonic and the sum loses its main swing. Switch off a high one and only the fine detail changes. Higher harmonics mostly sharpen corners, which is why a wave with sharp corners needs many of them.',
+      'The <b>RMS error</b> is the typical gap between your sum and the ideal wave, over one cycle. By Parseval&rsquo;s theorem its square equals the total power of the harmonics you left out, so it falls as you include more.'], tryit: 'On the square wave, turn the 1st harmonic off, then on again and turn the 3rd off. Which loss changes the shape more?' },
+    why: 'The wave is the <span class="y">sum of its harmonics.</span> Switch one off and see what changes.', hint: 'Toggle harmonics · space switches wave',
+    chart: { t: 'Harmonics', k: 'amplitude, on or off' }, goLabel: function () { return 'All on'; }, go: function (sc, st) { for (var q = 0; q < 6; q++) sc.setMask(q, true); st.refresh(); },
+    mount: function (el, sc, st) {
+      var sg = waveSeg(el, sc, 3, st), grid = document.createElement('div'); grid.className = 'chips'; var btns = [], q;
+      for (q = 0; q < 6; q++) (function (q) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'chip p'; b.innerHTML = '<span><em style="font-style:normal;color:' + PAL[q] + '">●</em> <u style="text-decoration:none"></u></span><i></i>';
+        b.addEventListener('click', function () { sc.setMask(q, !sc.mask()[q]); st.refresh(); }); grid.appendChild(b); btns.push(b);
+      })(q);
+      st.refresh = function () {
+        var w = sc.wave();
+        btns.forEach(function (b, k) { var t = term(w, k); b.querySelector('u').textContent = ordinal(t.k) + ' harmonic'; b.lastChild.textContent = 'radius ' + Math.abs(t.a).toFixed(2); b.setAttribute('aria-pressed', sc.mask()[k] ? 'true' : 'false'); });
+      };
+      st.after = st.refresh; el.appendChild(grid); st.refresh();
+      return { next: function () { sg.next(); } };
+    },
+    stats: function (sc) { var on = sc.mask().reduce(function (a, b) { return a + b; }, 0); return [['Harmonics on', on + ' of 6', 'hot'], ['Peak height', f3(sc.peak())], ['RMS error', f3(sc.err())]]; },
+    draw: function (sc) {
+      var w = sc.wave(), m = sc.mask(), m0 = Math.abs(term(w, 0).a), q;
+      mx.strokeStyle = 'rgba(255,255,255,0.12)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(14, 150.5); mx.lineTo(586, 150.5); mx.stroke();
+      for (q = 0; q < 6; q++) {
+        var t = term(w, q), h = Math.max(3, Math.abs(t.a) / m0 * 110), x = 30 + q * 94;
+        if (m[q]) rrect(x, 150 - h, 62, h, 4, PAL[q]); else { mx.strokeStyle = PAL[q]; mx.globalAlpha = 0.45; mx.lineWidth = 2; mx.strokeRect(x + 1, 150 - h + 1, 60, h - 2); mx.globalAlpha = 1; }
+        mtext(Math.abs(t.a).toFixed(2), x + 31, 144 - h, m[q] ? '#fff' : '#6f7894', 17, 'center'); mtext(t.k + '×', x + 31, 172, '#9ea8c2', 18, 'center');
+      }
+    } },
+  { id: 'corners', name: 'Corners', mode: 'corner',
+    explain: { title: 'Corners ring: the Gibbs overshoot', body: [
+      'A sum of smooth sine waves cannot jump instantly, so right next to a jump it overshoots, then rings. With a few terms the ringing is easy to see.',
+      'Add terms and the ringing is squeezed towards the jump, but the first peak does not get lower. For the square wave it settles near 1.179, an overshoot of about 9% of the 2-unit jump. The peak gets narrower, not smaller. The sawtooth has the same limit at its jump, though it needs more terms to reach it.',
+      'This is the <b>Gibbs phenomenon</b>. The RMS error still goes to zero, because the bad region shrinks, but the largest error next to the jump does not. The readout here is measured on the partial sum drawn, over a fine grid, not looked up from a formula.'], tryit: 'Slide from 5 to 50 terms. The amber peak gets thinner, but the measured overshoot stays near 9%. Then try Sawtooth.' },
+    why: 'Near a jump the sum overshoots by <span class="y">about 9% of the jump</span>, however many terms you add.', hint: 'Slide the terms · watch the amber peak',
+    chart: { t: 'Overshoot vs terms', k: '% of the jump' },
+    enter: function (sc) { if (sc.wave() === 2) sc.setWave(0); },
+    mount: function (el, sc, st) {
+      var sl = slider(el, { title: 'Terms', keys: '[ ]', min: 1, max: 50, val: sc.cornerN(), big: 5, fmt: function (v) { return v + (v === 1 ? ' term' : ' terms'); }, onInput: function (v) { sc.setCorner(v); sfx('tick'); } });
+      var sg = waveSeg(el, sc, 2, st);
+      return { next: function () { sg.next(); }, nudge: function (d) { sl.nudge(d); } };
+    },
+    stats: function (sc) { var o = sc.over(); return [['Terms', sc.cornerN(), 'hot'], ['Overshoot', o.pct.toFixed(1) + ' %', 'amber'], ['Peak height', f3(o.peak)]]; },
+    draw: function (sc) {
+      var cv = overCurve(sc.wave()), x0 = 40, x1 = 580, y0 = 160, y1 = 22, YM = 16, i;
+      function X(n) { return lerp(x0, x1, (n - 1) / 49); } function Y(v) { return lerp(y0, y1, v / YM); }
+      mx.strokeStyle = 'rgba(255,255,255,0.1)'; mx.lineWidth = 1;
+      [0, 5, 10, 15].forEach(function (v) { mx.beginPath(); mx.moveTo(x0, Y(v)); mx.lineTo(x1, Y(v)); mx.stroke(); mtext(v + '', 30, Y(v) + 6, '#6f7894', 18, 'right'); });
+      mx.setLineDash([6, 5]); mx.strokeStyle = AMBER; mx.beginPath(); mx.moveTo(x0, Y(8.95)); mx.lineTo(x1, Y(8.95)); mx.stroke(); mx.setLineDash([]);
+      mtext('~9 %', x1, Y(8.95) - 6, AMBER, 18, 'right');
+      mx.beginPath(); cv.forEach(function (v, k) { if (k) mx.lineTo(X(k + 1), Y(v)); else mx.moveTo(X(1), Y(v)); }); mx.strokeStyle = '#fff'; mx.lineWidth = 2.5; mx.stroke();
+      var n = sc.cornerN(); mx.beginPath(); mx.arc(X(n), Y(cv[n - 1]), 6, 0, 7); mx.fillStyle = AMBER; mx.fill();
+      mtext('1', x0, 184, '#6f7894', 18); mtext('terms', 310, 184, '#9ea8c2', 18, 'center'); mtext('50', x1, 182, '#6f7894', 18, 'right');
+    } }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+var stageBtns = STAGES.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function paintGo() { var s = STAGES[cur], g = $('go'); g.hidden = !s.go; if (s.go) g.innerHTML = '<svg viewBox="0 0 12 12" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M6 1.2a4.8 4.8 0 1 0 4.7 5.8H9.2A3.3 3.3 0 1 1 6 2.7c.9 0 1.7.4 2.3 1L6.8 5.2H11V1L9.4 2.6A4.8 4.8 0 0 0 6 1.2z"/></svg>' + s.goLabel(getScene()); }
+function go(i, instant) {
+  i = clamp(i, 0, STAGES.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STAGES[i], sc = getScene();
+    stage.show(sc); cur = i; tipEl.classList.remove('on');
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STAGES.length; setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; s.state = s.state || {}; if (s.enter) s.enter(sc, s.state); sc.setMode(s.mode);
+    ctl = s.mount(c, sc, s.state) || null;
+    paintGo(); renderStats(s.stats(sc, s.state));
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+$('go').addEventListener('click', function () { var s = STAGES[cur]; if (s.go) { s.go(getScene(), s.state); paintGo(); } });
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Studio backdrop on' : 'Studio backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #go, #explain, .chip')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-3]$/.test(k)) go(+k - 1);
+  else if (k === ' ' && !(e.target && e.target.tagName === 'BUTTON')) { e.preventDefault(); if (cur === 0) { getScene().setPaused(!getScene().paused()); paintGo(); } else if (ctl && ctl.next) ctl.next(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0, speed = calm ? 0.3 : 1;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000) * speed; last = now; tt += dt;
+  var s = STAGES[cur], sc = getScene();
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats(sc, s.state)); mx.clearRect(0, 0, MW, MH); s.draw(sc, s.state); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var ids = STAGES.map(function (s) { return s.id; }), h0 = (location.hash || '').slice(1).toLowerCase(), i0 = ids.indexOf(h0);
+if (i0 < 0) i0 = STAGES.map(function (s) { return s.name.toLowerCase(); }).indexOf(h0);
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

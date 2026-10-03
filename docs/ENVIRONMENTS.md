@@ -6,7 +6,7 @@ Every subject (category) has **one fixed environment**, and every topic in that 
 
 | Layer | File | Owns |
 | --- | --- | --- |
-| Environment | `shared/environments.js` | The 3D room: walls, furniture, props, lighting, the table the scene sits on |
+| Environment | `shared/environments.js`, `shared/rooms/<name>.js` | The 3D room: walls, furniture, props, lighting, the table the scene sits on. The core holds the lab, the studio and the shared helpers; each other subject has its own room file |
 | Stage | `shared/stage.js` | Renderer, camera, orbit controls, framing, bloom, the cinematic final pass, the on/off toggles |
 | Sound | `shared/sound.js` | The room's ambience and the interaction sounds |
 | Topic | `<category>/<topic>/index.html` | Its own scenes and its interface, nothing else |
@@ -83,15 +83,75 @@ The shared files are loaded straight from the repository, so a published change 
 
 If you need to change the *contract* itself (the subject fields, the stage API), update every topic in the same pull request. There is no version pinning.
 
+## Rooms: one file per subject
+
+The lab and the neutral studio live in `shared/environments.js`. Every other subject's room is its own file, `shared/rooms/<name>.js`, so a page downloads only the room of its subject. A room registers itself on the same `VLEnv` object and builds from the shared helpers in `VLEnv.kit` (walls, windows, tables, floors, canvas textures, glass, contact shadows), which keeps all rooms looking like one family:
+
+```js
+/* shared/rooms/study.js */
+(function () {
+'use strict';
+var ENV = window.VLEnv, K = ENV.kit;
+ENV.study = function (T) {
+  var g = new T.Group();
+  // build the room with K.* helpers; local y = 0 is the table top, the floor is at y = -13, the back wall near z = -19
+  var shadow = K.contactShadow(T, g, 0, 0, -1, 1, 1, 0.5);   // the stage resizes this under the subject
+  return { group: g, shadow: shadow, update: function (t, dt) {} };
+};
+})();
+```
+
+A topic page loads the core first, then its subject's room, then the stage:
+
+```html
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/study.js"></script>
+<script src="../../shared/stage.js"></script>
+```
+
+`npm run validate` fails if a topic of a subject with a room file does not load it, or loads it before the core. A topic that is listed under several subjects (`also`) always uses the room of its primary `category`; the extra listings only affect where its card appears.
+
+### Room contract (on top of the rules above)
+
+- **Clear zone.** The topic's model stands on the table at the origin and may be up to about 20 units wide and 10 high. Keep x in [-12, 12], y in [0, 10], z in [-9, 8] free of props. Props live behind it (z of -10 or further back), on the walls, or on the far side of the room.
+- **Table.** Local y = 0 is the table top. Use a table that suits the subject (wood, steel, mat, epoxy), at least 60 units wide and 30 deep, with legs or a base that reach the floor at y = -13.
+- **Walls.** The back wall is at about z = -19 and at least 110 wide. Side walls are not needed: the stage limits the orbit to about 60° either way and keeps the camera in front.
+- **Light.** Moderate, warm or cool to suit the mood: no more than a hemisphere light (~0.5), a key light (~0.3), a fill (~0.12) and one invisible overhead point light (~0.16) in total. No large surface may be emissive above 1.0. Small LEDs and screens may go to 1.4. No visible light cones, shafts or camera-facing glow sprites.
+- **Matte only,** as above. The stage forces it, but pick roughness 0.6 or higher and low metalness so it looks right before that.
+- **Animation is optional and quiet.** A blinking LED, a slow trace on a screen, a tiny sway. Nothing that ticks, floats or distracts.
+- **Real content on signs.** Equations, diagrams, charts and tables drawn on boards and posters must be correct and legible at normal view distance, on a dark or light backing with enough contrast. Original artwork only: no logos, brands or copied images.
+- **Cost.** Reuse geometry and materials, use instancing for repeats, and stay under about 150 draw calls and a few 512-pixel canvas textures.
+- **Test it** with the room harness (`.tmp/room.html`, ignored by git): `?room=<name>&cat=<category id>&yaw=0.6&pitch=0.2&zoom=1&sub=0`. Check yaw -0.6, 0 and 0.6, zoomed in and out, and with `sub=0` to see the whole room.
+
+### The planned rooms
+
+| Subject | Room | Mood and palette | Signature props |
+| --- | --- | --- | --- |
+| Biology | `lab` | Bright wet lab: sage walls, wood bench | window, bottles, glassware, sequencer, centrifuge, microscope (built) |
+| Math | `study` | A mathematician's study: slate green, walnut, brass | chalkboard wall with real proofs and diagrams, bookshelf, geometric solids, brass lamp, compass and set square |
+| Physics | `physicslab` | Teaching lab: cool slate, steel, white | optical table with a hole grid, optical rail with lens and prism, Newton's cradle, pendulum, whiteboard with correct physics |
+| Electronics | `bench` | Workbench: anti-static green mat, charcoal, orange | pegboard with tools, labelled parts drawers, oscilloscope with a slow trace, bench power supply with LEDs, soldering station, wire spools |
+| Aerospace | `hangar` | Hangar: concrete, light grey-blue, safety orange | big door window onto a runway and sky, scale aircraft and rocket models on stands, blueprint, telemetry screens, toolbox |
+| Chemistry | `chemlab` | Chemistry lab: cream tile, amber, teal | fume hood with sash, large periodic table poster, reagent shelf, burette stand, Bunsen burner, coloured flasks |
+| Astronomy | `observatory` | Dome at night: deep navy, brass, warm red lamp | ribbed dome with an open slit onto stars, refractor telescope on a mount, star charts, celestial globe |
+| Earth & Environment | `fieldstation` | Field station: earth browns, sage, sky blue | window onto mountains and sea, rock and mineral samples, soil-layer jars, topographic map, barometer and anemometer |
+| Engineering | `workshop` | Machine shop: industrial grey, safety yellow | vise on a steel bench, gear wall, steel shelving with parts bins, drafting table with blueprint, hard hats, calipers and wrench rack |
+| Materials | `materialslab` | Materials lab: copper, teal, charcoal | crystal specimens, metal ingot stacks, tensile-testing frame, furnace with a dim window, lattice-cell posters |
+| Computer Science | `devroom` | Developer's den: indigo, charcoal, teal and magenta accents | two monitors with real code, server rack with blinking LEDs, mechanical keyboard, flowchart or binary-tree whiteboard, headphones |
+| Statistics & Data | `analyst` | Analyst's office: beige, navy, mustard | whiteboard with a histogram and normal curve, Galton board, jar of marbles, dice and coins, bar-chart wall art |
+| Health & Medicine | `clinic` | Exam room: soft white, seafoam | exam bed, anatomy poster, supply cabinet, sink, patient monitor with an ECG trace, privacy curtain |
+| Neuroscience | `neurolab` | Neuro lab: dusk violet, teal | brain model on a stand, EEG monitor with live traces, neuron artwork, electrode-cap head form, microscope |
+
 ## Adding an environment for a new category
 
-1. Add a function to `shared/environments.js`: `ENV.<name> = function (T) { ... }`, following the contract and look rules above.
-2. Map the category to it in `ENV.CATEGORY_ENV`.
+1. Create `shared/rooms/<name>.js` as above (lowercase letters only; the file name must match `ENV.<name>`), following the contract and look rules.
+2. Map the category to it in `ENV.CATEGORY_ENV` in `shared/environments.js`.
 3. Set `"environment": "<name>"` on the category in `topics.json`.
 4. If it needs its own ambience, add a profile to `shared/sound.js` with the same name.
-5. Build a first topic from `templates/topic/` with `category: '<id>'`, and check it in the new environment.
-6. Add the environment to the table in [TOPIC_GUIDE.md](TOPIC_GUIDE.md).
-7. `npm run validate`.
+5. Add `<script src="../../shared/rooms/<name>.js"></script>` after `environments.js` in every topic of that category, and in `templates/topic/index.html` when the template's category changes.
+6. Check every topic of the category (see "Changing an environment safely").
+7. Update the table above and in [TOPIC_GUIDE.md](TOPIC_GUIDE.md).
+8. `npm run validate`.
 
 ## Subject contract
 

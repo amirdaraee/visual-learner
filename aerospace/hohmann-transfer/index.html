@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Orbits: The Hohmann Transfer</title>
+<meta name="description" content="An interactive orbit diagram: burn twice to move a spacecraft between two circular orbits and see why the cheapest path is an ellipse.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D diagram of a spacecraft moving between two circular orbits"><canvas id="gl"></canvas><div id="loading">Setting up the orrery…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Aerospace</span><span id="tagStage">Step 1 of 3</span></div>
+        <h1>The <em>Hohmann</em> transfer</h1>
+        <p>Two short burns move a spacecraft between circular orbits along an ellipse. Idealised and drawn as a flat diagram. Time is scaled.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1">
+      <div class="grp"><span class="lab">Step <em>1–3 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn" id="go" type="button" hidden></button>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#aerospace" title="All Aerospace concepts" aria-label="All Aerospace concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Room backdrop (B)" aria-label="Room backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="How it works (?)" aria-label="How it works"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="tip" aria-hidden="true"></div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>The Hohmann transfer</h2>
+    <p>To move a spacecraft from a low circular orbit to a higher one, the cheapest two-burn path is an <b>ellipse</b> that touches both circles. Burn forward once to stretch the orbit out, coast half an ellipse, then burn forward again to round it off. This page works through the numbers for an Earth-sized planet.</p>
+    <h3>What the model leaves out</h3>
+    <p>Burns are instant (impulsive). Both orbits are circular and lie in one plane. Gravity comes from one point mass, with no atmosphere, no Moon or Sun, no oblateness, no plane change and no fuel use beyond Δv. Real transfers add all of these. Time is scaled so a transfer takes seconds, and the planet&rsquo;s continents are invented. Orbit sizes are drawn to scale; the spacecraft, arrows and labels are not.</p>
+    <h3>Constants and sources</h3>
+    <p>Earth&rsquo;s gravitational parameter μ ~398,600 km³/s² and mean radius ~6,378 km. Formulas are the standard two-body results found in orbital mechanics texts (for example Bate, Mueller and White, <i>Fundamentals of Astrodynamics</i>; Vallado, <i>Fundamentals of Astrodynamics and Applications</i>).</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>3</code> or <code>←</code> <code>→</code> step · <code>Space</code> main action · <code>[</code> <code>]</code> slider · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and idealised. Not mission-planning or professional advice.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/hangar.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- helpers ---------- */
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function sstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function H(hex, m) { return new T.Color(hex).multiplyScalar(m == null ? 1 : m); }
+function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* shared look from the stage: matte shaded finish and readable in-scene text */
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', CORAL = '#ff6b86', AMBER = '#ffb454', LIME = '#c8f03c', TAU = Math.PI * 2;
+
+/* ---------- maths (pure, km and seconds; ideal two-body orbits around Earth) ---------- */
+/* maths:start */
+var MU = 398600, RE = 6378, SIDEREAL = 86164;
+function vcirc(r) { return Math.sqrt(MU / r); }
+function period(r) { return TAU * Math.sqrt(r * r * r / MU); }
+function visViva(r, a) { return Math.sqrt(MU * (2 / r - 1 / a)); }
+function hohmann(r1, r2) {
+  var a = (r1 + r2) / 2, e = (r2 - r1) / (r2 + r1), vp = visViva(r1, a), va = visViva(r2, a);
+  return { a: a, e: e, b: a * Math.sqrt(1 - e * e), vp: vp, va: va, v1: vcirc(r1), v2: vcirc(r2), dv1: vp - vcirc(r1), dv2: vcirc(r2) - va, tt: Math.PI * Math.sqrt(a * a * a / MU) };
+}
+/* Kepler's equation M = E - e sin E, solved by Newton's method */
+function kepler(M, e) {
+  var E = M + e * Math.sin(M), i, d;
+  for (i = 0; i < 20; i++) { d = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); E -= d; if (Math.abs(d) < 1e-12) break; }
+  return E;
+}
+/* maths:end */
+function fmtV(v) { return '~' + v.toFixed(2) + ' km/s'; }
+function fmtT(s) { return s < 7200 ? '~' + (s / 60).toFixed(1) + ' min' : s < 172800 ? '~' + (s / 3600).toFixed(1) + ' h' : '~' + (s / 86400).toFixed(1) + ' days'; }
+
+/* ---------- the invented planet: seamless value noise on a sphere, painted to a canvas ---------- */
+function h3(x, y, z) { var h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return h - Math.floor(h); }
+function vnoise(x, y, z) {
+  var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), u = sstep(x - xi), v = sstep(y - yi), w = sstep(z - zi);
+  return lerp(lerp(lerp(h3(xi, yi, zi), h3(xi + 1, yi, zi), u), lerp(h3(xi, yi + 1, zi), h3(xi + 1, yi + 1, zi), u), v),
+    lerp(lerp(h3(xi, yi, zi + 1), h3(xi + 1, yi, zi + 1), u), lerp(h3(xi, yi + 1, zi + 1), h3(xi + 1, yi + 1, zi + 1), u), v), w);
+}
+function mixc(a, b, k) { return [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)]; }
+function planetTexture() {
+  var W = 512, HT = 256, c = document.createElement('canvas'); c.width = W; c.height = HT;
+  var x = c.getContext('2d'), im = x.createImageData(W, HT), d = im.data, i, j, k;
+  var deep = [20, 58, 118], shallow = [48, 126, 184], sand = [196, 176, 118], green = [62, 128, 72], dry = [150, 140, 84], rock = [128, 112, 98], ice = [232, 241, 246];
+  for (j = 0; j < HT; j++) for (i = 0; i < W; i++) {
+    var lon = i / W * TAU, lat = (0.5 - j / HT) * Math.PI, cl = Math.cos(lat), px = cl * Math.cos(lon), py = Math.sin(lat), pz = cl * Math.sin(lon);
+    var n = 0.55 * vnoise(px * 2.2, py * 2.2, pz * 2.2) + 0.3 * vnoise(px * 4.7 + 9, py * 4.7, pz * 4.7) + 0.15 * vnoise(px * 10 + 3, py * 10, pz * 10), col;
+    if (n < 0.5) col = mixc(deep, shallow, sstep((n - 0.38) / 0.12));
+    else {
+      var q = (n - 0.5) / 0.22, m = vnoise(px * 3 + 40, py * 3, pz * 3);
+      col = q < 0.12 ? sand : mixc(m > 0.5 ? green : dry, rock, sstep((q - 0.5) / 0.5));
+    }
+    var ic = Math.abs(lat) - (1.28 + 0.14 * vnoise(px * 6, py * 6, pz * 6)); if (ic > 0) col = mixc(col, ice, sstep(ic / 0.06));
+    k = (j * W + i) * 4; d[k] = col[0]; d[k + 1] = col[1]; d[k + 2] = col[2]; d[k + 3] = 255;
+  }
+  x.putImageData(im, 0, 0); return new T.CanvasTexture(c);
+}
+function glowTexture() {
+  var c = document.createElement('canvas'); c.width = c.height = 64; var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c);
+}
+/* a flat arrow along +x, tail at the origin; set(length) resizes it */
+function arrow(color) {
+  var g = new T.Group(), m = new T.MeshBasicMaterial({ color: color }), sg = new T.CylinderGeometry(0.045, 0.045, 1, 8), hg = new T.ConeGeometry(0.14, 0.32, 14);
+  sg.rotateZ(-Math.PI / 2); sg.translate(0.5, 0, 0); hg.rotateZ(-Math.PI / 2); hg.translate(0.16, 0, 0);
+  var shaft = new T.Mesh(sg, m), head = new T.Mesh(hg, m); g.add(shaft); g.add(head);
+  g.userData.set = function (len) { var l = Math.max(len, 0.45); shaft.scale.x = l - 0.3; head.position.x = l - 0.32; };
+  g.userData.set(1); return g;
+}
+
+/* ---------- scene: the orrery ---------- */
+/* The diagram is a flat disc tilted toward the viewer. Orbit sizes are to scale; the craft, arrows and labels are not.
+   The scene is rebuilt (layout) whenever the orbits change, so every size is in scene units, never scaled by a parent. */
+function sceneOrrery() {
+  var root = new T.Group(), orr = new T.Group(), TILT = 1.15, tipMeshes = [], dummy = new T.Object3D();
+  orr.rotation.x = -TILT; root.add(orr);
+  var A = { r1: RE + 400, ratio: 42164 / (RE + 400), mode: 'single', burns: 2 };
+  var s = 1, R1 = 4.2, R2 = 8, kts = 1, D = hohmann(A.r1, A.r1 * A.ratio), live = { r: A.r1, v: vcirc(A.r1), ph: 'park', clock: 0 };
+  var ph = 'park', th = -1.3, M = 0, clock = 0, fl = 0, pulse = [-1, -1], lastX = 1e9, lastY = 1e9;
+
+  var spin = new T.Group(); orr.add(spin);
+  var tex = planetTexture();
+  var planet = new T.Mesh(new T.SphereGeometry(1, 64, 40), soft('#ffffff', 0.22, { map: tex, emissiveMap: tex })); planet.rotation.x = Math.PI / 2; planet.userData.tip = 'Earth-like planet · its mass sets μ'; spin.add(planet); tipMeshes.push(planet);
+  var halo = new T.Mesh(new T.SphereGeometry(1.04, 48, 32), new T.MeshBasicMaterial({ color: H(CYAN, 0.9), transparent: true, opacity: 0.14, side: T.BackSide, blending: T.AdditiveBlending, depthWrite: false })); orr.add(halo);
+  var disc = new T.Mesh(new T.CircleGeometry(1, 96), new T.MeshBasicMaterial({ color: '#3a4f7a', transparent: true, opacity: 0.2, depthWrite: false })); disc.position.z = -0.06; orr.add(disc);
+  var edge = new T.Mesh(new T.RingGeometry(0.992, 1, 128), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.22, depthWrite: false })); edge.position.z = -0.05; orr.add(edge);
+  function ringMesh(color, tip) { var m = new T.Mesh(new T.RingGeometry(0.9, 1, 8), new T.MeshBasicMaterial({ color: H(color, 1.2), side: T.DoubleSide })); m.userData.tip = tip; orr.add(m); tipMeshes.push(m); return m; }
+  var ring1 = ringMesh(CYAN, ''), ring2 = ringMesh(AMBER, '');
+
+  var ND = 120, dashes = new T.InstancedMesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ color: '#ffffff', side: T.DoubleSide }), ND); dashes.frustumCulled = false; orr.add(dashes);
+  var arr1 = arrow(H(CORAL, 1.5)), arr2 = arrow(H(CORAL, 1.5)); orr.add(arr1); orr.add(arr2);
+  var vArrow = arrow(H(LIME, 1.6)), gArrow = arrow(H(CYAN, 1.6)); gArrow.userData.set(0.75); orr.add(vArrow); orr.add(gArrow);
+  var pulses = [0, 1].map(function () { var m = new T.Mesh(new T.RingGeometry(0.3, 0.38, 40), new T.MeshBasicMaterial({ color: H(CORAL, 2), transparent: true, opacity: 0, side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending })); orr.add(m); return m; });
+  var lbO1 = label('orbit 1', { size: 0.4, color: CYAN }), lbO2 = label('orbit 2', { size: 0.4, color: AMBER }), lbT = label('transfer orbit', { size: 0.4, color: LIME }), lbB1 = label('burn 1', { size: 0.4, color: CORAL }), lbB2 = label('burn 2', { size: 0.4, color: CORAL });
+  var labels = [lbO1, lbO2, lbT, lbB1, lbB2];
+  labels.forEach(function (l) { l.userData.s0 = l.scale.clone(); orr.add(l); });
+
+  /* spacecraft: body, nose, nozzle, two panels, and a flame that only shows during a burn */
+  var craft = new T.Group(), steel = soft('#e8edf2', 0.35), panelM = soft('#4a86d0', 0.45);
+  var cb = new T.CylinderGeometry(0.1, 0.1, 0.36, 14); cb.rotateZ(-Math.PI / 2);
+  var cn = new T.ConeGeometry(0.1, 0.18, 14); cn.rotateZ(-Math.PI / 2); cn.translate(0.27, 0, 0);
+  var cz = new T.ConeGeometry(0.07, 0.1, 12); cz.rotateZ(Math.PI / 2); cz.translate(-0.23, 0, 0);
+  craft.add(new T.Mesh(cb, steel)); craft.add(new T.Mesh(cn, soft('#c9d3dd', 0.3))); craft.add(new T.Mesh(cz, soft('#7a8794', 0.2)));
+  [-1, 1].forEach(function (sg) { var p = new T.Mesh(new T.BoxGeometry(0.16, 0.34, 0.012), panelM); p.position.y = sg * 0.28; craft.add(p); });
+  var fg = new T.ConeGeometry(0.09, 0.6, 12); fg.rotateZ(Math.PI / 2); fg.translate(-0.55, 0, 0);
+  var flame = new T.Mesh(fg, new T.MeshBasicMaterial({ color: H(AMBER, 2), transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false })); craft.add(flame);
+  var hit = new T.Mesh(new T.SphereGeometry(0.5, 8, 6), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); hit.userData.tip = 'spacecraft · not to scale'; craft.add(hit); tipMeshes.push(hit);
+  craft.scale.setScalar(1.15); orr.add(craft);
+
+  /* trail: soft round points, brightest at the craft, fading to nothing behind it */
+  var NT = 380, tp = new Float32Array(NT * 3), tc = new Float32Array(NT * 3), tn = 0, tg = new T.BufferGeometry();
+  tg.setAttribute('position', new T.BufferAttribute(tp, 3)); tg.setAttribute('color', new T.BufferAttribute(tc, 3)); tg.setDrawRange(0, 0);
+  var trail = new T.Points(tg, new T.PointsMaterial({ size: 0.22, map: glowTexture(), vertexColors: true, transparent: true, blending: T.AdditiveBlending, depthWrite: false })); trail.frustumCulled = false; orr.add(trail);
+  function trailClear() { tn = 0; tg.setDrawRange(0, 0); lastX = lastY = 1e9; }
+  function trailAdd(x, y) {
+    var d = Math.hypot(x - lastX, y - lastY); if (d < 0.05) return;
+    /* fill the gap with points when the craft moves fast, so the trail stays continuous */
+    var n = lastX > 1e8 ? 1 : Math.min(14, Math.ceil(d / 0.05)), k, px, py, i, o, f, c = new T.Color('#9ff0ff').multiplyScalar(1.5);
+    for (k = 1; k <= n; k++) {
+      px = n === 1 ? x : lerp(lastX, x, k / n); py = n === 1 ? y : lerp(lastY, y, k / n);
+      if (tn < NT) tn++; else tp.copyWithin(0, 3);
+      o = (tn - 1) * 3; tp[o] = px; tp[o + 1] = py; tp[o + 2] = 0.04;
+    }
+    lastX = x; lastY = y;
+    for (i = 0; i < tn; i++) { f = Math.pow((i + 1) / tn, 1.5); tc[i * 3] = c.r * f; tc[i * 3 + 1] = c.g * f; tc[i * 3 + 2] = c.b * f; }
+    tg.setDrawRange(0, tn); tg.attributes.position.needsUpdate = true; tg.attributes.color.needsUpdate = true;
+  }
+
+  var api = { group: root, w: 9.6, w0: 9.6, h: 7, base: 5 };
+  /* rebuild everything that depends on the two orbit radii */
+  function layout() {
+    var tr = A.mode === 'transfer', r1 = A.r1, r2 = tr ? r1 * A.ratio : r1;
+    D = hohmann(r1, r2); s = (tr ? 8 : 4.2) / r2; R1 = r1 * s; R2 = r2 * s;
+    var Rp = RE * s, Rd = Math.max(R1, R2) * (tr ? 1.12 : 1.3) + 0.3, i;
+    planet.scale.setScalar(Rp); halo.scale.setScalar(Rp); disc.scale.setScalar(Rd); edge.scale.setScalar(Rd);
+    ring1.geometry.dispose(); ring1.geometry = new T.RingGeometry(R1 - 0.035, R1 + 0.035, 192); ring2.geometry.dispose(); ring2.geometry = new T.RingGeometry(R2 - 0.035, R2 + 0.035, 192);
+    ring1.userData.tip = 'orbit 1 · radius ~' + fmt(r1) + ' km'; ring2.userData.tip = 'orbit 2 · radius ~' + fmt(r2) + ' km';
+    ring2.visible = lbO2.visible = lbT.visible = lbB1.visible = lbB2.visible = arr1.visible = arr2.visible = tr; dashes.visible = tr; gArrow.visible = !tr;
+    var up = new T.Color(LIME).multiplyScalar(2), dn = new T.Color(LIME).multiplyScalar(0.45);
+    for (i = 0; i < ND; i++) {
+      var E0 = i / ND * TAU, E1 = (i + 0.58) / ND * TAU, x0 = D.a * (Math.cos(E0) - D.e) * s, y0 = D.b * Math.sin(E0) * s, x1 = D.a * (Math.cos(E1) - D.e) * s, y1 = D.b * Math.sin(E1) * s;
+      var show = i < ND / 2 || A.burns === 1;
+      dummy.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0.02); dummy.rotation.set(0, 0, Math.atan2(y1 - y0, x1 - x0)); dummy.scale.set(show ? Math.hypot(x1 - x0, y1 - y0) : 0.0001, 0.11, 1); dummy.updateMatrix();
+      dashes.setMatrixAt(i, dummy.matrix); dashes.setColorAt(i, i < ND / 2 ? up : dn);
+    }
+    dashes.instanceMatrix.needsUpdate = true; dashes.instanceColor.needsUpdate = true;
+    arr1.position.set(R1, 0, 0.03); arr1.rotation.z = Math.PI / 2; arr1.userData.set(D.dv1 * 0.5);
+    arr2.position.set(-R2, 0, 0.03); arr2.rotation.z = -Math.PI / 2; arr2.userData.set(D.dv2 * 0.5);
+    pulses[0].position.set(R1, 0, 0.05); pulses[1].position.set(-R2, 0, 0.05);
+    lbO1.position.set(0, -R1 - 0.75, 0.1); lbO2.position.set((R2 + 0.9) * Math.cos(0.75), (R2 + 0.9) * Math.sin(0.75), 0.1);
+    lbB1.position.set(R1 + 1.1, 0.95, 0.1); lbB2.position.set(-R2 + 1.2, -1.1, 0.1);
+    lbT.position.set(-D.a * D.e * s, D.b * s + 0.75, 0.1);
+    var tau = D.tt / period(r1), t1w = clamp(14 / tau, 3.5, 12);
+    kts = tr ? period(r1) / t1w : period(r1) / 8;
+    api.w0 = Rd + (tr ? 0.5 : 0.4); api.h = Rd * 0.72 + (tr ? 2.2 : 1.2); craft.scale.setScalar(clamp(Rd * 0.19, 1.2, 1.9)); api.base = Math.max(Rp, Rd * Math.cos(TILT)) + 0.3;
+    trailClear();
+  }
+  function burn(i) { fl = 1; pulse[i] = 0; sfx(i ? 'ping' : 'thump'); }
+  api.setMode = function (m) { A.mode = m; ph = 'park'; layout(); };
+  api.setAlt = function (alt) { A.r1 = RE + alt; ph = 'park'; layout(); };
+  api.setRatio = function (k) { A.ratio = k; ph = 'park'; layout(); };
+  api.setBurns = function (n) { A.burns = n; layout(); };
+  api.launch = function () { ph = 'armed'; th = -1.4; clock = 0; fl = 0; layout(); };
+  api.r1 = function () { return A.r1; }; api.ratio = function () { return A.ratio; }; api.burns = function () { return A.burns; };
+  api.calc = function () { return D; }; api.live = function () { return live; }; api.kts = function () { return kts; }; api.phase = function () { return ph; };
+  api.tips = function () { return tipMeshes; };
+  api.update = function (t, dt) {
+    var ds = dt * kts, r1 = A.r1, r2 = A.mode === 'transfer' ? r1 * A.ratio : r1, nt = Math.sqrt(MU / (D.a * D.a * D.a)), x, y, hd, rk, v, E;
+    var narrow = window.innerWidth <= 900; api.w = api.w0 * (narrow ? 1.3 : 1);
+    labels.forEach(function (l) { l.scale.copy(l.userData.s0).multiplyScalar(narrow ? 1.45 : 1); });
+    spin.rotation.z += TAU / SIDEREAL * ds;
+    if (ph === 'park' || ph === 'armed') {
+      th += Math.sqrt(MU / (r1 * r1 * r1)) * ds;
+      if (ph === 'armed' && th >= 0) { th = 0; ph = 'trans'; M = 0; clock = 0; burn(0); } else if (ph === 'park' && th > TAU) th -= TAU;
+    } else if (ph === 'trans') {
+      M += nt * ds; clock += ds;
+      if (A.burns === 2 && M >= Math.PI) { ph = 'orbit2'; th = Math.PI; burn(1); } else if (M >= TAU) M -= TAU;
+    } else { th += Math.sqrt(MU / (r2 * r2 * r2)) * ds; clock += ds; if (th > TAU) th -= TAU; }
+    if (ph === 'trans') {
+      E = kepler(M, D.e); rk = D.a * (1 - D.e * Math.cos(E)); x = D.a * (Math.cos(E) - D.e) * s; y = D.b * Math.sin(E) * s;
+      v = visViva(rk, D.a); hd = Math.atan2(D.b * Math.cos(E), -D.a * Math.sin(E));
+    } else { rk = ph === 'orbit2' ? r2 : r1; x = rk * s * Math.cos(th); y = rk * s * Math.sin(th); v = vcirc(rk); hd = th + Math.PI / 2; }
+    live.r = rk; live.v = v; live.ph = ph; live.clock = clock;
+    craft.position.set(x, y, 0.06); craft.rotation.z = hd;
+    vArrow.position.set(x + Math.cos(hd) * craft.scale.x * 0.38, y + Math.sin(hd) * craft.scale.x * 0.38, 0.07); vArrow.rotation.z = hd; vArrow.userData.set(v * 0.16);
+    gArrow.position.set(x, y, 0.07); gArrow.rotation.z = Math.atan2(-y, -x);
+    trailAdd(x, y);
+    fl = Math.max(0, fl - dt * 1.1); flame.visible = fl > 0.03; flame.scale.set(0.5 + fl, 0.4 + fl, 0.4 + fl);
+    pulses.forEach(function (m, i) {
+      if (pulse[i] < 0) { m.material.opacity = 0; return; }
+      pulse[i] += dt; var u = pulse[i] / 1.3; if (u >= 1) { pulse[i] = -1; m.material.opacity = 0; return; }
+      m.scale.setScalar(1 + u * 4); m.material.opacity = 0.9 * (1 - u) * (1 - u);
+    });
+  };
+  layout();
+  return api;
+}
+
+/* ---------- stage: renderer, camera, the studio environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'aerospace', fallbackText: 'This diagram needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok, camera = stage.camera, ptr = stage.pointer;
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null;
+canvas.addEventListener('pointerdown', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+function hover(sc) {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var r = canvas.getBoundingClientRect(); ndc.set((ptr.x - r.left) / r.width * 2 - 1, -((ptr.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var list = sc.tips().filter(function (m) { return m.visible; }), hit = ray.intersectObjects(list, false)[0];
+  if (hit && hit.object.userData.tip) { tipEl.textContent = hit.object.userData.tip; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, start, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'), cur = -1; wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<span></span>'; b.lastChild.textContent = it.label;
+    b.addEventListener('click', function () { pick(i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  function pick(i, silent) { cur = i; bs.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!silent) cb(items[i], i); }
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  if (start != null) pick(start);
+  return { pick: pick, next: function () { pick((cur + 1) % items.length); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  inp.addEventListener('pointerdown', function () { inp.dataset.drag = '1'; }); inp.addEventListener('pointerup', function () { inp.dataset.drag = ''; });
+  el.appendChild(group); paint();
+  return { set: function (v) { if (inp.dataset.drag) return; inp.value = v; paint(); }, nudge: function (d) { inp.value = clamp(+inp.value + d * (o.step || 1) * 5, o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { $('why').innerHTML = html; }
+
+/* ---------- mini charts (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+function mtext(t, x, y, col, px, al) { mx.font = '400 ' + (px || 20) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = col || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function rrect(x, y, w, h, r, fill) { r = Math.min(r, w / 2, h / 2); mx.beginPath(); mx.moveTo(x + r, y); mx.arcTo(x + w, y, x + w, y + h, r); mx.arcTo(x + w, y + h, x, y + h, r); mx.arcTo(x, y + h, x, y, r); mx.arcTo(x, y, x + w, y, r); mx.closePath(); mx.fillStyle = fill; mx.fill(); }
+function dot(x, y, col) { mx.beginPath(); mx.arc(x, y, 6, 0, 7); mx.fillStyle = col; mx.fill(); }
+
+/* ---------- steps ---------- */
+var built = {};
+function getScene() { if (!built.o) { built.o = sceneOrrery(); stage.add(built.o); } return built.o; }
+var PRE = { geo: 42164, gps: 26560 };
+
+var STAGES = [
+  { id: 'orbit', name: 'Circular orbit', explain: { title: 'Falling forever, and missing the ground', body: ["A spacecraft in a circular orbit is in free fall. Gravity bends its path toward the planet at exactly the rate the planet&rsquo;s surface curves away. For a circle of radius <b>r</b> that balance gives <b>v = &radic;(&mu;/r)</b>, where &mu; is the planet&rsquo;s gravitational parameter (~398,600 km&sup3;/s&sup2; for Earth).", "Higher orbits are <b>slower</b>, not faster. Radius counts from Earth&rsquo;s centre, so a 400 km altitude means r ~6,778 km, a speed of ~7.7 km/s and a period of ~92 minutes. The period follows <b>T = 2&pi;&radic;(r&sup3;/&mu;)</b>, so it grows quickly with radius. Everything here is idealised: one point mass, no atmosphere, no drag.", "The lime arrow is the velocity (length scaled to speed). The cyan arrow is the pull of gravity. Time is scaled so an orbit takes a few seconds."], tryit: 'Pick the GPS-like preset. The speed falls to ~3.9 km/s and the period grows to ~12 hours.' },
+    why: 'Gravity sets one speed for each height. <span class="y">Higher orbits are slower</span> and take longer.', hint: 'Drag the altitude slider · presets below',
+    chart: { t: 'Circular speed', k: 'vs altitude' },
+    enter: function (sc) { sc.setMode('single'); },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Altitude', keys: '[ ]', min: 200, max: 20200, step: 100, val: Math.round(sc.r1() - RE), fmt: function (v) { return fmt(v) + ' km'; }, onInput: function (v) { sc.setAlt(v); sg.pick(-1, true); } });
+      var sg = seg(el, [{ label: 'Low ~400 km', v: 400 }, { label: '~1,200 km', v: 1200 }, { label: 'GPS ~20,200', v: 20200 }], function (it) { sl.set(it.v); sc.setAlt(it.v); }, null, { title: 'Preset <em>space</em>' });
+      return { next: function () { sg.next(); }, nudge: function (d) { sl.nudge(d); } };
+    },
+    stats: function (sc) { var r = sc.r1(); return [['Radius', '~' + fmt(r) + ' km'], ['Speed', fmtV(vcirc(r)), 'hot'], ['Period', fmtT(period(r))]]; },
+    draw: function (sc) {
+      var x0 = 40, x1 = 580, y0 = 150, y1 = 28, n = 60, i, al, x, y, r = sc.r1() - RE;
+      mx.strokeStyle = 'rgba(255,255,255,0.1)'; mx.lineWidth = 1; [4, 6, 8].forEach(function (v) { y = lerp(y0, y1, (v - 3.5) / 4.5); mx.beginPath(); mx.moveTo(x0, y); mx.lineTo(x1, y); mx.stroke(); mtext(v + '', 32, y + 5, '#6f7894', 16, 'right'); });
+      mx.beginPath(); for (i = 0; i <= n; i++) { al = 200 + i / n * 20000; x = lerp(x0, x1, i / n); y = lerp(y0, y1, (vcirc(RE + al) - 3.5) / 4.5); if (i) mx.lineTo(x, y); else mx.moveTo(x, y); }
+      mx.strokeStyle = CYAN; mx.lineWidth = 3; mx.stroke();
+      dot(lerp(x0, x1, (r - 200) / 20000), lerp(y0, y1, (vcirc(RE + r) - 3.5) / 4.5), '#fff');
+      mtext('km/s', 44, 18, '#9ea8c2', 16); mtext('200 km', x0, 180, '#6f7894', 16); mtext('altitude', 310, 180, '#6f7894', 16, 'center'); mtext('20,200 km', x1, 180, '#6f7894', 16, 'right');
+    } },
+  { id: 'transfer', name: 'Transfer', explain: { title: 'One ellipse that touches both orbits', body: ["Burn <b>forward</b> at one point of the inner orbit. The craft speeds up and its orbit stretches into an ellipse. The burn point stays on the ellipse as its lowest point (periapsis), and the opposite side rises until it reaches the target radius (apoapsis). The ellipse has semi-major axis <b>a = (r1 + r2)/2</b>.", "Coast half an ellipse, which takes <b>t = &pi;&radic;(a&sup3;/&mu;)</b>. At the top the craft is too slow to stay at that height, so a second forward burn lifts the low side and makes the orbit circular. The two burns are <b>&Delta;v1 = &radic;(&mu;/r1)(&radic;(2r2/(r1+r2)) &minus; 1)</b> and <b>&Delta;v2 = &radic;(&mu;/r2)(1 &minus; &radic;(2r1/(r1+r2)))</b>.", "For a ~400 km orbit to geostationary radius (~42,164 km) the burns are roughly 2.4 km/s and 1.5 km/s, about 3.9 km/s in all, over about 5.3 hours. Idealised: instant burns, circular coplanar orbits, no perturbations and no plane change. Real geostationary transfers also change inclination."], tryit: 'Press Start transfer, then drag the ratio toward 1.2. The total Δv and the trip time both shrink.' },
+    why: 'Burn forward to raise the far side, coast half an ellipse, then <span class="y">burn again to circularise.</span>', hint: 'Slide the target orbit · Space starts the transfer',
+    chart: { t: 'Cost of the two burns', k: 'time scaled' }, goLabel: 'Start transfer', go: function (sc) { sc.launch(); },
+    enter: function (sc) { sc.setMode('transfer'); sc.setBurns(2); },
+    mount: function (el, sc) {
+      var sl = slider(el, { title: 'Target orbit r2 / r1', keys: '[ ]', min: 120, max: 1200, step: 1, val: Math.round(sc.ratio() * 100), fmt: function (v) { return (v / 100).toFixed(2) + ' ×'; }, onInput: function (v) { sc.setRatio(v / 100); sg.pick(-1, true); } });
+      function to(r2) { var k = clamp(r2 / sc.r1(), 1.2, 12); sl.set(Math.round(k * 100)); sc.setRatio(k); }
+      var sg = seg(el, [{ label: 'Geostationary', v: PRE.geo }, { label: 'GPS-like', v: PRE.gps }, { label: '2 ×', v: 0 }], function (it) { if (it.v) to(it.v); else { sl.set(200); sc.setRatio(2); } }, null, { title: 'Preset <em>space</em>' });
+      return { next: function () { sc.launch(); sfx('ui'); }, nudge: function (d) { sl.nudge(d); } };
+    },
+    stats: function (sc) { var d = sc.calc(); return [['Burn 1 · burn 2', fmtV(d.dv1).replace(' km/s', '') + ' · ' + fmtV(d.dv2)], ['Total Δv', fmtV(d.dv1 + d.dv2), 'hot'], ['Transfer time', fmtT(d.tt)]]; },
+    draw: function (sc) {
+      var d = sc.calc(), tot = d.dv1 + d.dv2, k = 430 / tot, r1 = sc.r1(), lv = sc.live(), el = lv.ph === 'trans' || lv.ph === 'orbit2' ? Math.min(lv.clock, d.tt) : 0;
+      [['burn 1', d.dv1, CYAN], ['burn 2', d.dv2, AMBER], ['total', tot, '#fff']].forEach(function (b, i) { var y = 6 + i * 32; mtext(b[0], 14, y + 17, '#9ea8c2', 16); rrect(88, y, Math.max(6, b[1] * k), 22, 5, b[2]); mtext(b[1].toFixed(2), 94 + b[1] * k, y + 18, '#dfe6f5', 16); });
+      mtext('a ~' + fmt(d.a) + ' km · e ~' + d.e.toFixed(3), 14, 130, '#dfe6f5', 17); mtext('r1 ~' + fmt(r1) + ' → r2 ~' + fmt(r1 * sc.ratio()) + ' km', 14, 154, '#9ea8c2', 16);
+      mtext(el > 0 ? 'time scaled · elapsed ' + fmtT(el) : 'time scaled · press Start to fly', 14, 180, LIME, 16);
+    } },
+  { id: 'two-burns', name: 'Why two burns', explain: { title: 'Speed drops on the way up', body: ["On the ellipse the speed follows the <b>vis-viva</b> equation, <b>v&sup2; = &mu;(2/r &minus; 1/a)</b>. Moving away from the planet turns speed into height, like a ball thrown upward, so the craft is fastest at periapsis and slowest at apoapsis.", "At apoapsis the ellipse speed is lower than the circular speed for that radius. With only burn 1, the craft climbs, swings round and falls back to the burn point, again and again. Burn 2 adds exactly the missing speed and lifts the low side, which turns the ellipse into the target circle.", "For a very large ratio (r2/r1 above about 11.94) a three-burn <b>bi-elliptic</b> transfer, which swings out far beyond the target first, can need less total &Delta;v than a Hohmann transfer, at the price of a much longer trip. Real missions also weigh time, fuel, and plane changes."], tryit: 'Choose Burn 1 only, fly it, and watch the craft come back to the burn point.' },
+    why: 'The craft slows as it climbs, so at the top it is <span class="y">too slow for a circle.</span> Burn 2 closes the gap.', hint: 'Compare two burns with one · Space switches',
+    chart: { t: 'Speed along the flight', k: 'time scaled' }, goLabel: 'Fly again', go: function (sc) { sc.launch(); },
+    enter: function (sc) { sc.setMode('transfer'); sc.setBurns(2); sc.launch(); },
+    mount: function (el, sc) {
+      var sg = seg(el, [{ label: 'Two burns', v: 2 }, { label: 'Burn 1 only', v: 1 }], function (it) { sc.setBurns(it.v); sc.launch(); setWhy(it.v === 1 ? 'With one burn the craft <span class="y">returns to the burn point</span> and repeats the same ellipse.' : STAGES[2].why); }, 0, { title: 'Plan <em>space</em>' });
+      return { next: function () { sg.next(); } };
+    },
+    stats: function (sc) {
+      var lv = sc.live(), d = sc.calc(), spent = lv.ph === 'trans' ? d.dv1 : lv.ph === 'orbit2' ? d.dv1 + d.dv2 : 0;
+      return [['Speed now', fmtV(lv.v), 'hot'], ['Radius now', '~' + fmt(lv.r) + ' km'], ['Δv spent', spent ? fmtV(spent) : 'none yet']];
+    },
+    draw: function (sc) {
+      var d = sc.calc(), lv = sc.live(), two = sc.burns() === 2, x0 = 40, x1 = 580, y0 = 156, y1 = 24, vmax = d.vp * 1.08, n = 80, i, M, E, v, x, y, t, nt = Math.sqrt(MU / (d.a * d.a * d.a));
+      function X(tt) { return lerp(x0 + 16, x1, tt / (2 * d.tt)); } function Y(vv) { return lerp(y0, y1, vv / vmax); }
+      mx.strokeStyle = 'rgba(255,255,255,0.18)'; mx.lineWidth = 1; mx.setLineDash([4, 5]); mx.beginPath(); mx.moveTo(x0, Y(d.v2)); mx.lineTo(x1, Y(d.v2)); mx.stroke(); mx.setLineDash([]);
+      mtext('circular at r2 ~' + d.v2.toFixed(2), x1, Y(d.v2) - 6, '#9ea8c2', 16, 'right');
+      mx.beginPath(); mx.moveTo(x0, Y(d.v1)); mx.lineTo(x0 + 16, Y(d.v1));
+      for (i = 0; i <= n; i++) { t = i / n * 2 * d.tt; if (two && t > d.tt) { mx.lineTo(X(d.tt), Y(d.va)); mx.lineTo(X(d.tt), Y(d.v2)); mx.lineTo(x1, Y(d.v2)); break; } E = kepler((nt * t) % TAU, d.e); v = visViva(d.a * (1 - d.e * Math.cos(E)), d.a); mx.lineTo(X(t), Y(v)); }
+      mx.strokeStyle = CYAN; mx.lineWidth = 3; mx.stroke();
+      if (lv.ph === 'park' || lv.ph === 'armed') { x = x0 + 8; } else { t = two ? Math.min(lv.clock, 2 * d.tt) : lv.clock % (2 * d.tt); x = X(t); }
+      dot(x, Y(lv.v), '#fff');
+      mtext('peri ~' + d.vp.toFixed(1), x0 + 40, y1 + 14, CORAL, 16); mtext('apo ~' + d.va.toFixed(1), X(d.tt), y0 + 20, AMBER, 16, 'center'); mtext('km/s', 14, 18, '#9ea8c2', 16);
+    } }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) { b.textContent = v; b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
+  });
+}
+var stageBtns = STAGES.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STAGES.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STAGES[i], sc = getScene();
+    stage.show(sc); cur = i; tipEl.classList.remove('on');
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STAGES.length; setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; s.state = s.state || {}; if (s.enter) s.enter(sc, s.state);
+    ctl = s.mount ? s.mount(c, sc, s.state) || null : null;
+    var goB = $('go'); goB.hidden = !s.go; if (s.go) goB.innerHTML = '<svg viewBox="0 0 12 12" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg>' + s.goLabel;
+    renderStats(s.stats(sc, s.state));
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+$('go').addEventListener('click', function () { var s = STAGES[cur]; if (s.go) s.go(getScene(), s.state); });
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Room backdrop on' : 'Room backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STAGES[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STAGES.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit + '</p><p style="font-size:12px;color:var(--mute)">Educational and idealised, not mission-planning advice. Time is scaled.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #go, #explain')) sfx('ui'); });
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-3]$/.test(k)) go(+k - 1);
+  else if (k === ' ' && ctl && ctl.next) { e.preventDefault(); ctl.next(); }
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0, speed = calm ? 0.3 : 1;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000) * speed; last = now; tt += dt;
+  var s = STAGES[cur], sc = getScene();
+  sc.update(tt, dt); hover(sc);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats(sc, s.state)); if (ctl && ctl.tick) ctl.tick(); mx.clearRect(0, 0, MW, MH); s.draw(sc, s.state); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var ids = STAGES.map(function (s) { return s.id; }), i0 = ids.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

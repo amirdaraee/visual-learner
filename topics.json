@@ -5,42 +5,105 @@
       "name": "Biology",
       "blurb": "Genes, cells and living systems.",
       "accent": "#5eead4",
-      "environment": "lab"
+      "environment": "lab",
+      "preview": "assets/previews/biology.jpg"
     },
     {
       "id": "math",
       "name": "Math",
       "blurb": "Structures and patterns you can see move.",
       "accent": "#a78bfa",
-      "environment": "studio"
+      "environment": "study",
+      "preview": "assets/previews/fourier-series.jpg"
     },
     {
       "id": "physics",
       "name": "Physics",
       "blurb": "Forces, waves and fields in motion.",
       "accent": "#7fb2ff",
-      "environment": "studio"
+      "environment": "physicslab",
+      "preview": "assets/previews/wave-interference.jpg"
     },
     {
       "id": "electronics",
       "name": "Electronics",
       "blurb": "Circuits, signals and the parts inside them.",
       "accent": "#ffb454",
-      "environment": "studio"
+      "environment": "bench",
+      "preview": "assets/previews/rc-circuit.jpg"
     },
     {
       "id": "aerospace",
       "name": "Aerospace",
       "blurb": "Flight, orbits and the machines that do them.",
       "accent": "#ff6b86",
-      "environment": "studio"
+      "environment": "hangar",
+      "preview": "assets/previews/hohmann-transfer.jpg"
     },
     {
       "id": "chemistry",
       "name": "Chemistry",
       "blurb": "Atoms, bonds and reactions.",
       "accent": "#9be564",
-      "environment": "studio"
+      "environment": "chemlab",
+      "preview": "assets/previews/molecular-shapes.jpg"
+    },
+    {
+      "id": "astronomy",
+      "name": "Astronomy",
+      "blurb": "Stars, planets and the sky above.",
+      "accent": "#e879f9",
+      "environment": "observatory"
+    },
+    {
+      "id": "earth",
+      "name": "Earth & Environment",
+      "blurb": "Land, weather, water and climate.",
+      "accent": "#d6a66b",
+      "environment": "fieldstation"
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering",
+      "blurb": "Forces, structures and machines.",
+      "accent": "#cbd5e1",
+      "environment": "workshop"
+    },
+    {
+      "id": "materials",
+      "name": "Materials",
+      "blurb": "Crystals, metals and why matter behaves as it does.",
+      "accent": "#67e8f9",
+      "environment": "materialslab"
+    },
+    {
+      "id": "computer-science",
+      "name": "Computer Science",
+      "blurb": "Algorithms and data you can watch move.",
+      "accent": "#fb923c",
+      "environment": "devroom",
+      "preview": "assets/previews/binary-numbers.jpg"
+    },
+    {
+      "id": "statistics",
+      "name": "Statistics & Data",
+      "blurb": "Chance, samples and the shape of data.",
+      "accent": "#fde68a",
+      "environment": "analyst"
+    },
+    {
+      "id": "health",
+      "name": "Health & Medicine",
+      "blurb": "How the body and treatments work.",
+      "accent": "#f87171",
+      "environment": "clinic"
+    },
+    {
+      "id": "neuroscience",
+      "name": "Neuroscience",
+      "blurb": "Neurons, signals and the brain.",
+      "accent": "#a5b4fc",
+      "environment": "neurolab"
     }
   ],
   "topics": [
@@ -57,7 +120,130 @@
       ],
       "level": "Intermediate",
       "status": "live",
-      "added": "2026-10-02"
+      "added": "2026-10-02",
+      "preview": "assets/previews/biology.jpg",
+      "also": [
+        "health"
+      ]
+    },
+    {
+      "id": "fourier-series",
+      "category": "math",
+      "title": "Fourier Series: Waves from Circles",
+      "summary": "Stack spinning circles to build a square wave, a sawtooth or a triangle, and watch the sum close in on the shape.",
+      "path": "math/fourier-series/",
+      "tags": [
+        "waves",
+        "series",
+        "signals"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/fourier-series.jpg"
+    },
+    {
+      "id": "wave-interference",
+      "category": "physics",
+      "title": "Wave Interference: Two Ripples",
+      "summary": "Drop two sources into a water surface, change their spacing and wavelength, and see where waves add and cancel.",
+      "path": "physics/wave-interference/",
+      "tags": [
+        "waves",
+        "interference",
+        "optics"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/wave-interference.jpg"
+    },
+    {
+      "id": "rc-circuit",
+      "category": "electronics",
+      "title": "The RC Circuit: Charging a Capacitor",
+      "summary": "Charge and discharge a capacitor through a resistor and see the time constant shape the curve.",
+      "path": "electronics/rc-circuit/",
+      "tags": [
+        "circuits",
+        "capacitor",
+        "filters"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/rc-circuit.jpg"
+    },
+    {
+      "id": "hohmann-transfer",
+      "category": "aerospace",
+      "title": "Orbits: The Hohmann Transfer",
+      "summary": "Burn twice to move a spacecraft between two circular orbits, and see why the cheapest path is an ellipse.",
+      "path": "aerospace/hohmann-transfer/",
+      "tags": [
+        "orbits",
+        "orbital mechanics",
+        "delta-v"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/hohmann-transfer.jpg"
+    },
+    {
+      "id": "molecular-shapes",
+      "category": "chemistry",
+      "title": "Molecular Shapes: Why Molecules Bend",
+      "summary": "Add bonds and lone pairs around a central atom and watch electron repulsion pick the shape.",
+      "path": "chemistry/molecular-shapes/",
+      "tags": [
+        "VSEPR",
+        "bonding",
+        "geometry"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/molecular-shapes.jpg"
+    },
+    {
+      "id": "binary-numbers",
+      "category": "computer-science",
+      "also": [
+        "math",
+        "electronics"
+      ],
+      "title": "Binary Numbers: Counting with Two Digits",
+      "summary": "Why decimal needs a new column after 9, how a pile of dots groups by tens and by doubles, then flip bits to see two digits write any number.",
+      "path": "computer-science/binary-numbers/",
+      "tags": [
+        "binary",
+        "number systems",
+        "bits"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/binary-numbers.jpg"
+    },
+    {
+      "id": "cpu",
+      "category": "computer-science",
+      "also": [
+        "electronics"
+      ],
+      "title": "The CPU: What Is Inside the Chip",
+      "summary": "Follow a real RISC-V program through fetch, decode and execute, build an adder from switches, and see how pipelines and caches make chips fast.",
+      "path": "computer-science/cpu/",
+      "tags": [
+        "processor",
+        "instructions",
+        "hardware"
+      ],
+      "level": "Intermediate",
+      "status": "live",
+      "added": "2026-10-02",
+      "preview": "assets/previews/cpu.jpg"
     }
   ]
 }

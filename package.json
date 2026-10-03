@@ -7,7 +7,7 @@
   "type": "module",
   "engines": { "node": ">=18" },
   "scripts": {
-    "serve": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8844",
     "validate": "node scripts/validate.mjs"
   }
 }

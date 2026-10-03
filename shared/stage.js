@@ -110,7 +110,8 @@ function create(o) {
     renderer.setClearColor(0x0b0f1a, 1);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     scene = new T.Scene(); scene.fog = new T.FogExp2(0x0b0f1a, 0.012);
-    camera = new T.PerspectiveCamera(38, 1, 0.1, 300);
+    /* near plane 0.5: the composer's depth buffer is 16-bit, and a nearer plane makes distant surfaces flicker where they almost touch */
+    camera = new T.PerspectiveCamera(38, 1, 0.5, 300);
     scene.add(new T.AmbientLight(0xffffff, 0.46));
     var dl = new T.DirectionalLight(0xffffff, 0.3); dl.position.set(3, 6, 9); scene.add(dl);
     var dl2 = new T.DirectionalLight(0xdce6f0, 0.14); dl2.position.set(-6, -3, 4); scene.add(dl2);
@@ -178,6 +179,8 @@ function create(o) {
   canvas.addEventListener('pointerleave', function () { ptr.in = false; });
   canvas.addEventListener('wheel', function (e) { e.preventDefault(); rig.tz = clamp(rig.tz * Math.exp(e.deltaY * 0.001), 0.35, yawLimit() ? 1.2 : 2); }, { passive: false });
   S.resetView = function () { rig.ty = 0; rig.tp = 0.2; rig.tz = 1; };
+  /* jump the camera to a view: { yaw, pitch, zoom }. Used by tests and preview captures. */
+  S.setView = function (v) { v = v || {}; if (v.yaw != null) rig.ty = rig.yaw = v.yaw; if (v.pitch != null) rig.tp = rig.pitch = v.pitch; if (v.zoom != null) rig.tz = rig.zoom = v.zoom; };
   canvas.addEventListener('dblclick', S.resetView);
   S.dragging = function () { return !!drag; };
 
