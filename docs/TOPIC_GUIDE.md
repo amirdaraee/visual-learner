@@ -41,6 +41,8 @@ Add one object to `topics` in `topics.json`:
 | `status` | `live` or `soon` |
 | `added` | `YYYY-MM-DD` |
 
+**Share cards.** Every live topic has Open Graph and Twitter tags and a 1200 x 630 image at `assets/social/<topic-id>.png`, so links look good when shared. Generate them with `node scripts/social-cards.mjs` (all) or `node scripts/social-cards.mjs <topic-id>` (one, or `site` for the site card). Regenerate after changing a title, a level or a preview. The validator checks the tags and the file.
+
 **One topic, several subjects.** A topic has exactly one home (`category`) and any number of extra listings (`also`). It is built once, in the primary category's folder and environment, and the landing page shows its card under every subject it is listed in. Pick the primary by asking "which subject's room should this be in?".
 
 **Preview images.** A category and a topic can have an optional `preview`: a JPEG path such as `assets/previews/biology.jpg`, shown at the top of its card on the landing page. A card without one gets a tinted tile with the subject's icon. To make one: open the topic at 1200 x 750 and pick a stage that reads well. Turn the backdrop off (the environment button), hide the interface (the eye button, and the tool buttons), so only the model is left. Crop to an 800 x 500 region around the model (16:10, the card's proportions) and save it as a JPEG at about 80% quality (aim for under 150 KB) in `assets/previews/`. Focus on the model, not the room. Retake it when a shared environment or the interface style changes enough to make it look dated. Use a real capture of the topic, never a mock-up.

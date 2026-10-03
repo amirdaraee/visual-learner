@@ -20,9 +20,11 @@ Visual Learner: a static GitHub Pages site of interactive 3D explainers, grouped
 ```sh
 npm run serve       # static server on http://localhost:8844
 npm run validate    # manifest + page checks, must pass
+npm run test:unit   # unit tests (validator, writing rules, PR rules)
+npm run test:e2e    # browser tests of every topic (Playwright); see docs/TESTING.md
 ```
 
-There is no build step and none should be added.
+There is no build step and none should be added. The test tooling is a dev dependency only; the site itself loads nothing from `node_modules`.
 
 ## Rules for this repo
 

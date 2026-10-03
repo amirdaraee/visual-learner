@@ -40,7 +40,11 @@ Work through these in order. Each step links to the document that has the detail
 
 **7. Make a preview image.** Open the page at 1200 x 750, turn the backdrop off, hide the interface, crop to the model at 16:10 and save a JPEG under 150 KB as `assets/previews/<topic-id>.jpg`. Add it as `preview` on the topic. The steps are in the topic guide. It must be a real capture, not a mock-up.
 
-**8. Check it.**
+**8. Make the share card.** Fill in the share tags in your page (the template has them with placeholders: canonical, Open Graph and Twitter), then run `node scripts/social-cards.mjs <topic-id>` to create `assets/social/<topic-id>.png` (1200 x 630) from your title, subject, level and preview. It needs Chrome installed (set `CHROME` to its path if it is not in the macOS default). Commit the image.
+
+**9. Run the checks.** `npm install`, then `npm test` runs the validator, the unit tests and the browser tests (every step of every topic, phone width, no-WebGL, the writing rules). The same checks run on your pull request, with one more that reads your description and file list. Details: [docs/TESTING.md](docs/TESTING.md).
+
+**10. Check it by eye.**
 - `npm run validate` passes.
 - Open every step on desktop and at about 400 px wide, with the console open: no errors, no overlapping controls, no horizontal scroll, labels readable.
 - Orbit to both sides and zoom in and out: nothing collides, and the model stays clear of the room.
@@ -48,7 +52,7 @@ Work through these in order. Each step links to the document that has the detail
 - Read each explain panel next to the screen: does every sentence match what is shown?
 - Leave no dev or test files in the topic folder.
 
-**9. Update the docs and open a pull request.** Add the topic to the table in `README.md`, then open a pull request using the template with screenshots at desktop and phone width and the sources for your facts.
+**11. Update the docs and open a pull request.** Add the topic to the table in `README.md`, then open a pull request using the template with screenshots at desktop and phone width and the sources for your facts.
 
 ### Adding a new subject
 
@@ -67,7 +71,7 @@ Add the category to `topics.json` (`id`, `name`, `blurb`, `accent`, `environment
 - One topic or one fix per pull request.
 - Describe what the page teaches and list the sources for any factual claims.
 - Include a screenshot or short recording at desktop and phone width.
-- `npm run validate` must pass. CI runs it too.
+- `npm test` must pass. CI runs it, plus a check that the description and files follow these guidelines, and it will tell you what to fix.
 - Keep commits focused. Write messages in the imperative: "Add pendulum phase-space topic".
 
 ## Code style

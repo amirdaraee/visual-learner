@@ -6,6 +6,20 @@
 <meta name="theme-color" content="#0b0f0d">
 <title>The CPU: What Is Inside the Chip</title>
 <meta name="description" content="How a real CPU works: its floor plan, a real RISC-V instruction split into fields, the adder built from switches, the pipeline and the cache that make it fast.">
+<link rel="canonical" href="https://turnscience.com/computer-science/cpu/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="The CPU: What Is Inside the Chip · Visual Learner">
+<meta property="og:description" content="Follow a real RISC-V program through fetch, decode and execute, build an adder from switches, and see how pipelines and caches make chips fast.">
+<meta property="og:url" content="https://turnscience.com/computer-science/cpu/">
+<meta property="og:image" content="https://turnscience.com/assets/social/cpu.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The CPU: What Is Inside the Chip: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The CPU: What Is Inside the Chip · Visual Learner">
+<meta name="twitter:description" content="Follow a real RISC-V program through fetch, decode and execute, build an adder from switches, and see how pipelines and caches make chips fast.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/cpu.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -779,9 +793,9 @@ var STAGES = [
     }, stats: rows },
   { id: 'pipeline', name: 'Pipeline', long: 'Why it is fast: the pipeline', key: 'pipe', why: 'Pipelined, a new instruction starts <span class="y">every cycle</span>. After the first result, one finishes per cycle.', hint: 'Compare the two modes, then set the branch to wrong',
     explain: { title: 'A pipeline finishes one instruction per cycle once it is full', sections: [
-      { h: 'What you see', p: ['Each row is an instruction and each column is one clock cycle. The colours are five stages: IF fetch, ID decode, EX execute, MEM memory access and WB write-back. One at a time, 6 instructions take 5 × 6 = 30 cycles. Pipelined, a new instruction enters each cycle, so they take 6 + 4 = 10 cycles. The first result appears after 5 cycles and then one arrives every cycle.'] },
-      { h: 'Branches', p: ['The branch predictor guesses which way the beq goes and fetching continues down that path. When the guess is wrong, found in EX, the two instructions behind the branch are flushed and fetching restarts from the right place. Here that costs 2 cycles, so the program takes 12.'] },
-      { h: 'Simplified', p: ['Real CPUs have ~10 to 20 or more stages, finish several instructions per cycle and can run them out of order. These six are independent. Instructions that depend on each other can force stalls.'] }
+      { h: 'What you see', p: ['Each row is an instruction and each column is one clock cycle. The colours are the five stages: IF fetch, ID decode, EX execute, MEM memory access and WB write-back.'] },
+      { h: 'How it works', p: ['One at a time, 6 instructions take 5 × 6 = 30 cycles. Pipelined, a new instruction enters each cycle, so they take 6 + 4 = 10 cycles. The first result appears after 5 cycles and then one arrives every cycle.', 'The branch predictor guesses which way the beq goes and fetching continues down that path. When the guess is wrong, which is found in EX, the two instructions behind the branch are flushed and fetching restarts from the right place. Here that costs 2 cycles, so the program takes 12.'] },
+      { h: 'What is left out', p: ['Real CPUs have ~10 to 20 or more stages, finish several instructions per cycle and can run them out of order. These six are independent. Instructions that depend on each other can force stalls.'] }
     ], tryit: ['Set the branch to Predicted wrong in Pipelined mode and watch rows 4 and 5 turn into flushed bubbles.'] },
     btn: function (sc) { return { label: 'Replay', icon: ICON_RESTART, run: function () { sc.replay(); } }; },
     mount: function (el, sc) {
@@ -792,9 +806,9 @@ var STAGES = [
     }, stats: rows },
   { id: 'memory', name: 'Memory', long: 'Why it is fast: the cache', key: 'ladder', why: 'Each level is <span class="y">bigger and slower</span>. A cache keeps recent lines close, so ordered reads mostly hit.', hint: 'Pick a rung, then try the cache demo',
     explain: { title: 'Each memory level is bigger and slower, and the cache hides it', sections: [
-      { h: 'The ladder', p: ['The bars compare approximate access times on a log scale, so each step up is about 10 times longer. Typical values: registers well under 1 ns, L1 ~1 ns, L2 ~3 to 5 ns, L3 ~10 to 20 ns, RAM ~60 to 100 ns, SSD ~tens of microseconds. If 1 ns were 1 second, L1 takes about a second, RAM about a minute and a half, and an SSD hours to a day.'] },
-      { h: 'The cache demo', p: ['A cache keeps copies of recently used lines. Reading an array in order, one miss loads a whole line and the next reads are hits. Jumping by 4 numbers lands on a different line each time, and the line is gone before the loop returns, so every read misses. This demo has 4 lines of 4 numbers, and ordered reading hits 75% of the time. Real lines are 64 bytes.'] },
-      { h: 'Cores', p: ['More cores do not speed up a single read. By Amdahl’s law, a job with 20% serial work gains at most about 3.3 times from 8 cores.'] }
+      { h: 'What you see', p: ['The bars compare approximate access times on a log scale, so each step up is about 10 times longer. Below them, the cache demo reads an array in a loop and counts hits and misses.'] },
+      { h: 'How it works', p: ['Typical values: registers well under 1 ns, L1 ~1 ns, L2 ~3 to 5 ns, L3 ~10 to 20 ns, RAM ~60 to 100 ns, SSD ~tens of microseconds. If 1 ns were 1 second, L1 takes about a second, RAM about a minute and a half, and an SSD hours to a day.', 'A cache keeps copies of recently used lines. Reading an array in order, one miss loads a whole line and the next reads are hits. Jumping by 4 numbers lands on a different line each time, and the line is gone before the loop returns, so every read misses. This demo has 4 lines of 4 numbers, and ordered reading hits 75% of the time. Real lines are 64 bytes.'] },
+      { h: 'In real life', p: ['More cores do not speed up a single read. By Amdahl’s law, a job with 20% serial work gains at most about 3.3 times from 8 cores.'] }
     ], tryit: ['Open the cache demo, run In order, then run Jumping around and compare the hit rates.'] },
     btn: function (sc) { return STAGES[4].key === 'cache' ? { label: 'Next read', icon: ICON_NEXT, run: function () { sc.stepNow(); } } : null; },
     mount: function (el, sc) {

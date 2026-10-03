@@ -105,6 +105,12 @@ for (const t of data.topics || []) {
     if (!html.includes(`src="${roomSrc}"`)) fail(`${where}: page must load its subject's room with <script src="${roomSrc}"> (after environments.js)`);
     else if (html.indexOf(roomSrc) < html.indexOf(envSrcPath)) fail(`${where}: the room script must come after environments.js`);
   }
+  /* share card: Open Graph and Twitter tags that point at this topic's own image */
+  const cardUrl = `https://turnscience.com/assets/social/${t.id}.png`;
+  if (!html.includes(`<meta property="og:image" content="${cardUrl}">`)) fail(`${where}: add <meta property="og:image" content="${cardUrl}"> and the other share tags (see templates/topic/index.html)`);
+  if (!html.includes('<meta name="twitter:card" content="summary_large_image">')) fail(`${where}: missing the twitter:card tag`);
+  if (!html.includes(`<link rel="canonical" href="https://turnscience.com/${t.path}">`)) fail(`${where}: canonical link must be https://turnscience.com/${t.path}`);
+  if (!existsSync(join(root, 'assets', 'social', `${t.id}.png`))) fail(`${where}: assets/social/${t.id}.png is missing (node scripts/social-cards.mjs ${t.id})`);
   const uiSrc = '../'.repeat(depth) + 'shared/ui.css';
   if (!html.includes(`href="${uiSrc}"`)) fail(`${where}: page must use the shared interface style with <link rel="stylesheet" href="${uiSrc}">`);
   if (!/VLStage\.create\(/.test(html)) fail(`${where}: page must create its scene with VLStage.create(...)`);

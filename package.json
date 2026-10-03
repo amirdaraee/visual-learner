@@ -5,9 +5,19 @@
   "description": "Interactive 3D explainers for science and engineering.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "serve": "python3 -m http.server 8844",
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "test:unit": "node --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "playwright test",
+    "test": "npm run validate && npm run test:unit && npm run test:e2e",
+    "check:pr": "node scripts/check-pr.mjs",
+    "cards": "node scripts/social-cards.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }
