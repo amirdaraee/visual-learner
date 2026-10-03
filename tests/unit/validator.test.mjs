@@ -84,4 +84,24 @@ test('a category mapped to the wrong room fails', () => {
   const e = editFile('topics.json', (t) => t.replace('"environment": "study"', '"environment": "hangar"'));
   withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /ENV\.CATEGORY_ENV/); });
 });
+test('analytics code embedded in a page fails', () => {
+  const e = editFile('math/fourier-series/index.html', (h) => h.replace('</body>', '<script async src="https://www.googletagmanager.com/gtag/js?id=G-TEST"></script></body>'));
+  withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /analytics code must not be embedded/); });
+});
+test('a topic page without the analytics script tag fails', () => {
+  const e = editFile('math/fourier-series/index.html', (h) => h.replace('<script defer src="../../shared/analytics.js"></script>\n', ''));
+  withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /shared\/analytics\.js/); });
+});
+test('analytics that ignores Do Not Track fails', () => {
+  const e = editFile('shared/analytics.js', (h) => h.replace(/globalPrivacyControl/g, 'gpc'));
+  withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /Do Not Track/); });
+});
+test('analytics that turns advertising features on fails', () => {
+  const e = editFile('shared/analytics.js', (h) => h.replace('allow_google_signals: false', 'allow_google_signals: true'));
+  withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /advertising features/); });
+});
+test('the landing page without the analytics script fails', () => {
+  const e = editFile('index.html', (h) => h.replace('<script defer src="shared/analytics.js"></script>', ''));
+  withDefect(e.edit, e.undo, (r) => { assert.ok(!r.ok); assert.match(r.out, /index\.html: must load shared\/analytics\.js/); });
+});
 test('the scratch copy really is separate from the repo', () => { assert.notEqual(dir, repo); assert.ok(existsSync(join(dir, 'topics.json'))); });

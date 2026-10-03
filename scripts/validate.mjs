@@ -90,7 +90,9 @@ for (const t of data.topics || []) {
   if (!html.includes(`href="${back}"`) && !html.includes(`href="${back}#${t.category}"`)) fail(`${where}: page must link back with href="${back}#${t.category}"`);
   if (/<script[^>]+src=["']http:\/\//i.test(html)) fail(`${where}: scripts must use https`);
   if (/\b(AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,})/.test(html)) fail(`${where}: looks like it contains a secret`);
-  if (/google-analytics|googletagmanager|gtag\(|plausible\.io|segment\.com/i.test(html)) fail(`${where}: analytics and trackers are not allowed`);
+  /* analytics code lives only in shared/analytics.js; pages load that file and embed nothing of their own */
+  if (/google-analytics|googletagmanager|gtag\(|plausible\.io|segment\.com|cloudflareinsights|fbq\(|hotjar|clarity\.ms/i.test(html)) fail(`${where}: analytics code must not be embedded in a page; load shared/analytics.js instead`);
+  if (!html.includes(`<script defer src="${'../'.repeat(depth)}shared/analytics.js"></script>`)) fail(`${where}: add <script defer src="${'../'.repeat(depth)}shared/analytics.js"></script> after the stylesheet link (it does nothing off the live site)`);
   /* the shared stylesheet counts as part of the page, since the rule lives there for every topic */
   const sharedCss = readFileSync(join(root, 'shared', 'ui.css'), 'utf8');
   if (!/prefers-reduced-motion/.test(html + (html.includes('shared/ui.css') ? sharedCss : ''))) fail(`${where}: page must respect prefers-reduced-motion`);
@@ -120,6 +122,23 @@ for (const t of data.topics || []) {
   if (/<img[^>]+src=["']\//i.test(html)) fail(`${where}: use relative asset paths, not root-absolute ones`);
 }
 
+{
+  const an = existsSync(join(root, 'shared', 'analytics.js')) ? readFileSync(join(root, 'shared', 'analytics.js'), 'utf8') : '';
+  if (!an) fail('shared/analytics.js is missing');
+  else {
+    if (!/globalPrivacyControl/.test(an) || !/doNotTrack/.test(an)) fail('shared/analytics.js must honour Do Not Track and Global Privacy Control');
+    if (!/vl-consent/.test(an) || !/granted/.test(an)) fail('shared/analytics.js must keep an explicit consent choice before loading Google Analytics');
+    const ga = an.indexOf("googletagmanager.com/gtag/js"), consent = an.indexOf("saved === 'granted'");
+    if (ga < 0 || consent < 0) fail('shared/analytics.js: Google Analytics must only load through the consent path');
+    if (/ad_storage:\s*'granted'|allow_google_signals:\s*true|allow_ad_personalization_signals:\s*true/.test(an)) fail('shared/analytics.js: advertising features must stay off');
+  }
+  for (const page of ['index.html', 'privacy.html']) {
+    const h = existsSync(join(root, page)) ? readFileSync(join(root, page), 'utf8') : null;
+    if (h === null) { fail(`${page} is missing`); continue; }
+    if (!h.includes('<script defer src="shared/analytics.js"></script>') && !h.includes('<script src="shared/analytics.js"></script>')) fail(`${page}: must load shared/analytics.js`);
+    if (/gtag\(|googletagmanager|cloudflareinsights/i.test(h)) fail(`${page}: analytics code must not be embedded in a page`);
+  }
+}
 for (const f of ['shared/stage.js', 'shared/environments.js', 'shared/sound.js', 'shared/ui.css', 'README.md', 'LICENSE', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md', 'SECURITY.md', 'CLAUDE.md', '.nojekyll', 'index.html']) {
   if (!existsSync(join(root, f))) fail(`missing required file: ${f}`);
 }

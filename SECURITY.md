@@ -1,6 +1,6 @@
 # Security Policy
 
-Visual Learner is a static site. It has no server, no accounts, no database, no analytics and collects no user data. The realistic risks are cross-site scripting in a page, a compromised third-party script, and accidentally committed secrets.
+Visual Learner is a static site. It has no server, no accounts and no database. The only data collection is the site-wide analytics in `shared/analytics.js`: Cloudflare Web Analytics without cookies, and Google Analytics only after a visitor accepts. See [the privacy page](privacy.html). The realistic risks are cross-site scripting in a page, a compromised third-party script, and accidentally committed secrets.
 
 ## Reporting a vulnerability
 
@@ -17,6 +17,6 @@ Out of scope: issues in GitHub Pages itself, in browsers, or in the CDNs we load
 ## Standards for contributors
 
 - Never commit tokens, keys or personal data.
-- Do not add analytics, trackers or third-party embeds.
+- Do not add analytics, trackers or third-party embeds to a page. The one analytics file is `shared/analytics.js`, and changes to it need the owner's review.
 - Load libraries only from pinned versions on a reputable CDN, or vendor them into `shared/`.
 - Build DOM with `textContent` or escaped strings when showing anything that came from outside the page.

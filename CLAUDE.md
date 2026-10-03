@@ -31,7 +31,7 @@ There is no build step and none should be added. The test tooling is a dev depen
 1. **Git.** Do not commit, push, tag or open pull requests unless explicitly asked. The owner handles all commits.
 2. **No AI attribution.** No co-author trailers, "generated with" lines, or mentions of an AI assistant in commits, code, comments, docs or page content.
 3. **Originality.** Do not copy source, layout or visual style from other sites. If a site's notice asks not to be reproduced, respect it. Build from the topic's own subject instead.
-4. **No tracking, no secrets.** No analytics, cookies, third-party embeds, API keys or user data collection. If a free API is useful, prefer it over scraping, and ask the owner for a token if one is needed.
+4. **No tracking in topics, no secrets.** Topic pages never embed analytics, cookies, third-party embeds or collect user data. The only analytics is `shared/analytics.js` (Cloudflare Web Analytics without cookies, Google Analytics 4 only after consent, nothing off turnscience.com or with Do Not Track), described on `privacy.html`; do not change it without the owner. No API keys or secrets in the repo. If a free API is useful, prefer it over scraping, and ask the owner for a token if one is needed.
 5. **Accuracy.** Follow `docs/CONTENT_POLICY.md`. Hedge approximate numbers, label schematic visuals, never present invented data as real.
 6. **Keep topics self-contained.** One HTML file per topic, relative links only, libraries from a pinned CDN URL (or from `shared/` once vendored).
 

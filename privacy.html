@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d0c">
+<title>Privacy · Visual Learner</title>
+<meta name="description" content="What Visual Learner collects, why, and how to opt out.">
+<link rel="canonical" href="https://turnscience.com/privacy.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: dark; --bg: #0b0d0c; --ink: #f1f3ee; --ink-2: #c4c9c1; --mute: #99a097; --rule: rgba(255, 255, 255, 0.13); --lime: #c8f03c; --lime-ink: #11160a; --display: 'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif; --mono: 'Martian Mono', ui-monospace, Menlo, monospace; }
+* { box-sizing: border-box; }
+html { background: radial-gradient(ellipse 80% 50% at 80% -10%, #1b2a21 0%, transparent 70%), var(--bg); background-attachment: fixed; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font-family: Figtree, system-ui, sans-serif; line-height: 1.6; }
+a { color: var(--lime); }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 22px 20px 72px; }
+.back { display: inline-block; margin-bottom: 26px; color: var(--mute); text-decoration: none; font-weight: 600; font-size: 14px; }
+.back:hover { color: var(--ink); }
+h1 { margin: 0 0 8px; font: 800 clamp(2rem, 6vw, 3rem)/1.02 var(--display); letter-spacing: -0.03em; }
+h1 em { font-style: normal; color: var(--lime); }
+h2 { margin: 34px 0 8px; font: 800 1.3rem var(--display); letter-spacing: -0.02em; }
+p, li { color: var(--ink-2); }
+ul { padding-left: 20px; }
+code { font: 500 0.88em var(--mono); background: rgba(255, 255, 255, 0.08); padding: 1px 6px; border-radius: 4px; }
+.lead { font-size: 1.1rem; }
+.card { margin-top: 28px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--rule); background: rgba(255, 255, 255, 0.045); }
+.btn { display: inline-flex; align-items: center; height: 42px; padding: 0 20px; border-radius: 99px; border: 0; background: var(--lime); color: var(--lime-ink); font: 700 14px Figtree, sans-serif; cursor: pointer; }
+.updated { margin-top: 36px; color: var(--mute); font: 500 12px var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./">← All subjects</a>
+  <h1>Your <em>privacy</em></h1>
+  <p class="lead">Visual Learner has no accounts, no ads and nothing for sale. It counts visits so I can see which topics are useful. Here is exactly what that involves.</p>
+
+  <h2>Always on: Cloudflare Web Analytics</h2>
+  <p>Page views are counted with Cloudflare Web Analytics. Cloudflare states that it does not use cookies or local storage for this and does not track people across sites. What it records for each view: the page address, the referring site, country, browser, operating system and device type.</p>
+
+  <h2>Only if you accept: Google Analytics</h2>
+  <p>A banner asks once. If you click Accept, Google Analytics 4 loads and sets cookies named <code>_ga</code> and <code>_ga_…</code>. It sends page views and which steps of a topic you open, with approximate location and device details, to Google. Advertising features and Google signals are switched off. If you click Decline, Google Analytics is never loaded and no Google cookie is set.</p>
+
+  <h2>Do Not Track</h2>
+  <p>If your browser sends Do Not Track or Global Privacy Control, neither tool loads and you will not see the banner.</p>
+
+  <h2>Other things your browser does</h2>
+  <ul>
+    <li><b>Fonts and libraries.</b> The fonts come from Google Fonts, and the 3D library from cdnjs and jsDelivr. Those providers see your IP address and browser details when the files load. This happens whatever you choose above.</li>
+    <li><b>Saved in your browser.</b> Your choice here, and whether you muted sound or turned off effects or the backdrop. These stay on your device and are not sent anywhere.</li>
+  </ul>
+
+  <div class="card">
+    <p style="margin-top:0"><b>Your current choice:</b> <span id="state">checking…</span></p>
+    <button type="button" class="btn" id="change">Change my choice</button>
+  </div>
+
+  <h2>Questions</h2>
+  <p>The site is run by Amirhossein Daraei in Luxembourg and is open source. Ask or report a problem in an <a href="https://github.com/amirdaraee/visual-learner/issues">issue on GitHub</a>.</p>
+  <p class="updated">Last updated 3 October 2026</p>
+</div>
+<script src="shared/analytics.js"></script>
+<script>
+(function () {
+  var s = document.getElementById('state'), a = window.VLAnalytics;
+  var labels = { granted: 'Google Analytics accepted', denied: 'Google Analytics declined', unset: 'not chosen yet', off: 'analytics are off here (Do Not Track, or this is not the live site)' };
+  function show() { s.textContent = labels[a.status()] || labels.unset; }
+  show();
+  document.getElementById('change').addEventListener('click', function () { a.open(); });
+  window.addEventListener('storage', show); setInterval(show, 1000);
+})();
+</script>
+</body>
+</html>

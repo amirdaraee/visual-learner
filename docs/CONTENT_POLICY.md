@@ -35,7 +35,7 @@ Medical, electrical, chemical and aerospace topics carry real-world risk.
 
 ## Privacy
 
-- No analytics, cookies, fingerprinting or third-party embeds.
+- No analytics, cookies, fingerprinting or third-party embeds in a topic page. The site-wide analytics lives in `shared/analytics.js` and is described on the privacy page (cookieless Cloudflare Web Analytics for everyone, Google Analytics only after consent). Do not add your own.
 - No collection of user input beyond the page's own session. Do not store personal data.
 
 ## Accessibility

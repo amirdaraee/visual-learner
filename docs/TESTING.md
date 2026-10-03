@@ -23,6 +23,7 @@ npm test                        # all three
 - `check-pr.test.mjs` covers the pull request rules in `scripts/check-pr.mjs`.
 
 **Browser tests** (`tests/e2e/`, Playwright). They run the real pages:
+- Analytics and consent (`analytics.spec.mjs`): nothing is sent off the live site or with Do Not Track; the banner, decline, accept, a saved choice and withdrawing consent; the privacy page.
 - Landing page: every subject shows, opening a subject and going back, search, filters, topics listed under several subjects, preview images, phone width, share tags, the 404 page.
 - Every live topic, from `topics.json`, so a new topic is picked up with no test changes:
   - loads with no script or console errors, draws a real picture, loads only from allowed hosts (our server, cdnjs, jsDelivr, Google Fonts);

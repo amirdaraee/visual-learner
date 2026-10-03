@@ -55,12 +55,20 @@ test.describe('landing page', () => {
     await expect(page.locator('h1')).toContainText('subject');
   });
 
-  test('every preview image loads', async ({ page }) => {
+  test('every preview image is served as an image, and the ones in view load', async ({ page, request }) => {
     await page.goto('/index.html');
     await page.waitForSelector('.shot img');
-    await page.waitForTimeout(500);
-    const broken = await page.evaluate(() => [...document.querySelectorAll('.shot img')].filter((i) => i.complete && !i.naturalWidth).map((i) => i.src));
-    expect(broken).toEqual([]);
+    // every preview file exists and is served as an image (the images load lazily, so this is checked on the files themselves)
+    const srcs = await page.locator('.shot img').evaluateAll((els) => els.map((e) => e.getAttribute('src')));
+    expect(srcs.length).toBeGreaterThan(0);
+    for (const src of srcs) {
+      const res = await request.get('/' + src);
+      expect(res.status(), src).toBe(200);
+      expect(res.headers()['content-type'], src).toMatch(/^image\//);
+    }
+    // the first row is on screen at load, so it must be drawn
+    const first = page.locator('.shot img').first();
+    await expect.poll(() => first.evaluate((e) => e.complete && e.naturalWidth > 0)).toBe(true);
   });
 
   test('has no horizontal scroll on a phone', async ({ page }) => {
