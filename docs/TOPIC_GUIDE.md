@@ -52,7 +52,7 @@ New categories go in `categories` with an `id`, `name`, `blurb`, `accent` colour
 **Structure**
 - One `index.html`, with a `<title>` and a meta description.
 - A link back to the landing page, opened on your subject: `href="../../index.html#biology"` (use your own category id; adjust the depth if you nest deeper).
-- Relative links only. The site is served under `/visual-learner/`.
+- Relative links only. The site is served at the root of turnscience.com, and under `/visual-learner/` when run from a fork.
 
 **Libraries**
 - three.js pinned to an exact version, loaded from `cdnjs.cloudflare.com`, or copied into `shared/`.

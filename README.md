@@ -2,7 +2,7 @@
 
 Interactive 3D explainers for science and engineering. Pick a subject, play with the idea, then read the explanation.
 
-**Live site:** https://amirdaraee.github.io/visual-learner/
+**Live site:** https://turnscience.com/
 
 Every topic is a single self-contained web page: a full-screen 3D scene you can orbit, a small control dock, live readouts, and an "Explain this step" panel for the full story.
 

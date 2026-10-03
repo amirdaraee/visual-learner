@@ -74,7 +74,7 @@ Add the category to `topics.json` (`id`, `name`, `blurb`, `accent`, `environment
 
 - Plain JavaScript in an IIFE, `var` and function declarations, no frameworks or bundlers.
 - Pinned library versions, loaded from a CDN or from `shared/`.
-- Relative links only, so the site works under `/visual-learner/`.
+- Relative links only, so the site works from any base path (it is served at the root of turnscience.com, and under `/visual-learner/` when run from a fork).
 - Comments only where the reason is not obvious.
 
 ## Licensing of contributions
