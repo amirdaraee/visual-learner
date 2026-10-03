@@ -175,7 +175,7 @@ What a topic scene hands the stage:
 | `stage.add(subject)` | Registers a scene (made matte, hidden) |
 | `stage.show(subject)` | Shows one scene, hides the rest, resets the camera |
 | `stage.frame(dt, t)` | Frames the subject, updates the environment, renders |
-| `stage.setEnv(on)`, `setFx(on)`, `setCine(on)` | Backdrop, cinematic effects and camera sway toggles. Env and fx are remembered between visits |
+| `stage.setEnv(on)`, `setFx(on)`, `setCine(on)` | Backdrop, cinematic effects and camera sway toggles. Camera sway is off by default (opt-in). Env and fx are remembered between visits |
 | `stage.pointer`, `stage.dragging()`, `stage.camera` | For topic-level hover and picking |
 | `stage.yaw` | Current camera yaw, for panning sound |
 | `VLStage.soft(color, glow)` | The shared matte finish for shaded objects |

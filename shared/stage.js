@@ -98,7 +98,7 @@ function create(o) {
   var calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function read(k, d) { try { var v = localStorage.getItem(prefix + '-' + k); return v == null ? d : v !== '0'; } catch (e) { return d; } }
   function write(k, v) { try { localStorage.setItem(prefix + '-' + k, v ? '1' : '0'); } catch (e) {} }
-  S.envOn = read('env', true); S.fxOn = read('fx', true); S.cine = true; S.yaw = 0;
+  S.envOn = read('env', true); S.fxOn = read('fx', true); S.cine = false /* the slow camera sway is opt-in: the toolbar camera button turns it on */; S.yaw = 0;
   S.environmentName = window.VLEnv ? window.VLEnv.nameFor(o.category) : null;
 
   var renderer, scene, camera, composer = null, fxPass = null, floor, grid, env = null;

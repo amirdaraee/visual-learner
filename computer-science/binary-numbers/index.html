@@ -51,8 +51,8 @@
     <a class="icb" id="back" href="../../index.html#computer-science" title="All Computer Science concepts" aria-label="All Computer Science concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
     <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
     <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
-    <button class="icb" id="envb" type="button" aria-pressed="true" title="Room backdrop (B)" aria-label="Room backdrop"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M2 20h20"/></svg></button>
-    <button class="icb" id="cine" type="button" aria-pressed="true" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Room backdrop (B)" aria-label="Room backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
     <button class="icb" id="how" type="button" title="Keys and notes (?)" aria-label="Keys and notes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
     <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
   </div>
@@ -133,21 +133,35 @@ var PLACE = [128, 64, 32, 16, 8, 4, 2, 1];
 
 /* ---------- scene parts ---------- */
 /* text that changes: runs = [[text, color], ...], drawn centred and shrunk to fit */
+function ledFace(c, x, pw, ph) {
+  /* the dark glass of a small LED screen: rounded corners, a faint dot grid, a thin edge */
+  var r = Math.round(ph * 0.14);
+  x.clearRect(0, 0, pw, ph);
+  x.beginPath(); x.moveTo(r, 1); x.lineTo(pw - r, 1); x.quadraticCurveTo(pw - 1, 1, pw - 1, r); x.lineTo(pw - 1, ph - r); x.quadraticCurveTo(pw - 1, ph - 1, pw - r, ph - 1); x.lineTo(r, ph - 1); x.quadraticCurveTo(1, ph - 1, 1, ph - r); x.lineTo(1, r); x.quadraticCurveTo(1, 1, r, 1); x.closePath();
+  x.fillStyle = '#04070a'; x.fill(); x.lineWidth = 2; x.strokeStyle = 'rgba(255,255,255,0.1)'; x.stroke();
+  x.save(); x.clip(); x.fillStyle = 'rgba(255,255,255,0.045)';
+  for (var gy = 6; gy < ph; gy += 9) for (var gx = 6; gx < pw; gx += 9) x.fillRect(gx, gy, 2, 2);
+  x.restore();
+}
+/* a screen fixed to a panel: a thin dark bezel with the lit face on its front. z is the panel surface it is mounted on. */
+function ledMount(planeW, planeH, tex, x, y, z, parent) {
+  var g = new T.Group(), m = planeH * 0.16;
+  var bez = new T.Mesh(new T.BoxGeometry(planeW + m, planeH + m, 0.08), soft('#161c22', 0)); bez.position.z = 0.04; g.add(bez);
+  var face = new T.Mesh(new T.PlaneGeometry(planeW, planeH), new T.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); face.position.z = 0.086; g.add(face);
+  g.position.set(x, y, z); if (parent) parent.add(g); return g;
+}
+/* text that changes: runs = [[text, color], ...], drawn centred and shrunk to fit, on an LED screen */
 function dyn(wu, hu, o) {
-  o = o || {};
-  var c = document.createElement('canvas'), pw = 1024, ph = Math.round(pw * hu / wu), x, tex, m, key = '';
-  c.width = pw; c.height = ph; x = c.getContext('2d'); tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter;
-  if (o.plane) m = new T.Mesh(new T.PlaneGeometry(wu, hu), new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-  else { m = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false, fog: false })); m.scale.set(wu, hu, 1); m.renderOrder = 20; }
+  var c = document.createElement('canvas'), pw = 1024, ph = Math.round(pw * hu / wu), x, tex, key = '';
+  c.width = pw; c.height = ph; x = c.getContext('2d'); tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter; tex.anisotropy = 4;
+  var m = ledMount(wu, hu, tex, 0, 0, 0, null);
   return { mesh: m, set: function (runs) {
-    var k = JSON.stringify(runs), fs = ph * 0.54, tw, px, r = ph / 2; if (k === key) return; key = k;
-    x.clearRect(0, 0, pw, ph);
-    x.beginPath(); x.moveTo(r, 1); x.lineTo(pw - r, 1); x.arc(pw - r, r, r - 1, -Math.PI / 2, Math.PI / 2); x.lineTo(r, ph - 1); x.arc(r, r, r - 1, Math.PI / 2, Math.PI * 1.5); x.closePath();
-    x.fillStyle = 'rgba(8,12,20,0.82)'; x.fill(); x.lineWidth = 2; x.strokeStyle = 'rgba(255,255,255,0.16)'; x.stroke();
-    do { x.font = '500 ' + fs + 'px ui-monospace, Menlo, Consolas, monospace'; tw = 0; runs.forEach(function (q) { tw += x.measureText(q[0]).width; }); fs -= 2; } while (tw > pw - 80 && fs > 12);
+    var k = JSON.stringify(runs), fs = ph * 0.54, tw, px; if (k === key) return; key = k;
+    ledFace(c, x, pw, ph);
+    do { x.font = '600 ' + fs + 'px ui-monospace, Menlo, Consolas, monospace'; tw = 0; runs.forEach(function (q) { tw += x.measureText(q[0]).width; }); fs -= 2; } while (tw > pw - 80 && fs > 12);
     px = (pw - tw) / 2; x.textBaseline = 'middle';
-    runs.forEach(function (q) { x.fillStyle = q[1]; x.fillText(q[0], px, ph / 2 + 3); px += x.measureText(q[0]).width; });
-    tex.needsUpdate = true;
+    runs.forEach(function (q) { x.shadowColor = q[1]; x.shadowBlur = 14; x.fillStyle = q[1]; x.fillText(q[0], px, ph / 2 + 3); px += x.measureText(q[0]).width; });
+    x.shadowBlur = 0; tex.needsUpdate = true;
   } };
 }
 /* one bit: a cube that sinks and goes dark for 0, rises and glows for 1. The digit is printed on its front. */
@@ -168,7 +182,16 @@ function makeCap(hex, s, y0, rise) {
   return cp;
 }
 function box(w, h, d, color, x, y, z, parent) { var m = new T.Mesh(new T.BoxGeometry(w, h, d), soft(color, 0.04)); m.position.set(x, y, z); parent.add(m); return m; }
-function note(txt, x, y, parent, o) { var l = label(txt, o); l.position.set(x, y, 0.3); parent.add(l); return l; }
+var MOUNT = 0;   /* depth of the panel the current scene's labels are fixed to; each scene sets it */
+function note(txt, x, y, parent, o) {
+  o = o || {};
+  if (o.bg === false) { var l = label(txt, { plane: true, bg: false, size: o.size, color: o.color, bold: o.bold }); l.position.set(x, y, MOUNT + 0.02); parent.add(l); return l; }
+  var fs = 48, padX = 30, padY = 18, c = document.createElement('canvas'), cx = c.getContext('2d'), font = '600 ' + fs + 'px ui-monospace, Menlo, Consolas, monospace', tw, w, h, psz = o.size || 0.4, col = o.color || '#dbe4ee', tex;
+  cx.font = font; tw = Math.ceil(cx.measureText(txt).width); w = tw + padX * 2; h = fs + padY * 2; c.width = w; c.height = h;
+  ledFace(c, cx, w, h); cx.font = font; cx.textBaseline = 'middle'; cx.shadowColor = col; cx.shadowBlur = 12; cx.fillStyle = col; cx.fillText(txt, padX, h / 2 + 2);
+  tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter; tex.anisotropy = 4;
+  return ledMount(psz * w / h, psz, tex, x, y, MOUNT, parent);
+}
 /* odometer wheel texture: ten digits stacked around the rim, printed turned so they read upright on the front */
 function digitTex() {
   var cw = 128, ch = 256, c = document.createElement('canvas'), x, k, tex; c.width = cw * 10; c.height = ch; x = c.getContext('2d');
@@ -181,7 +204,7 @@ function digitTex() {
 }
 
 /* ---------- scene: eight switches and a decimal odometer (steps 3 and 4) ---------- */
-function sceneBank() {
+function sceneBank() { MOUNT = -1.6;
   var root = new T.Group(), inner = new T.Group(), P = 1.7, value = 75, disp = 75, caps = [], dim = [], lit = [], picks = [], wheels = [], tipMeshes = [];
   inner.position.y = -3.85; root.add(inner);
   box(14.2, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner);
@@ -202,7 +225,7 @@ function sceneBank() {
     if (c) note('×2', x - P / 2, 2.3, inner, { size: 0.3, color: MUTE, bg: false, plane: true });
   });
   var binP = dyn(13.2, 0.62, { plane: true }), decP = dyn(7.4, 0.56);
-  binP.mesh.position.set(0, -0.35, 1.91); inner.add(binP.mesh); decP.mesh.position.set(0, 3.15, 0.3); inner.add(decP.mesh);
+  binP.mesh.position.set(0, -0.35, 1.84); inner.add(binP.mesh); decP.mesh.position.set(0, 3.15, -1.6); inner.add(decP.mesh);
   var api = {
     group: root, w: 7.8, h: 4.7, base: 2.85, picks: function () { return picks; }, tips: function () { return picks; },
     setValue: function (v, snap) { v = clamp(v | 0, 0, 255); var old = bitsOf(value, 8), now = bitsOf(v, 8); now.forEach(function (b, c) { if (snap) caps[c].lit = b; else if (b !== old[c]) caps[c].flash = 1; }); value = v; if (snap) disp = v; },
@@ -219,7 +242,7 @@ function sceneBank() {
 }
 
 /* ---------- scene: a big decimal counter that runs out of digits (step 1) ---------- */
-function sceneDigits() {
+function sceneDigits() { MOUNT = -1.6;
   var root = new T.Group(), inner = new T.Group(), value = 0, disp = 0, ev = null, wheels = [], lamps = [], flash = [0, 0, 0], X = [-3.1, 0, 3.1];
   inner.position.y = -3.85; root.add(inner);
   box(14.2, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner);
@@ -234,7 +257,7 @@ function sceneDigits() {
     note(['groups of 100', 'groups of 10', 'single things'][i], x, 1.5, inner, { size: 0.3, color: MUTE, bg: false, plane: true });
   });
   var top = note('ten digits: 0 1 2 3 4 5 6 7 8 9', 0, 8.0, inner, { size: 0.36, color: MUTE }), teaser = note('what if you only had two digits?', 0, 8.0, inner, { size: 0.4, color: AMBER, bold: true });
-  var msg = dyn(13, 0.78); msg.mesh.position.set(0, 0.6, 0.3); inner.add(msg.mesh);
+  var msg = dyn(13, 0.78); msg.mesh.position.set(0, 0.6, -1.6); inner.add(msg.mesh);
   function lampColor(i) {
     var j = 2 - i, c;
     if (!ev) return null;
@@ -267,7 +290,7 @@ function sceneDigits() {
 
 /* ---------- scene: one pile of dots, sorted by tens and by doubles (step 2) ---------- */
 var DOT_S = 0.44, DOT_MAX = 31, FRAME_COLS = [4, 2, 1, 1, 1];
-function sceneDots() {
+function sceneDots() { MOUNT = 0.05;
   var root = new T.Group(), inner = new T.Group(), N = 13, sorted = false, rnd = mulberry(11), pile = [], tries, PILE = new T.Color('#aab3a8'), WHITE = new T.Color('#f1f3ee'), AMB = new T.Color(AMBER), LIM = new T.Color(LIME);
   inner.position.y = -3.85; root.add(inner);
   box(15.6, 0.7, 3.8, '#34414e', 0, -0.35, 0, inner); box(15.4, 8.4, 0.3, '#222c36', 0, 4.2, -1.75, inner);
@@ -296,7 +319,7 @@ function sceneDots() {
   tw = FRAME_COLS.reduce(function (s, c) { return s + c * DOT_S + 0.2; }, 0) + 4 * 0.3; x = -tw / 2;
   SIZES.forEach(function (s, k) { var f = frameAt(x, 2.2, FRAME_COLS[k], s / FRAME_COLS[k]); fR.push(addFrame(R, f, LIME)); x += f.w + 0.3; });
   var tL = dyn(6.8, 0.56), tR = dyn(6.8, 0.56), eL = dyn(6.8, 0.5), eR = dyn(6.8, 0.5), wL = dyn(6.8, 0.6), wR = dyn(6.8, 0.6);
-  [[tL, 3.2, L], [tR, 3.2, R], [eL, -2.4, L], [eR, -2.4, R], [wL, -3.05, L], [wR, -3.05, R]].forEach(function (q) { q[0].mesh.position.set(0, q[1], 0.35); q[2].g.add(q[0].mesh); });
+  [[tL, 3.2, L], [tR, 3.2, R], [eL, -2.4, L], [eR, -2.4, R], [wL, -3.05, L], [wR, -3.05, R]].forEach(function (q) { q[0].mesh.position.set(0, q[1], 0.05); q[2].g.add(q[0].mesh); });
   note('tens', -1.55, 2.7, L.g, { size: 0.34, color: MUTE, bg: false, plane: true }); note('ones', 1.55, 2.7, L.g, { size: 0.34, color: MUTE, bg: false, plane: true });
   note('ten at a time, the rest stay loose', 0, -1.55, L.g, { size: 0.28, color: MUTE, bg: false, plane: true });
   note('each size doubles the one to its right', 0, -1.45, R.g, { size: 0.26, color: MUTE, bg: false, plane: true });
@@ -353,7 +376,7 @@ function sceneDots() {
 
 /* ---------- scene: adding two 4-bit numbers (step 4) ---------- */
 var PRE = [{ label: '7 + 1', a: 7, b: 1 }, { label: '5 + 6', a: 5, b: 6 }, { label: '9 + 9', a: 9, b: 9 }, { label: '15 + 1', a: 15, b: 1 }];
-function sceneAdd() {
+function sceneAdd() { MOUNT = -1.15;
   var root = new T.Group(), inner = new T.Group(), XJ = function (j) { return (2 - j) * 2.3; }, a = 7, b = 1, m4 = true, walking = false, done = 4;
   var CA = [], CB = [], CC = [], CR = [], picks = [], j, all;
   inner.position.y = -1.3; root.add(inner);
@@ -370,7 +393,7 @@ function sceneAdd() {
   note('worth', -6.8, 5.35, inner, { size: 0.3, color: MUTE, bg: false, plane: true }); note('carry', -6.8, 3.95, inner, { size: 0.34, color: AMBER }); note('A', -6.8, 2.1, inner, { size: 0.4 }); note('+ B', -6.8, 0.2, inner, { size: 0.4 }); note('= sum', -6.8, -2.1, inner, { size: 0.4 });
   var gone = note('dropped', XJ(4), 3.95, inner, { size: 0.34, color: CORAL });
   var dA = dyn(2.1, 0.62), dB = dyn(2.1, 0.62), dS = dyn(2.1, 0.62);
-  [[dA, 2.1], [dB, 0.2], [dS, -2.1]].forEach(function (q) { q[0].mesh.position.set(6.95, q[1], 0.3); inner.add(q[0].mesh); });
+  [[dA, 2.1], [dB, 0.2], [dS, -2.1]].forEach(function (q) { q[0].mesh.position.set(6.95, q[1], -1.15); inner.add(q[0].mesh); });
   function calc() { var r = addBits(bitsOf(a, 4), bitsOf(b, 4), 4), sum = a + b; return { a: a, b: b, sum: sum, bits: r.s, cin: r.cin, cout: r.out, overflow: sum > 15, shown: m4 ? sum & 15 : sum, m4: m4 }; }
   function apply() {
     var r = calc(), A = bitsOf(a, 4), B = bitsOf(b, 4), d = walking ? done : 4, k, show4 = !m4 || !!(r.cout && d >= 4);
@@ -392,7 +415,7 @@ function sceneAdd() {
 }
 
 /* ---------- scene: two levels versus ten, with noise (step 6, schematic) ---------- */
-function sceneSignal() {
+function sceneSignal() { MOUNT = -0.85;
   var root = new T.Group(), N = 20, PS = 8, X0 = -7, X1 = 7, YL = -2.2, YH = 2.8, DX = (X1 - X0) / N, seed = 3, noise = 0.12, L = 2, i;
   var seq2 = [], seq10 = [], R = [], sm = [], errs = 0, rnd;
   function yOf(v) { return YL + v * (YH - YL); }
