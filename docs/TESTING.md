@@ -40,6 +40,25 @@ npm test                        # all three
 - No AI attribution lines in commit messages.
 - The checklist from the pull request template is filled in and ticked, and "What this changes" and (for a new topic) "Sources" are not empty.
 
+## What runs when
+
+The browser tests are the slow part (about 12 minutes for everything on GitHub), so they are limited:
+
+| Event | Fast checks (validate, unit) | Browser tests |
+| --- | --- | --- |
+| Pull request | yes | only for what the change touches (see below) |
+| Push to `main` | yes | no |
+| Weekly (Monday) and "Run workflow" | yes | everything |
+
+`scripts/affected-tests.mjs` decides what a pull request needs:
+- The stage, interface style, sound, core environments, tests or CI changed: every topic.
+- `shared/rooms/<name>.js` changed: the topics of the subjects that use that room.
+- Files inside a topic folder changed: that topic.
+- The landing page, manifest or previews changed: just the landing page tests (seconds).
+- Only docs, templates or scripts changed: no browser tests.
+
+To run the same subset locally: `TOPICS=cpu,binary-numbers npm run test:e2e`.
+
 ## When a check fails
 
 The message says what to fix. Common ones: add the missing share tags or image (`npm run cards -- <topic-id>`), trim an explanation to 90 to 290 words, rewrite a sentence that uses a phrase from the avoid-list in [WRITING.md](WRITING.md), move a control that overlaps on a phone.

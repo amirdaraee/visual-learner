@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { manifest, liveTopics, watch } from './helpers.mjs';
+import { manifest, watch } from './helpers.mjs';
+
+// the landing page always looks at every topic, even when a pull request limits the topic tests
+const liveTopics = manifest.topics.filter((t) => t.status === 'live');
 
 test.describe('landing page', () => {
   test('shows every subject and loads without errors', async ({ page }) => {

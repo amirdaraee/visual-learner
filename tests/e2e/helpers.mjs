@@ -4,7 +4,9 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const manifest = JSON.parse(readFileSync(join(root, 'topics.json'), 'utf8'));
-export const liveTopics = manifest.topics.filter((t) => t.status === 'live');
+const only = (process.env.TOPICS || '').split(',').map((x) => x.trim()).filter(Boolean);
+/** Live topics to test. Set TOPICS=cpu,binary-numbers to run only those (the pull request check does this). */
+export const liveTopics = manifest.topics.filter((t) => t.status === 'live' && (!only.length || only.includes(t.id)));
 
 /** Hosts a page may load from: our own server and the pinned CDNs the guide allows. */
 export const ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];

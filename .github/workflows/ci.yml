@@ -1,15 +1,21 @@
 name: CI
 
+# Cost control: pushes to main run only the fast checks. A pull request runs the browser tests for the topics it touches
+# (scripts/affected-tests.mjs decides), and nothing in the browser if only docs changed. The full browser suite runs weekly
+# and on demand, so a problem that slips through still shows up within a week.
 on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -17,6 +23,7 @@ jobs:
   checks:
     name: Validate and unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,20 +32,43 @@ jobs:
       - run: npm run validate
       - run: npm run test:unit
 
-  # Opens every topic in a real browser: scene renders, steps and explanations work, phone layout, no WebGL, writing guide.
+  # Opens topics in a real browser: scene renders, steps and explanations work, phone layout, no WebGL, writing guide.
   browser:
     name: Browser tests
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Work out which browser tests this change needs
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/affected-tests.mjs
+      - if: steps.plan.outputs.run == 'true'
+        run: npm ci
+      - if: steps.plan.outputs.run == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Run the browser tests
+        if: steps.plan.outputs.run == 'true'
+        env:
+          TOPICS: ${{ steps.plan.outputs.topics }}
+          RUN_ALL: ${{ steps.plan.outputs.all }}
+        run: |
+          if [ "$RUN_ALL" = "true" ]; then
+            npm run test:e2e
+          elif [ -n "$TOPICS" ]; then
+            npx playwright test
+          else
+            npx playwright test tests/e2e/site.spec.mjs
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -51,6 +81,7 @@ jobs:
     name: Contribution guidelines
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
