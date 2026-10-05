@@ -159,6 +159,27 @@
       "preview": "assets/previews/wave-interference.jpg"
     },
     {
+      "id": "boiling-altitude",
+      "category": "physics",
+      "also": [
+        "chemistry",
+        "earth"
+      ],
+      "title": "Boiling Point: Why Altitude Lowers It",
+      "summary": "Climb a mountain with a pot of water, see thinner air let it boil at a lower temperature, then seal the lid to push it back up.",
+      "path": "physics/boiling-altitude/",
+      "tags": [
+        "boiling",
+        "pressure",
+        "vapour pressure",
+        "altitude"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-05",
+      "preview": "assets/previews/boiling-altitude.jpg"
+    },
+    {
       "id": "rc-circuit",
       "category": "electronics",
       "title": "The RC Circuit: Charging a Capacitor",

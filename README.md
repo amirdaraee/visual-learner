@@ -12,12 +12,12 @@ Every topic is a single self-contained web page: a full-screen 3D scene you can 
 | --- | --- |
 | Biology | [Exome Lab: Find the Variant](biology/exome-sequencing/) |
 | Math | [Fourier Series: Waves from Circles](math/fourier-series/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/) |
-| Physics | [Wave Interference: Two Ripples](physics/wave-interference/) |
+| Physics | [Wave Interference: Two Ripples](physics/wave-interference/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
 | Electronics | [The RC Circuit: Charging a Capacitor](electronics/rc-circuit/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
 | Aerospace | [Orbits: The Hohmann Transfer](aerospace/hohmann-transfer/) |
-| Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/) |
+| Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
 | Astronomy | coming soon |
-| Earth & Environment | coming soon |
+| Earth & Environment | [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
 | Engineering | coming soon |
 | Materials | coming soon |
 | Computer Science | [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
