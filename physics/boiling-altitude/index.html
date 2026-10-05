@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Boiling Point and Altitude</title>
+<meta name="description" content="A pot of water on a schematic mountain: climb, watch the air thin, and see why water boils at a lower temperature high up and a higher one under a lid.">
+<link rel="canonical" href="https://turnscience.com/physics/boiling-altitude/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="Boiling Point: Why Altitude Lowers It · Visual Learner">
+<meta property="og:description" content="Climb a mountain with a pot of water, see thinner air let it boil at a lower temperature, then seal the lid to push it back up.">
+<meta property="og:url" content="https://turnscience.com/physics/boiling-altitude/">
+<meta property="og:image" content="https://turnscience.com/assets/social/boiling-altitude.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Boiling Point: Why Altitude Lowers It: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Boiling Point: Why Altitude Lowers It · Visual Learner">
+<meta name="twitter:description" content="Climb a mountain with a pot of water, see thinner air let it boil at a lower temperature, then seal the lid to push it back up.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/boiling-altitude.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<script defer src="../../shared/analytics.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D pot of water on a burner beside a schematic mountain"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Filling the pot…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Physics</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>Boiling <em>up high</em></h1>
+        <p>Water boils at 100 °C at the beach but only about 70 °C on top of Everest. The reason is how hard the air presses on the water.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#physics" title="All Physics concepts" aria-label="All Physics concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Studio backdrop (B)" aria-label="Studio backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="ui-hint" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Boiling and altitude</h2>
+    <p>A liquid boils when its <b>vapour pressure</b> reaches the pressure pressing on it. The air pressure falls as you climb, so the boiling point falls with it. A sealed lid raises the pressure, so the boiling point rises.</p>
+    <h3>What is simplified</h3>
+    <p>The scene is <b>schematic</b>: the molecules, the pot and the mountain are not to scale, and heating is sped up. Air pressure comes from the International Standard Atmosphere, a model of an average day; real pressure shifts with the weather by a few kPa. Vapour pressure uses the Buck equation, a fit that stays within a fraction of a percent of steam tables from 0 to ~120 °C. The water is pure, and effects such as dissolved salt, superheating and the small extra pressure from the depth of the water are left out.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>[</code> <code>]</code> change the main slider · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and schematic, not instructions for using a pressure cooker. Follow the maker's manual for any real appliance.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/physicslab.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- maths (pure, no THREE; kept together so it can be tested on its own) ---------- */
+/* maths:begin */
+var P0 = 101.325;
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+/* International Standard Atmosphere, troposphere (valid up to 11 km): pressure in kPa at altitude h in metres */
+function pressureAt(h) { return P0 * Math.pow(1 - 2.25577e-5 * h, 5.25588); }
+/* vapour pressure of water in kPa (Buck equation): within a fraction of a percent of steam tables from 0 to ~120 °C */
+function vapourP(t) { return 0.61121 * Math.exp((18.678 - t / 234.5) * (t / (257.14 + t))); }
+/* boiling point: where the vapour pressure equals the pressure on the water. vapourP rises steadily, so a bisection finds it */
+function boilAt(p) { var lo = 0, hi = 160, m, i; for (i = 0; i < 50; i++) { m = (lo + hi) / 2; if (vapourP(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; }
+/* maths:end */
+
+function num(n, p) { return n.toFixed(p == null ? 1 : p); }
+function metres(a) { return Math.round(a).toLocaleString('en-US') + ' m'; }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+var soft = VLStage.soft, label = VLStage.label;
+var CYAN = '#7fe3ff', CORAL = '#ff6b86', LIME = '#c8f03c', VIOLET = '#b99cff';
+var PLACES = [{ label: 'Dead Sea', a: -430 }, { label: 'Sea level', a: 0 }, { label: 'Denver', a: 1609 }, { label: 'La Paz', a: 3640 }, { label: 'Everest', a: 8849 }];
+var ALT0 = -500, ALT1 = 9000, ROOM = 20, RATE = 9;
+
+/* shared state across steps */
+var S = { alt: 0, tset: 60, gauge: P0, mode: 'air', lid: false, t: ROOM, boiling: false, hist: [], histT: 0 };
+var motion = calm ? 0.3 : 1;
+function pOut() { return pressureAt(S.alt); }
+function pIn() { return S.lid ? pOut() + S.gauge : pOut(); }
+function tBoil() { return boilAt(pIn()); }
+
+/* ---------- the scene: pot, burner, thermometer, air column, mountain ---------- */
+function Pool(n, geo, mat) {
+  var m = new T.InstancedMesh(geo, mat, n), d = new T.Object3D(), i;
+  m.instanceMatrix.setUsage(T.DynamicDrawUsage); m.frustumCulled = false;
+  function set(i, x, y, z, s) { d.position.set(x, y, z); d.scale.setScalar(Math.max(s, 1e-4)); d.updateMatrix(); m.setMatrixAt(i, d.matrix); }
+  for (i = 0; i < n; i++) set(i, 0, 0, 0, 0);
+  return { mesh: m, set: set, done: function () { m.instanceMatrix.needsUpdate = true; } };
+}
+/* a text sprite whose words change: rebuilt only when the text does */
+function Tag(parent, o, cx, cy) {
+  var cur = null, txt = '', pos = new T.Vector3();
+  return {
+    pos: pos,
+    set: function (t) {
+      if (t !== txt) {
+        txt = t; if (cur) { parent.remove(cur); cur.material.map.dispose(); cur.material.dispose(); }
+        cur = label(t, o); if (cur.center) cur.center.set(cx == null ? 0.5 : cx, cy == null ? 0.5 : cy); parent.add(cur);
+      }
+      cur.position.copy(pos);
+    },
+    show: function (v) { if (cur) cur.visible = v; }
+  };
+}
+
+function scenePot() {
+  var root = new T.Group(), g = new T.Group(), i;
+  root.add(g); g.position.set(-0.75, -0.85, 0);
+  var PX = -1.5, R = 1.35, YB = -1.4, YT = 0.7, WY = 0.25;
+
+  /* burner and flames */
+  var steel = soft('#3b4452', 0.12);
+  var burner = new T.Mesh(new T.CylinderGeometry(1.5, 1.6, 0.3, 36), steel); burner.position.set(PX, -1.88, 0); g.add(burner);
+  var grate = new T.Mesh(new T.TorusGeometry(1.0, 0.05, 8, 36), steel); grate.rotation.x = Math.PI / 2; grate.position.set(PX, -1.45, 0); g.add(grate);
+  var flames = [], fm = new T.MeshBasicMaterial({ color: '#6fb3ff', transparent: true, opacity: 0.85, depthWrite: false }), fg = new T.ConeGeometry(0.09, 1, 10).translate(0, 0.5, 0);
+  for (i = 0; i < 14; i++) { var f = new T.Mesh(fg, fm), an = i / 14 * Math.PI * 2; f.position.set(PX + Math.cos(an) * 0.85, -1.73, Math.sin(an) * 0.85); f.userData.ph = Math.random() * 6; g.add(f); flames.push(f); }
+
+  /* glass pot and water */
+  var glass = soft('#a9c4d8', 0.06, { transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide });
+  var wall = new T.Mesh(new T.CylinderGeometry(R, R, YT - YB, 48, 1, true), glass); wall.position.set(PX, (YT + YB) / 2, 0); wall.renderOrder = 3; g.add(wall);
+  var floorM = new T.Mesh(new T.CircleGeometry(R, 48).rotateX(-Math.PI / 2), soft('#5a6a7a', 0.08)); floorM.position.set(PX, YB, 0); g.add(floorM);
+  var rim = new T.Mesh(new T.TorusGeometry(R, 0.035, 8, 48), soft('#b8c6d4', 0.04)); rim.rotation.x = Math.PI / 2; rim.position.set(PX, YT, 0); g.add(rim);
+  var water = new T.Mesh(new T.CylinderGeometry(R - 0.02, R - 0.02, WY - YB, 48), soft('#1d6c96', 0.25, { transparent: true, opacity: 0.32, depthWrite: false })); water.position.set(PX, (WY + YB) / 2, 0); water.renderOrder = 2; g.add(water);
+  var surf = new T.Mesh(new T.CircleGeometry(R - 0.02, 48).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#4fb6e6', transparent: true, opacity: 0.28, depthWrite: false, side: T.DoubleSide })); surf.position.set(PX, WY, 0); g.add(surf);
+
+  /* lid for the pressure cooker step */
+  var lid = new T.Group(), lidM = soft('#8b98a8', 0.12);
+  var lidDisc = new T.Mesh(new T.CylinderGeometry(R + 0.1, R + 0.1, 0.1, 48), lidM); lid.add(lidDisc);
+  var knob = new T.Mesh(new T.CylinderGeometry(0.16, 0.2, 0.22, 20), soft('#2b313b', 0.1)); knob.position.y = 0.16; lid.add(knob);
+  var valve = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 0.25, 12), soft(LIME, 0.4)); valve.position.set(0.7, 0.17, 0); lid.add(valve);
+  lid.position.set(PX, YT + 0.06, 0); g.add(lid);
+  
+  /* thermometer: 0 to 130 °C */
+  var TX = PX + 0.85, TB = -1.25;
+  function tY(t) { return -1.05 + clamp(t, 0, 130) / 130 * 3.4; }
+  var tubeM = soft('#e6eef5', 0.15, { transparent: true, opacity: 0.35, depthWrite: false });
+  var tube = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 3.75, 16), tubeM); tube.position.set(TX, TB + 3.75 / 2, 0); tube.renderOrder = 4; g.add(tube);
+  var bulb = new T.Mesh(new T.SphereGeometry(0.14, 16, 12), soft(CORAL, 0.6)); bulb.position.set(TX, TB, 0); g.add(bulb);
+  var col = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 1, 12).translate(0, 0.5, 0), soft(CORAL, 0.6)); col.position.set(TX, TB, 0); g.add(col);
+  [0, 50, 100].forEach(function (t) {
+    var tk = new T.Mesh(new T.BoxGeometry(0.16, 0.02, 0.02), soft('#ffffff', 0.4)); tk.position.set(TX + 0.12, tY(t), 0); g.add(tk);
+  });
+  var mark = new T.Mesh(new T.TorusGeometry(0.12, 0.028, 8, 24), new T.MeshBasicMaterial({ color: LIME })); mark.rotation.x = Math.PI / 2; g.add(mark);
+  var boilTag = Tag(g, { size: 0.21, color: LIME }, 1, 0.5), nowTag = Tag(g, { size: 0.24, color: '#ffffff' });
+  nowTag.pos.set(TX, TB + 3.75 + 0.3, 0);
+
+  /* the column of air above the pot */
+  var AX0 = PX - 1.3, AX1 = PX + 1.3, AY0 = 0.95, AY1 = 3.4, AZ = 0.9;
+  var box = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(AX1 - AX0, AY1 - AY0, 2 * AZ)), new T.LineBasicMaterial({ color: VIOLET, transparent: true, opacity: 0.25 }));
+  box.position.set(PX, (AY0 + AY1) / 2, 0); g.add(box);
+
+  /* schematic mountain: altitude -500 m at the base, 9,000 m at the peak */
+  var MX = 2.7, MR = 1.7, MB = -2.0, MH = 4.4;
+  var mtn = new T.Mesh(new T.ConeGeometry(MR, MH, 7, 1), soft('#4a5560', 0.08, { flatShading: true })); mtn.position.set(MX, MB + MH / 2, 0); g.add(mtn);
+  var snow = new T.Mesh(new T.ConeGeometry(0.42, 1.0, 7, 1), soft('#dfe7ef', 0.03, { flatShading: true })); snow.position.set(MX, MB + MH - 0.5 + 0.01, 0); g.add(snow);
+  function mY(a) { return MB + (a - ALT0) / (ALT1 - ALT0) * MH; }
+  function mR(y) { return MR * (1 - (y - MB) / MH); }
+  var sea = new T.Mesh(new T.TorusGeometry(mR(mY(0)) * 0.93, 0.025, 6, 7), new T.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: 0.7 })); sea.rotation.x = Math.PI / 2; sea.position.set(MX, mY(0), 0); g.add(sea);
+  var flag = new T.Mesh(new T.SphereGeometry(0.13, 16, 12), new T.MeshBasicMaterial({ color: LIME })); g.add(flag);
+  var altTag = Tag(g, { size: 0.24, color: LIME }, 0.5, 0);
+  var cap = label('schematic, not to scale', { size: 0.17, color: '#aebbd0', bg: false }); cap.position.set(MX, MB - 0.2, MR + 0.2); g.add(cap);
+
+  /* the two pushes on the water: air pressing down (green) and vapour pushing up (blue); boiling starts when blue is as long as green */
+  var HH = 0.32;
+  function Arrow(color, down) {
+    var m = new T.MeshBasicMaterial({ color: color }), grp = new T.Group();
+    var shaft = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 1, 12).translate(0, 0.5, 0), m), head = new T.Mesh(new T.ConeGeometry(0.18, HH, 16), m);
+    if (down) head.rotation.x = Math.PI;
+    grp.add(shaft); grp.add(head); shaft.renderOrder = head.renderOrder = 6; g.add(grp);
+    return {
+      set: function (len) {
+        var hl = Math.min(HH, len), k = hl / HH; head.scale.set(Math.max(k, 0.3), Math.max(k, 0.01), Math.max(k, 0.3));
+        if (down) { head.position.y = hl / 2; shaft.position.y = hl; } else { head.position.y = len - hl / 2; shaft.position.y = 0; }
+        shaft.scale.y = Math.max(0.001, len - hl);
+      },
+      grp: grp
+    };
+  }
+  var airArrow = Arrow(LIME, true), vapArrow = Arrow('#4fb6ff', false);
+  var GX = PX + 1.8, BX = PX + 2.45; airArrow.grp.position.set(GX, WY, 0); vapArrow.grp.position.set(BX, WY, 0);
+  var wl = new T.Mesh(new T.BoxGeometry(1.15, 0.03, 0.03), new T.MeshBasicMaterial({ color: '#4fb6e6' })); wl.position.set((GX + BX) / 2, WY, 0); g.add(wl);
+  var airTag = Tag(g, { size: 0.2, color: LIME }, 0.5, 1), vapTag = Tag(g, { size: 0.2, color: '#8fd0ff' }, 0.5, 1);
+  airTag.pos.set(GX, WY - 0.12, 0); vapTag.pos.set(BX + 0.1, WY - 0.5, 0);
+
+  /* molecules: water (cyan) in the pot, vapour (pale) leaving it, air (violet) above, bubbles of steam inside */
+  var sph = new T.SphereGeometry(1, 10, 8);
+  var NW = 130, NV = 60, NA = 110, NB = 36;
+  var wP = Pool(NW, sph, soft('#3fb8e8', 0.18)), vP = Pool(NV, sph, soft('#dff2ff', 0.25)), aP = Pool(NA, sph, soft('#9a7cf0', 0.15));
+  var bP = Pool(NB, sph, soft('#ffffff', 0.12, { transparent: true, opacity: 0.45, depthWrite: false }));
+  [wP, vP, aP, bP].forEach(function (p) { g.add(p.mesh); });
+  var w = [], v = [], a = [], b = [];
+  function inDisc(rmax) { var r = Math.sqrt(Math.random()) * rmax, an = Math.random() * Math.PI * 2; return [PX + Math.cos(an) * r, Math.sin(an) * r]; }
+  for (i = 0; i < NW; i++) { var q = inDisc(R - 0.15); w.push({ x: q[0], y: lerp(YB + 0.1, WY - 0.08, Math.random()), z: q[1], p: Math.random() * 6, f: 0.7 + Math.random() * 0.6 }); }
+  for (i = 0; i < NV; i++) v.push({ on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 });
+  for (i = 0; i < NA; i++) { var dir = new T.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize(); a.push({ x: lerp(AX0, AX1, Math.random()), y: lerp(AY0, AY1, Math.random()), z: lerp(-AZ, AZ, Math.random()), d: dir }); }
+  for (i = 0; i < NB; i++) b.push({ on: false, x: 0, y: 0, z: 0, r: 0 });
+  var vAcc = 0, bAcc = 0, wasBoiling = false;
+
+  function spawnVapour(n) {
+    for (var k = 0; k < v.length && n > 0; k++) if (!v[k].on) {
+      var q = inDisc(R - 0.2), o = v[k]; o.on = true; o.x = q[0]; o.z = q[1]; o.y = WY + 0.02; o.vx = (Math.random() - 0.5) * 0.4; o.vz = (Math.random() - 0.5) * 0.4; o.vy = 0.5 + Math.random() * 0.7; n--;
+    }
+  }
+
+  return {
+    group: root, w: 5.0, h: 3.7, base: 2.85,
+    setLid: function (on) { lid.visible = on; },
+    update: function (t, dt) {
+      var po = pOut(), pi = pIn(), tb = boilAt(pi), heat = 0, k = 1 - Math.exp(-dt * 3);
+      /* temperature */
+      if (S.mode === 'air') { S.t += (ROOM - S.t) * k; S.boiling = false; }
+      else if (S.mode === 'vapour') { heat = clamp(S.tset / 100, 0.15, 1); S.t += (Math.min(S.tset, tb) - S.t) * k; S.boiling = S.tset >= tb - 0.05; }
+      else {
+        heat = 1;
+        if (S.t < tb) S.t = Math.min(tb, S.t + RATE * motion * dt); else S.t += (tb - S.t) * (1 - Math.exp(-dt * 2.5));
+        S.boiling = S.t >= tb - 0.05;
+        S.histT += dt; if (S.histT > 0.1) { S.histT = 0; S.hist.push([S.t, tb]); if (S.hist.length > 240) S.hist.shift(); }
+      }
+      if (S.boiling && !wasBoiling) sfx('pop'); wasBoiling = S.boiling;
+      var over = Math.max(0, S.t - tb);
+
+      /* flames */
+      flames.forEach(function (f) { f.visible = heat > 0.01; f.scale.set(1, heat * 0.32 * (0.85 + 0.2 * Math.sin(t * 9 * motion + f.userData.ph)) + 0.001, 1); });
+
+      /* water molecules jiggle harder when hotter */
+      var amp = 0.03 + 0.07 * clamp(S.t / 100, 0, 1.3), fq = (2 + 7 * clamp(S.t / 100, 0, 1.3)) * motion;
+      for (i = 0; i < NW; i++) { var m = w[i]; wP.set(i, m.x + amp * Math.sin(t * fq * m.f + m.p), m.y + amp * Math.sin(t * fq * 1.3 * m.f + m.p * 2), m.z + amp * Math.cos(t * fq * 0.9 * m.f + m.p), 0.055); }
+      wP.done();
+
+      /* vapour leaves the surface faster as the vapour pressure grows; under the lid it stays trapped */
+      var cap = S.lid ? Math.round(NV * clamp(pi / 220, 0.2, 1)) : NV, live = 0;
+      vAcc += dt * motion * (1.5 + 26 * vapourP(S.t) / P0 + (S.boiling ? 10 : 0));
+      for (i = 0; i < NV; i++) if (v[i].on) live++;
+      while (vAcc >= 1) { vAcc -= 1; if (live < cap) { spawnVapour(1); live++; } }
+      for (i = 0; i < NV; i++) {
+        var o = v[i];
+        if (!o.on) { vP.set(i, 0, 0, 0, 0); continue; }
+        o.x += o.vx * dt * motion; o.y += o.vy * dt * motion; o.z += o.vz * dt * motion;
+        if (S.lid) {
+          if (o.y > YT - 0.05) { o.y = YT - 0.05; o.vy = -Math.abs(o.vy); } if (o.y < WY + 0.03) { o.y = WY + 0.03; o.vy = Math.abs(o.vy); }
+          var dx = o.x - PX, rr = Math.hypot(dx, o.z); if (rr > R - 0.08) { o.vx = -o.vx; o.vz = -o.vz; o.x = PX + dx * (R - 0.09) / rr; o.z *= (R - 0.09) / rr; }
+          if (live > cap + 2) { o.on = false; live--; }
+        } else if (o.y > AY1) o.on = false;
+        vP.set(i, o.x, o.y, o.z, o.on ? 0.05 : 0);
+      }
+      vP.done();
+
+      /* bubbles of steam form at the bottom only once the water boils */
+      bAcc += dt * motion * (S.boiling ? 9 + 6 * Math.min(over, 5) : 0);
+      while (bAcc >= 1) { bAcc -= 1; for (var j = 0; j < NB; j++) if (!b[j].on) { var q = inDisc(R - 0.25), bb = b[j]; bb.on = true; bb.x = q[0]; bb.z = q[1]; bb.y = YB + 0.08; bb.r = 0.04; break; } }
+      for (i = 0; i < NB; i++) {
+        var e = b[i];
+        if (e.on) { e.y += (0.7 + e.r * 4) * dt * motion; e.r = Math.min(0.16, e.r + 0.08 * dt * motion); e.x += Math.sin(t * 5 + i) * 0.003; if (e.y > WY - 0.04) { e.on = false; spawnVapour(1); } }
+        bP.set(i, e.x, e.y, e.z, e.on ? e.r : 0);
+      }
+      bP.done();
+
+      /* air molecules: fewer of them the higher you go */
+      var na = Math.round(NA * clamp(po / P0, 0, 1.1)), sp = 0.9 * motion * dt;
+      for (i = 0; i < NA; i++) {
+        var c = a[i];
+        c.x += c.d.x * sp; c.y += c.d.y * sp; c.z += c.d.z * sp;
+        if (c.x < AX0 || c.x > AX1) c.d.x = -c.d.x; if (c.y < AY0 || c.y > AY1) c.d.y = -c.d.y; if (c.z < -AZ || c.z > AZ) c.d.z = -c.d.z;
+        c.x = clamp(c.x, AX0, AX1); c.y = clamp(c.y, AY0, AY1); c.z = clamp(c.z, -AZ, AZ);
+        aP.set(i, c.x, c.y, c.z, i < na ? 0.07 : 0);
+      }
+      aP.done();
+
+      /* thermometer, mountain marker and labels */
+      col.scale.y = tY(S.t) - TB; mark.position.set(TX, tY(tb), 0);
+      boilTag.pos.set(TX - 0.2, tY(tb), 0); boilTag.set('boils at ' + Math.round(tb) + ' °C');
+      nowTag.set(Math.round(S.t) + ' °C');
+      var ref = S.lid ? 230 : 110, la = 2.3 * pi / ref, lv = 2.3 * Math.min(vapourP(S.t), pi) / ref;
+      airArrow.set(la); vapArrow.set(Math.max(lv, 0.02));
+      airTag.set('air'); vapTag.set('vapour');
+      var fy = mY(S.alt), fr = mR(fy) + 0.03; flag.position.set(MX - fr * 0.6, fy, fr * 0.8);
+      altTag.pos.set(MX - fr * 0.6, fy + 0.2, fr * 0.8); var at = PLACES.filter(function (pl) { return pl.a === S.alt; })[0]; altTag.set(at ? at.label + ' · ' + metres(S.alt) : metres(S.alt));
+      surf.position.y = WY + (S.boiling ? 0.012 * Math.sin(t * 13 * motion) : 0);
+    }
+  };
+}
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'physics', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok;
+if (!ok) $('loading').style.display = 'none';
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'); wrap.className = 'seg';
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.textContent = it.label;
+    b.addEventListener('click', function () { cb(it, i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  return { mark: function (fn) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', fn(items[i]) ? 'true' : 'false'); }); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.nudge || o.step || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+
+/* altitude: a slider and the five places, kept in step with each other */
+function altControls(el) {
+  var sl = slider(el, { title: 'Altitude', keys: '[ ]', min: ALT0, max: ALT1, step: 10, nudge: 250, val: S.alt, fmt: metres, onInput: function (v) { S.alt = v; sg.mark(match); } });
+  var sg = seg(el, PLACES, function (it) { S.alt = it.a; sl.set(it.a); sg.mark(match); }, { title: 'Go to' });
+  function match(p) { return p.a === S.alt; }
+  sg.mark(match);
+  return { nudge: function (d) { sl.nudge(d); } };
+}
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+var PX0 = 44, PX1 = 584, CY0 = 162, CY1 = 24;
+function mtext(t, x, y, c, px, al) { mx.font = '400 ' + (px || 13) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = c || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function hline(y, c, dash) { mx.save(); mx.strokeStyle = c; mx.lineWidth = 1.5; if (dash) mx.setLineDash([6, 5]); mx.beginPath(); mx.moveTo(PX0, y); mx.lineTo(PX1, y); mx.stroke(); mx.restore(); }
+function dot(x, y, c) { mx.beginPath(); mx.arc(x, y, 6, 0, 7); mx.fillStyle = c; mx.fill(); }
+function axes() { mx.strokeStyle = 'rgba(255,255,255,0.14)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(PX0, CY1); mx.lineTo(PX0, CY0); mx.lineTo(PX1, CY0); mx.stroke(); }
+function pct(p) { return Math.round(p / P0 * 100) + ' %'; }
+/* push contest: the push on the water (green) against the vapour's push (blue), as % of the push at the beach */
+function pushChart(pDown, downLabel, ref) {
+  var vp = Math.min(vapourP(S.t), pDown), X = function (p) { return lerp(PX0, PX1, clamp(p / ref, 0, 1)); };
+  mtext(downLabel + '  ' + pct(pDown), PX0, 34, LIME, 14);
+  mx.fillStyle = 'rgba(200,240,60,0.85)'; mx.fillRect(PX0, 42, X(pDown) - PX0, 26);
+  mtext('Vapour pushing up  ' + pct(vp), PX0, 98, '#8fd0ff', 14);
+  mx.fillStyle = 'rgba(79,182,255,0.85)'; mx.fillRect(PX0, 106, Math.max(2, X(vp) - PX0), 26);
+  mx.save(); mx.strokeStyle = LIME; mx.lineWidth = 2; mx.setLineDash([5, 4]); mx.beginPath(); mx.moveTo(X(pDown), 40); mx.lineTo(X(pDown), 136); mx.stroke(); mx.restore();
+  mtext(S.boiling ? 'Blue has caught up with green: boiling' : 'Blue must reach the green line to boil', PX0, 170, S.boiling ? '#ffc857' : '#9ea8c2', 13);
+}
+function placeChart() {
+  var n = PLACES.length, bw = 64, gap = (PX1 - PX0 - n * bw) / (n - 1), Y = function (p) { return 150 - p / 110 * 116; };
+  PLACES.forEach(function (pl, i) {
+    var x = PX0 + i * (bw + gap), p = pressureAt(pl.a), on = pl.a === S.alt;
+    mx.fillStyle = on ? 'rgba(200,240,60,0.9)' : 'rgba(150,170,200,0.35)'; mx.fillRect(x, Y(p), bw, 150 - Y(p));
+    mtext(pct(p), x + bw / 2, Y(p) - 6, on ? LIME : '#c4cad6', 13, 'center');
+    mtext(pl.label, x + bw / 2, 172, on ? LIME : '#9ea8c2', 12, 'center');
+  });
+  if (!PLACES.some(function (pl) { return pl.a === S.alt; })) { var y = Y(pOut()); hline(y, LIME, true); mtext('you: ' + pct(pOut()), PX1, y - 6, LIME, 13, 'right'); }
+}
+function histChart(tMax) {
+  var Y = function (t) { return CY0 - clamp(t / tMax, 0, 1) * (CY0 - CY1); }, n = S.hist.length, X = function (i) { return lerp(PX0, PX1, i / 239); };
+  axes(); hline(Y(100), 'rgba(255,255,255,0.12)'); hline(Y(tBoil()), LIME, true);
+  if (n > 1) { mx.beginPath(); S.hist.forEach(function (h, i) { if (i) mx.lineTo(X(i), Y(h[0])); else mx.moveTo(X(i), Y(h[0])); }); mx.strokeStyle = CYAN; mx.lineWidth = 2.5; mx.stroke(); dot(X(n - 1), Y(S.hist[n - 1][0]), '#ffffff'); }
+  mtext('100 °C', PX0 + 6, Y(100) - 6, '#6f7894', 12); mtext('boils at ' + Math.round(tBoil()) + ' °C', PX1, Y(tBoil()) - 6, LIME, 12, 'right');
+  mtext('time →', (PX0 + PX1) / 2, 182, '#6f7894', 12, 'center');
+}
+function deg(t) { return Math.round(t) + ' °C'; }
+
+/* ---------- steps ---------- */
+var built = null;
+function getScene() { if (!built) { built = scenePot(); stage.add(built); } return built; }
+function placeSeg(el) { var sg = seg(el, PLACES, function (it) { S.alt = it.a; sg.mark(function (p) { return p.a === S.alt; }); }, { title: 'Go to' }); sg.mark(function (p) { return p.a === S.alt; }); }
+var STEPS = [
+  { name: 'Air', hash: 'air', explain: { title: 'Air has weight, and there is less of it up high', sections: [
+      { h: 'What you see', p: ['The purple dots above the pot stand for tiny bits of air, called molecules. The green arrow shows how hard the air pushes down on the water. Drag the altitude slider, or pick a place, to carry the pot up the mountain. Altitude means height above the sea.'] },
+      { h: 'How it works', p: ['You cannot feel it, but all the air above you has weight. At the beach it presses with about the weight of 10 tonnes on every square metre. This push is called air pressure. On this page the push at the beach counts as 100%.', 'Higher up, there is less air stacked above you, so it pushes less. In Denver, 1.6 km up, the push is about 82%. On top of Everest, the highest mountain on Earth, it is only about 31%.', 'The numbers come from a standard model of an average day. Real air pressure also changes a little with the weather.'] }
+    ], tryit: ['Pick Everest. The green arrow shrinks to about a third, and two out of every three purple dots disappear.'] },
+    why: 'Carry the pot up the mountain. <span class="y">Higher up, the green arrow shrinks: less air pushes on the water.</span>', hint: 'Drag the altitude or pick a place',
+    chart: { t: 'How hard the air pushes', k: '% of the beach' },
+    enter: function () { S.mode = 'air'; S.lid = false; },
+    mount: function (el) { return altControls(el); },
+    stats: function () { return [['Altitude', metres(S.alt), 'hot'], ['Air pushing down', pct(pOut())], ['Beach', '100 %']]; },
+    draw: placeChart },
+  { name: 'Heat', hash: 'heat', explain: { title: 'Water boils when its vapour pushes as hard as the air', sections: [
+      { h: 'What you see', p: ['Drag the heat slider. The blue dots are water molecules, and they shake faster as the water warms. The white dots escaping from the surface are water vapour: water that has turned into a gas. The blue arrow shows how hard the vapour pushes up, and the green arrow is the air pushing down.'] },
+      { h: 'How it works', p: ['In warm water a few molecules move fast enough to break free. The hotter the water, the more escape, and the harder the vapour pushes. This push is called vapour pressure.', 'Boiling means bubbles of vapour forming inside the water. A bubble can only grow if the vapour pushes as hard as the air pressing down. So the water boils when the blue arrow grows as long as the green one. That temperature is called the boiling point.', 'At the beach that happens at 100 °C. Up a mountain the green arrow is shorter, so the blue one catches up at a lower temperature.'] }
+    ], tryit: ['Set the heat to 90 °C at sea level: no bubbles yet. Now pick La Paz, a city 3.6 km up. The green arrow shrinks and the same water starts to boil.'] },
+    why: 'Heat the water. <span class="y">It boils when the blue arrow grows as long as the green one.</span>', hint: 'Heat the water · change the altitude',
+    chart: { t: 'Push contest', k: 'blue must reach green' },
+    enter: function () { S.mode = 'vapour'; S.lid = false; },
+    mount: function (el) {
+      var ts = slider(el, { title: 'Heat to', keys: '[ ]', min: 10, max: 110, step: 1, nudge: 2, val: S.tset, fmt: function (v) { return v + ' °C'; }, onInput: function (v) { S.tset = v; } });
+      placeSeg(el); return { nudge: function (d) { ts.nudge(d); } };
+    },
+    stats: function () { return [['Water', deg(S.t), 'hot'], ['Water boils at', deg(tBoil())], ['State', S.boiling ? 'Boiling' : 'Not boiling yet', S.boiling ? 'amber' : '']]; },
+    draw: function () { pushChart(pOut(), 'Air pushing down', 110); } },
+  { name: 'Boil', hash: 'boil', explain: { title: 'Boiling water stops getting hotter', sections: [
+      { h: 'What you see', p: ['The burner is on full. The chart draws the water temperature over time, sped up. The dashed green line is the boiling point at your altitude, and the green ring on the thermometer marks the same temperature.'] },
+      { h: 'How it works', p: ['The water warms until it reaches the boiling point, then the line goes flat. From then on, the heat from the flame goes into turning water into steam, so the temperature stays put. A bigger flame makes the water boil away faster. It does not make it hotter.', 'The higher you go, the lower that flat line sits. Water boils at about 95 °C in Denver, 88 °C in La Paz and 70 °C on top of Everest. Near sea level it drops by roughly 1 °C for every 300 m you climb.'] },
+      { h: 'In real life', p: ['Pasta, rice and eggs cook because the water around them is hot. Boiling water is cooler in the mountains, so food there takes longer to cook, and many packets print separate high-altitude directions.'] }
+    ], tryit: ['Wait for the line to go flat, then pick Everest. The water bubbles hard for a moment and settles near 70 °C.'] },
+    why: 'Once water boils, it stops getting hotter. <span class="y">Higher up, it stops at a lower temperature.</span>', hint: 'Watch the line go flat · try other places',
+    chart: { t: 'Water temperature over time', k: 'sped up' },
+    enter: function () { S.mode = 'boil'; S.lid = false; S.t = ROOM; S.hist = []; },
+    mount: function (el) {
+      var c = altControls(el);
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Start again from 20 °C';
+      b.addEventListener('click', function () { S.t = ROOM; S.hist = []; sfx('ui'); }); el.appendChild(b);
+      return c;
+    },
+    stats: function () { return [['Altitude', metres(S.alt)], ['Water boils at', deg(tBoil()), 'hot'], ['Water now', deg(S.t), S.boiling ? 'amber' : '']]; },
+    draw: function () { histChart(130); } },
+  { name: 'Lid', hash: 'lid', explain: { title: 'A sealed lid makes water boil hotter', sections: [
+      { h: 'What you see', p: ['A lid now seals the pot, so the steam is trapped inside. This is how a pressure cooker works. The slider sets how much harder the trapped steam presses on the water, and the green arrow grows to match.'] },
+      { h: 'How it works', p: ['Trapped steam presses down on the water harder than the air alone. This is the mountain run the other way. With a longer green arrow, the water has to get hotter before the blue arrow can catch up, so it boils at a higher temperature.', 'Many pressure cookers add about the same push again as the air, so the water is pushed about twice as hard as usual. At sea level it then boils at about 120 °C. A valve lets out extra steam so the push cannot keep rising.', 'Hotter water cooks food faster, which is why pressure cookers are popular in high places.'] }
+    ], tryit: ['Set the slider to its lowest: the lid makes no difference. Slide it up to +100 % and watch the thermometer climb past 100 °C.'] },
+    why: 'Seal the lid. <span class="y">A longer green arrow means the water must get hotter to boil.</span>', hint: 'Slide the push on the water up',
+    chart: { t: 'Push contest, lid on', k: 'blue must reach green' },
+    enter: function () { S.mode = 'cooker'; S.lid = true; },
+    mount: function (el) {
+      var gs = slider(el, { title: 'Extra push from the steam', keys: '[ ]', min: 0, max: 120, step: 5, nudge: 5, val: Math.round(S.gauge / P0 * 100), fmt: function (v) { return '+' + v + ' %'; }, onInput: function (v) { S.gauge = v / 100 * P0; } });
+      placeSeg(el); return { nudge: function (d) { gs.nudge(d); } };
+    },
+    stats: function () { return [['Push on the water', pct(pIn())], ['Water boils at', deg(tBoil()), 'hot'], ['Water now', deg(S.t), S.boiling ? 'amber' : '']]; },
+    draw: function () { pushChart(pIn(), 'Steam and air pushing down', 230); } }
+];
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) b.textContent = v;
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    if (cur < 0 || i !== cur) stage.show(sc);
+    cur = i; s.enter(); sc.setLid(S.lid);
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; $('why').innerHTML = s.why; $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; ctl = s.mount(c) || null;
+    renderStats(s.stats());
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* tools + keys */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Studio backdrop on' : 'Studio backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">Schematic and educational. Numbers come from standard models and are approximate.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-4]$/.test(k)) go(+k - 1);
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  sc.update(tt, dt);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; renderStats(s.stats()); mx.clearRect(0, 0, MW, MH); s.draw(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>
