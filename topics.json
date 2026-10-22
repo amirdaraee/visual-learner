@@ -282,6 +282,23 @@
       "status": "live",
       "added": "2026-10-22",
       "preview": "assets/previews/inside-a-cell.jpg"
+    },
+    {
+      "id": "moon-phases",
+      "category": "astronomy",
+      "title": "Moon Phases: Why the Moon Changes Shape",
+      "summary": "Move the Moon around Earth, see each phase from the ground, and find out why the dark part is not Earth’s shadow.",
+      "path": "astronomy/moon-phases/",
+      "tags": [
+        "moon",
+        "phases",
+        "eclipses",
+        "orbits"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-22",
+      "preview": "assets/previews/moon-phases.jpg"
     }
   ]
 }
