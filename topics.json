@@ -336,6 +336,23 @@
       "status": "live",
       "added": "2026-10-22",
       "preview": "assets/previews/water-cycle.jpg"
+    },
+    {
+      "id": "plate-boundaries",
+      "category": "earth",
+      "title": "Plate Boundaries: Ridges, Mountains and Faults",
+      "summary": "Pull plates apart to grow sea floor, push them together to raise mountains, and slide them past each other until a fault slips.",
+      "path": "earth/plate-boundaries/",
+      "tags": [
+        "plates",
+        "earthquakes",
+        "volcanoes",
+        "mountains"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-23",
+      "preview": "assets/previews/plate-boundaries.jpg"
     }
   ]
 }
