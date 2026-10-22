@@ -299,6 +299,26 @@
       "status": "live",
       "added": "2026-10-22",
       "preview": "assets/previews/moon-phases.jpg"
+    },
+    {
+      "id": "seasons",
+      "category": "astronomy",
+      "title": "Seasons: Why Summer Is Warm",
+      "summary": "Move Earth round the Sun, see sunlight spread and days change with the tilt, and find out why distance does not cause the seasons.",
+      "path": "astronomy/seasons/",
+      "tags": [
+        "seasons",
+        "earth",
+        "sunlight",
+        "orbits"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-22",
+      "preview": "assets/previews/seasons.jpg",
+      "also": [
+        "earth"
+      ]
     }
   ]
 }

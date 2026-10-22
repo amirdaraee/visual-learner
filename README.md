@@ -16,8 +16,8 @@ Every topic is a single self-contained web page: a full-screen 3D scene you can 
 | Electronics | [The RC Circuit: Charging a Capacitor](electronics/rc-circuit/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
 | Aerospace | [Orbits: The Hohmann Transfer](aerospace/hohmann-transfer/) |
 | Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
-| Astronomy | [Moon Phases: Why the Moon Changes Shape](astronomy/moon-phases/) |
-| Earth & Environment | [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
+| Astronomy | [Moon Phases: Why the Moon Changes Shape](astronomy/moon-phases/), [Seasons: Why Summer Is Warm](astronomy/seasons/) |
+| Earth & Environment | [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/), [Seasons: Why Summer Is Warm](astronomy/seasons/) |
 | Engineering | coming soon |
 | Materials | coming soon |
 | Computer Science | [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
