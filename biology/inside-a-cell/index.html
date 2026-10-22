@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Inside a Cell</title>
+<meta name="description" content="Cut open a schematic 3D animal cell, see what each part does, follow one protein from DNA to the outside, then turn it into a plant cell.">
+<link rel="canonical" href="https://turnscience.com/biology/inside-a-cell/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="Inside a Cell: The Parts and Their Jobs · Visual Learner">
+<meta property="og:description" content="Cut open a cell, see what each part does, follow one protein from DNA to the outside, then turn it into a plant cell.">
+<meta property="og:url" content="https://turnscience.com/biology/inside-a-cell/">
+<meta property="og:image" content="https://turnscience.com/assets/social/inside-a-cell.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Inside a Cell: The Parts and Their Jobs: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Inside a Cell: The Parts and Their Jobs · Visual Learner">
+<meta name="twitter:description" content="Cut open a cell, see what each part does, follow one protein from DNA to the outside, then turn it into a plant cell.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/inside-a-cell.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<script defer src="../../shared/analytics.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D cutaway of a schematic animal cell"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Growing the cell…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Biology</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>Inside a <em>cell</em></h1>
+        <p>Every living thing is built from cells. Each one is a tiny bag packed with parts, and each part has a job.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#biology" title="All Biology concepts" aria-label="All Biology concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Lab backdrop (B)" aria-label="Lab backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="ui-hint" aria-hidden="true"></div>
+  <div id="tip" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Inside a cell</h2>
+    <p>A cell is the smallest living unit. Inside its membrane, compartments called <b>organelles</b> each do one job: the nucleus stores the DNA, ribosomes build proteins, mitochondria release energy, and so on. They work together, as the protein's route in step 3 shows.</p>
+    <h3>What is simplified</h3>
+    <p>The model is <b>schematic</b> and not to scale. A real cell is far more crowded: it has millions of ribosomes, hundreds to thousands of mitochondria in many cell types, and its organelles change shape and move all the time. Sizes, numbers and positions here are chosen to be readable. Real cells come in many shapes; this one is a generic round animal cell and a generic leaf-like plant cell. Not shown: peroxisomes, endosomes, the many small vesicles moving at any moment, and the fact that the ER and the nuclear envelope are one connected membrane.</p>
+    <h3>Sources</h3>
+    <p>Volumes of a liver cell: Alberts et al., <i>Molecular Biology of the Cell</i>, chapter 12. Number of cells in the body: Sender, Fuchs and Milo, <i>PLoS Biology</i> (2016). Sizes are typical textbook values and vary between cell types.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>[</code> <code>]</code> change the main control · <code>P</code> play or pause the protein · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · hover a part to name it, click it to pick it · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and schematic. Nothing here is medical advice.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var motion = calm ? 0.3 : 1;
+
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function ease(k) { return k * k * (3 - 2 * k); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* seeded random numbers, so the cell is laid out the same way on every visit */
+function rng(seed) { return function () { seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var rnd = rng(7);
+function rdir() { var z = rnd() * 2 - 1, a = rnd() * Math.PI * 2, r = Math.sqrt(1 - z * z); return new T.Vector3(Math.cos(a) * r, z, Math.sin(a) * r); }
+var soft = VLStage.soft, label = VLStage.label;
+var LIME = '#c8f03c', CORAL = '#ff6b86';
+
+/* ---------- the shape of the cell: a slightly lumpy ball (animal) that can become a rounded box (plant) ---------- */
+var RA = new T.Vector3(3.0, 2.75, 3.0), BOX = new T.Vector3(3.3, 3.9, 3.3);
+var VC = new T.Vector3(0.4, -0.25, 0.1), VRAD = new T.Vector3(1.85, 2.45, 1.85);
+function ellR(d, a) { return 1 / Math.sqrt(d.x * d.x / (a.x * a.x) + d.y * d.y / (a.y * a.y) + d.z * d.z / (a.z * a.z)); }
+function animalR(d) { return ellR(d, RA) * (1 + 0.03 * Math.sin(3.1 * d.x + 1.3) * Math.sin(2.6 * d.y + 0.4) * Math.sin(2.9 * d.z + 2.1)); }
+function boxR(d) { return 1 / Math.pow(Math.pow(Math.abs(d.x) / BOX.x, 6) + Math.pow(Math.abs(d.y) / BOX.y, 6) + Math.pow(Math.abs(d.z) / BOX.z, 6), 1 / 6); }
+function shapeR(d, k) { return lerp(animalR(d), boxR(d), k); }
+/* distance from the centre to the vacuole wall along d (the centre is inside the vacuole) */
+function vacR(d) { var lo = 0, hi = 6, m, x, y, z, i; for (i = 0; i < 30; i++) { m = (lo + hi) / 2; x = (d.x * m - VC.x) / VRAD.x; y = (d.y * m - VC.y) / VRAD.y; z = (d.z * m - VC.z) / VRAD.z; if (x * x + y * y + z * z < 1) lo = m; else hi = m; } return lo; }
+/* where an organelle sits in the plant cell: pushed into the thin layer between the vacuole and the wall */
+function plantSpot(p) { var d = p.clone().normalize(), sv = vacR(d), sw = boxR(d), f = clamp(p.length() / animalR(d), 0, 1); return d.multiplyScalar(sv + 0.28 + f * Math.max(0, sw - sv - 0.62)); }
+
+/* ---------- the cutaway: a wedge facing the camera is removed from every part of the cell ---------- */
+var CLIP = [new T.Plane(new T.Vector3(1, 0, 0), 0), new T.Plane(new T.Vector3(-1, 0, 0), 0)];
+var OPEN_MAX = 75 * Math.PI / 180;
+function setClip(h) { CLIP[0].normal.set(Math.cos(h), 0, -Math.sin(h)); CLIP[1].normal.set(-Math.cos(h), 0, -Math.sin(h)); }
+function isCut(p) { return CLIP[0].distanceToPoint(p) < 0 && CLIP[1].distanceToPoint(p) < 0; }
+
+/* ---------- parts: each has a name, a job, and the materials that light up when it is picked ---------- */
+var PARTS = {}, PICK = [];
+function part(key, o) { o.key = key; o.mats = []; o.anchors = []; o.b = 1; o.g = 0; PARTS[key] = o; return o; }
+part('membrane', { name: 'Cell membrane', job: 'Controls what goes in and out', why: 'The cell membrane is an oily film only ~5 nm thick. <span class="y">It decides what gets in and out.</span>' });
+part('cytoplasm', { name: 'Cytoplasm', job: 'Holds the parts', why: 'The cytoplasm is the watery gel that fills the cell. <span class="y">Many of the cell\'s chemical reactions happen in it.</span>' });
+part('nucleus', { name: 'Nucleus', job: 'Stores the DNA', why: 'The nucleus holds the DNA, about 2 m of it in a human cell. <span class="y">DNA carries the instructions for every protein.</span>' });
+part('ribosomes', { name: 'Ribosomes', job: 'Build proteins', why: 'Ribosomes are tiny machines, ~25 nm across. <span class="y">They read copied instructions and build proteins.</span>' });
+part('rough', { name: 'Rough ER', job: 'Makes proteins to send out', why: 'The rough ER is folded sheets dotted with ribosomes. <span class="y">Proteins built there are folded and sent on.</span>' });
+part('smooth', { name: 'Smooth ER', job: 'Makes fats', why: 'The smooth ER is a network of tubes with no ribosomes. <span class="y">It makes fats and stores calcium.</span>' });
+part('golgi', { name: 'Golgi apparatus', job: 'Packs and ships', why: 'The Golgi is a stack of flat sacs. <span class="y">It finishes proteins and packs them into small bubbles called vesicles.</span>' });
+part('mito', { name: 'Mitochondria', job: 'Release energy as ATP', why: 'Mitochondria use oxygen to release the energy in food. <span class="y">They store it as ATP, which powers the cell.</span>', plantWhy: 'Plant cells have mitochondria too. <span class="y">Chloroplasts make sugar, and mitochondria release its energy.</span>' });
+part('lyso', { name: 'Lysosomes', job: 'Break down waste', why: 'Lysosomes are bags of digestive enzymes. <span class="y">They break down worn-out parts and things the cell takes in.</span>' });
+part('cyto', { name: 'Cytoskeleton', job: 'Shape and tracks', with: ['centrioles'], why: 'The cytoskeleton is a mesh of protein fibres. <span class="y">It holds the cell\'s shape and carries cargo along its tracks.</span>' });
+part('centrioles', { name: 'Centrioles', job: 'Organise the fibres', why: 'Centrioles are a pair of short tubes near the nucleus of animal cells. <span class="y">Most plant cells do not have them.</span>' });
+part('wall', { name: 'Cell wall', job: 'Keeps the shape', why: 'The cell wall is a stiff layer of cellulose. <span class="y">It gives the cell its boxy shape and stops it bursting.</span>' });
+part('chloro', { name: 'Chloroplasts', job: 'Make sugar from light', why: 'Chloroplasts use light to make sugar from carbon dioxide and water. <span class="y">Their green comes from chlorophyll.</span>' });
+part('vacuole', { name: 'Central vacuole', job: 'Stores water', why: 'The central vacuole is a sac of water that can fill up to ~90 % of the cell. <span class="y">It keeps the plant firm.</span>' });
+var TOUR = [['membrane', 'cytoplasm', 'nucleus'], ['ribosomes', 'rough', 'smooth', 'golgi'], ['mito', 'lyso', 'cyto']];
+var TOUR_FLAT = TOUR[0].concat(TOUR[1], TOUR[2]);
+var COMPARE = [['wall', 'chloro', 'vacuole'], ['mito', 'centrioles']];
+var FOUND = { wall: 'Plant only', chloro: 'Plant only', vacuole: 'Plant only', mito: 'Both', centrioles: 'Animal only' };
+
+function mat(key, color, glow, extra, noclip) {
+  var m = soft(color, glow, extra);
+  if (!noclip) { m.clippingPlanes = CLIP; m.clipIntersection = true; }
+  m.side = T.DoubleSide; m.userData.base = new T.Color(color); m.userData.glow = glow; PARTS[key].mats.push(m); return m;
+}
+function lineMat(key, color, op) {
+  var m = new T.LineBasicMaterial({ color: color, transparent: true, opacity: op, depthWrite: false, clippingPlanes: CLIP, clipIntersection: true });
+  m.userData.base = new T.Color(color); m.userData.glow = 0; PARTS[key].mats.push(m); return m;
+}
+function pickable(obj, key, anchor) { obj.userData.part = key; PICK.push(obj); if (anchor) PARTS[key].anchors.push(obj); return obj; }
+
+/* a text sprite whose words change: rebuilt only when the text does */
+function Tag(parent, o, cx, cy) {
+  var cur = null, txt = '', pos = new T.Vector3();
+  return {
+    pos: pos,
+    set: function (t) {
+      if (t !== txt) {
+        txt = t; if (cur) { parent.remove(cur); cur.material.map.dispose(); cur.material.dispose(); }
+        cur = label(t, o); if (cur.center) cur.center.set(cx == null ? 0.5 : cx, cy == null ? 0.5 : cy); parent.add(cur);
+      }
+      cur.position.copy(pos); cur.visible = true;
+    },
+    show: function (v) { if (cur) cur.visible = v; }
+  };
+}
+
+/* a closed surface that follows the cell's shape; scale < 1 sits inside the membrane */
+function Shell(scale, m) {
+  var geo = new T.SphereGeometry(1, 72, 48), pos = geo.attributes.position, dirs = new Float32Array(pos.array), d = new T.Vector3(), i;
+  var mesh = new T.Mesh(geo, m);
+  return {
+    mesh: mesh,
+    set: function (k) {
+      for (i = 0; i < pos.count; i++) { d.set(dirs[i * 3], dirs[i * 3 + 1], dirs[i * 3 + 2]); var r = shapeR(d, k) * scale; pos.setXYZ(i, d.x * r, d.y * r, d.z * r); }
+      pos.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+    }
+  };
+}
+/* one flat face of the cut: a half disc (or half rounded box) in the plane that holds the y axis and direction e */
+function Face(m) {
+  var M = 64, geo = new T.BufferGeometry(), arr = new Float32Array((M + 2) * 3), idx = [], d = new T.Vector3(), i;
+  for (i = 1; i <= M; i++) idx.push(0, i, i + 1);
+  geo.setIndex(idx); geo.setAttribute('position', new T.BufferAttribute(arr, 3));
+  var mesh = new T.Mesh(geo, m);
+  return {
+    mesh: mesh,
+    set: function (ex, ez, k) {
+      for (i = 0; i <= M; i++) { var a = -Math.PI / 2 + Math.PI * i / M; d.set(ex * Math.cos(a), Math.sin(a), ez * Math.cos(a)); var r = shapeR(d, k) * 0.962; arr[(i + 1) * 3] = d.x * r; arr[(i + 1) * 3 + 1] = d.y * r; arr[(i + 1) * 3 + 2] = d.z * r; }
+      geo.attributes.position.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+    }
+  };
+}
+function sphere(r, w, h) { return new T.SphereGeometry(r, w || 20, h || 14); }
+function walk(n, step, rmax, start) {
+  var p = start ? start.clone() : rdir().multiplyScalar(rnd() * rmax * 0.7), pts = [p.clone()], i;
+  for (i = 1; i < n; i++) { p.add(rdir().multiplyScalar(step)); if (p.length() > rmax) p.multiplyScalar(rmax / p.length()); pts.push(p.clone()); }
+  return new T.CatmullRomCurve3(pts);
+}
+/* small ripples on the ER sheets */
+function erW(x, y, z) { return 1 + 0.045 * Math.sin(8 * x + 3 * y) * Math.cos(6 * z - 2 * y + 1); }
+
+/* fixed layout of the animal cell */
+var NA = new T.Vector3(-0.35, 0.3, -0.45), NP = new T.Vector3(-2.15, 1.15, -0.95);
+var GA = new T.Vector3(1.55, -0.4, 0.6), SA = new T.Vector3(-1.2, -1.05, 0.5), CA = new T.Vector3(-0.95, -1.05, -0.95);
+var ER_PHI0 = 0.75 * Math.PI, ER_PHI = Math.PI, ER_TH0 = 0.55, ER_TH = 2.0, ER_R = [1.25, 1.45, 1.65];
+function erDir(phi, th) { return new T.Vector3(-Math.cos(phi) * Math.sin(th), Math.cos(th), Math.sin(phi) * Math.sin(th)); }
+function erPoint(dir, r) { return dir.clone().multiplyScalar(r * erW(dir.x, dir.y, dir.z)); }
+
+function buildCell() {
+  var g = new T.Group(), i, j, d = new T.Object3D(), Z = new T.Vector3(0, 0, 1), Y = new T.Vector3(0, 1, 0);
+
+  /* membrane: two layers so the cut edge shows its thickness */
+  var memOut = Shell(1, mat('membrane', '#c96a82', 0.06)), memIn = Shell(0.975, mat('membrane', '#8e4a5e', 0.04));
+  g.add(memOut.mesh); g.add(memIn.mesh); pickable(memOut.mesh, 'membrane'); pickable(memIn.mesh, 'membrane');
+  /* cell wall, plant only: always box-shaped, it fades in around the membrane */
+  var wallMatO = mat('wall', '#b9d27a', 0.16, { transparent: true, opacity: 0 }), wallMatI = mat('wall', '#8fae58', 0.14, { transparent: true, opacity: 0 });
+  var wallO = Shell(1.065, wallMatO), wallI = Shell(1.03, wallMatI); wallO.set(1); wallI.set(1);
+  var wall = new T.Group(); wall.add(wallO.mesh); wall.add(wallI.mesh); g.add(wall); pickable(wallO.mesh, 'wall'); pickable(wallI.mesh, 'wall');
+  /* the two cut faces: see-through jelly, so the parts behind them stay visible */
+  var faceMat = mat('cytoplasm', '#5fb8a6', 0.12, { transparent: true, opacity: 0.1, depthWrite: false }, true);
+  var faceA = Face(faceMat), faceB = Face(faceMat); g.add(faceA.mesh); g.add(faceB.mesh); pickable(faceA.mesh, 'cytoplasm'); pickable(faceB.mesh, 'cytoplasm');
+
+  /* nucleus, with the rough ER wrapped around it; they move together */
+  var ng = new T.Group(); ng.position.copy(NA); g.add(ng);
+  var envO = new T.Mesh(sphere(1, 48, 32), mat('nucleus', '#9a7cf0', 0.18)); ng.add(envO); pickable(envO, 'nucleus', true);
+  var envI = new T.Mesh(sphere(0.95, 48, 32), mat('nucleus', '#6a50c4', 0.12)); ng.add(envI); pickable(envI, 'nucleus');
+  var nucleolus = new T.Mesh(sphere(0.34, 28, 20), mat('nucleus', '#4b2f9e', 0.2)); nucleolus.position.set(0.18, 0.12, 0.1); ng.add(nucleolus); pickable(nucleolus, 'nucleus');
+  var chromM = mat('nucleus', '#d9ccff', 0.35);
+  for (i = 0; i < 7; i++) { var ch = new T.Mesh(new T.TubeGeometry(walk(9, 0.24, 0.82), 48, 0.022, 5), chromM); ng.add(ch); pickable(ch, 'nucleus'); }
+  var dirG = GA.clone().sub(NA).normalize();
+  var NPORE = 70, pores = new T.InstancedMesh(new T.TorusGeometry(0.055, 0.018, 6, 12), mat('nucleus', '#e6dcff', 0.3), NPORE + 1);
+  for (i = 0; i <= NPORE; i++) {
+    var y = 1 - 2 * (i + 0.5) / NPORE, rr = Math.sqrt(Math.max(0, 1 - y * y)), ph = i * 2.39996, pd = i < NPORE ? new T.Vector3(Math.cos(ph) * rr, y, Math.sin(ph) * rr) : dirG;
+    d.position.copy(pd); d.quaternion.setFromUnitVectors(Z, pd); d.scale.setScalar(1); d.updateMatrix(); pores.setMatrixAt(i, d.matrix);
+  }
+  ng.add(pores);
+  var erM = mat('rough', '#3aa6d0', 0.16);
+  ER_R.forEach(function (r) {
+    var geo = new T.SphereGeometry(r, 44, 22, ER_PHI0, ER_PHI, ER_TH0, ER_TH), p = geo.attributes.position, v = new T.Vector3();
+    for (var k = 0; k < p.count; k++) { v.fromBufferAttribute(p, k); var u = v.clone().normalize(), w = erW(u.x, u.y, u.z); p.setXYZ(k, v.x * w, v.y * w, v.z * w); }
+    geo.computeVertexNormals();
+    var sheet = new T.Mesh(geo, erM); ng.add(sheet); pickable(sheet, 'rough');
+  });
+  var ribM = mat('ribosomes', '#ffe08a', 0.45), ribG = sphere(0.03, 6, 4), NER = 390, erRib = new T.InstancedMesh(ribG, ribM, NER);
+  for (i = 0; i < NER; i++) {
+    var rr2 = ER_R[i % 3], dd = erDir(ER_PHI0 + rnd() * ER_PHI, ER_TH0 + 0.05 + rnd() * (ER_TH - 0.1));
+    d.position.copy(erPoint(dd, rr2)).addScaledVector(dd, i % 2 ? 0.03 : -0.03); d.quaternion.identity(); d.updateMatrix(); erRib.setMatrixAt(i, d.matrix);
+  }
+  ng.add(erRib); pickable(erRib, 'ribosomes');
+  var erAnchor = new T.Object3D(); erAnchor.position.copy(erPoint(erDir(1.15 * Math.PI, 1.3), ER_R[2])); ng.add(erAnchor); PARTS.rough.anchors.push(erAnchor);
+
+  /* Golgi: a curved stack of flat sacs, its bulging side toward the nucleus, with vesicles at the rim */
+  var ax = GA.clone().sub(NA).normalize(), gg = new T.Group(), gi = new T.Group(); gg.add(gi); gi.scale.set(1, 1, 0.62);
+  gg.position.copy(GA); gg.quaternion.setFromUnitVectors(Y, ax.clone().negate()); g.add(gg);
+  var golM = mat('golgi', '#f0a64a', 0.2);
+  for (i = 0; i < 5; i++) { var cis = new T.Mesh(new T.SphereGeometry(0.78, 30, 6, 0, Math.PI * 2, 0, 0.78 - i * 0.03), golM); cis.position.y = -0.78 + (i - 2) * 0.1; gi.add(cis); pickable(cis, 'golgi'); }
+  var vesM = mat('golgi', '#ffd38a', 0.35);
+  for (i = 0; i < 10; i++) { var va = rnd() * Math.PI * 2, vr = 0.55 + rnd() * 0.18, ves = new T.Mesh(sphere(0.05 + rnd() * 0.035, 12, 8), vesM); ves.position.set(Math.cos(va) * vr, -0.25 + rnd() * 0.3, Math.sin(va) * vr); gi.add(ves); pickable(ves, 'golgi'); }
+
+  /* smooth ER: a tangle of tubes */
+  var sg = new T.Group(); sg.position.copy(SA); g.add(sg); PARTS.golgi.anchors.push(gg); PARTS.smooth.anchors.push(sg);
+  var smM = mat('smooth', '#4fd1b0', 0.2);
+  for (i = 0; i < 7; i++) { var tb = new T.Mesh(new T.TubeGeometry(walk(7, 0.3, 0.6), 40, 0.045, 6), smM); sg.add(tb); pickable(tb, 'smooth'); }
+
+  /* mitochondria and lysosomes, placed where there is room */
+  var taken = [{ p: NA, r: 1.95 }, { p: GA, r: 1.0 }, { p: SA, r: 0.9 }, { p: CA, r: 0.45 }];
+  function free(r) {
+    for (var tries = 0; tries < 400; tries++) {
+      var p = rdir().multiplyScalar(Math.cbrt(rnd()) * 0.82), q = new T.Vector3(p.x * RA.x, p.y * RA.y, p.z * RA.z), ok = true;
+      for (var k = 0; k < taken.length; k++) if (q.distanceTo(taken[k].p) < taken[k].r + r) { ok = false; break; }
+      if (ok) { taken.push({ p: q, r: r }); return q; }
+    }
+    return rdir().multiplyScalar(2);
+  }
+  var movers = [];
+  function mover(obj, a, plantScale, plantPos) { obj.position.copy(a); movers.push({ o: obj, a: a.clone(), p: plantPos || plantSpot(a), s: plantScale }); return obj; }
+  mover(ng, NA, 0.66, NP); mover(gg, GA, 0.8); mover(sg, SA, 0.8);
+  var mOut = mat('mito', '#ff6b5a', 0.2), mIn = mat('mito', '#ffc0a8', 0.3), discG = new T.CylinderGeometry(1, 1, 1, 18);
+  for (i = 0; i < 10; i++) {
+    var mg = new T.Group(), body = new T.Mesh(sphere(1, 24, 14), mOut); body.scale.set(0.42, 0.17, 0.17); mg.add(body); pickable(body, 'mito', true);
+    for (j = 0; j < 4; j++) { var x = -0.24 + j * 0.16, rd = 0.17 * Math.sqrt(1 - x * x / (0.42 * 0.42)) * 0.8, cr = new T.Mesh(discG, mIn); cr.scale.set(rd, 0.014, rd); cr.rotation.z = Math.PI / 2; cr.position.x = x; mg.add(cr); }
+    mg.quaternion.setFromAxisAngle(rdir(), rnd() * Math.PI * 2); g.add(mg); mover(mg, free(0.45), 0.8);
+  }
+  var lyM = mat('lyso', '#c86bd8', 0.25), lysos = [];
+  for (i = 0; i < 6; i++) { var ly = new T.Mesh(sphere(0.12 + rnd() * 0.05, 18, 12), lyM); g.add(ly); pickable(ly, 'lyso', true); mover(ly, free(0.2), 0); lysos.push(ly); }
+
+  /* centrioles and the cytoskeleton fibres that spread from them */
+  var cen = new T.Group(); cen.position.copy(CA); g.add(cen);
+  var cM = mat('centrioles', '#a8f07a', 0.35), cg = new T.CylinderGeometry(0.06, 0.06, 0.26, 12);
+  var c1 = new T.Mesh(cg, cM), c2 = new T.Mesh(cg, cM); c2.rotation.z = Math.PI / 2; c2.position.set(0.12, 0.1, 0); cen.add(c1); cen.add(c2); pickable(c1, 'centrioles', true); pickable(c2, 'centrioles');
+  PARTS.cyto.anchors.push(cen);
+  var NL = 40, NS = 5, lineA = [], lineP = [], la = new Float32Array(NL * NS * 6);
+  for (i = 0; i < NL; i++) {
+    var u, end, tries2 = 0;
+    do { u = rdir(); end = u.clone().multiplyScalar(animalR(u) * 0.92); tries2++; } while (tries2 < 60 && new T.Vector3().lerpVectors(CA, end, 0.5).distanceTo(NA) < 1.15);
+    var side = rdir().cross(end.clone().sub(CA)).normalize().multiplyScalar(0.18);
+    var a0 = rdir(), b0 = rdir().cross(a0).normalize(), t0 = rnd() * Math.PI * 2;
+    for (j = 0; j <= NS; j++) {
+      var s = j / NS, pa = new T.Vector3().lerpVectors(CA, end, s).addScaledVector(side, Math.sin(s * Math.PI));
+      var cd = a0.clone().multiplyScalar(Math.cos(t0 + s * 0.9)).addScaledVector(b0, Math.sin(t0 + s * 0.9)).normalize();
+      lineA.push(pa); lineP.push(cd.multiplyScalar(boxR(cd) * 0.94));
+    }
+  }
+  var lgeo = new T.BufferGeometry(); lgeo.setAttribute('position', new T.BufferAttribute(la, 3));
+  var fibres = new T.LineSegments(lgeo, lineMat('cyto', '#cfe8ff', 0.5)); g.add(fibres);
+
+  /* free ribosomes floating in the cytoplasm */
+  var NFR = 280, frib = new T.InstancedMesh(ribG, ribM, NFR), fA = [], fP = [];
+  frib.instanceMatrix.setUsage(T.DynamicDrawUsage);
+  for (i = 0; i < NFR; i++) {
+    var q;
+    do { var p0 = rdir().multiplyScalar(Math.cbrt(rnd()) * 0.9); q = new T.Vector3(p0.x * RA.x, p0.y * RA.y, p0.z * RA.z); } while (q.distanceTo(NA) < 1.1);
+    fA.push(q); fP.push(plantSpot(q));
+  }
+  g.add(frib); pickable(frib, 'ribosomes', false);
+  var ribAnchor = new T.Object3D(); ribAnchor.position.copy(fA[3]); g.add(ribAnchor); PARTS.ribosomes.anchors.push(ribAnchor);
+
+  /* plant only: chloroplasts in the thin layer of cytoplasm, and the big central vacuole */
+  var chl = new T.Group(); g.add(chl);
+  var chM = mat('chloro', '#4fbf4a', 0.22), grM = mat('chloro', '#24701f', 0.25), grG = new T.CylinderGeometry(0.075, 0.075, 0.1, 14), nch = 0;
+  for (i = 0; i < 40 && nch < 13; i++) {
+    var cy = 1 - 2 * (i + 0.5) / 40, cr2 = Math.sqrt(1 - cy * cy), ca = i * 2.39996, cd2 = new T.Vector3(Math.cos(ca) * cr2, cy, Math.sin(ca) * cr2);
+    var sv = vacR(cd2), sw = boxR(cd2); if (sw - sv < 0.55) continue;
+    var cp = cd2.clone().multiplyScalar((sv + sw) / 2); if (cp.distanceTo(NP) < 1.35) continue;
+    var cgp = new T.Group(), lens = new T.Mesh(sphere(1, 24, 14), chM); lens.scale.set(0.46, 0.2, 0.3); cgp.add(lens); pickable(lens, 'chloro', true);
+    for (j = 0; j < 3; j++) { var gr = new T.Mesh(grG, grM); gr.position.x = -0.22 + j * 0.22; cgp.add(gr); }
+    /* lie flat against the wall, turned at random */
+    cgp.quaternion.setFromUnitVectors(Y, cd2).multiply(new T.Quaternion().setFromAxisAngle(Y, rnd() * Math.PI * 2));
+    cgp.position.copy(cp); chl.add(cgp); nch++;
+  }
+  var vac = new T.Mesh(sphere(1, 48, 32), mat('vacuole', '#7fb8ff', 0.25, { transparent: true, opacity: 0.3, depthWrite: false })); vac.position.copy(VC); g.add(vac); pickable(vac, 'vacuole', true);
+
+  /* in-scene words */
+  var memTag = Tag(g, { size: 0.2, color: '#ffd0da' }), cytTag = Tag(g, { size: 0.2, color: '#b6f0e2' }), nucTag = Tag(g, { size: 0.2, color: '#d9ccff' });
+  var selTag = Tag(g, { size: 0.24, color: LIME }, 0.5, 0), cap = label('schematic, not to scale', { size: 0.17, color: '#aebbd0', bg: false }); g.add(cap);
+  var memDir = new T.Vector3(-0.85, 0.5, 0.05).normalize();
+  /* anchors for words on parts that have no single centre */
+  var memA = new T.Object3D(), wallA = new T.Object3D(), cytA = new T.Object3D(); g.add(memA); g.add(wallA); g.add(cytA);
+  PARTS.membrane.anchors.push(memA); PARTS.wall.anchors.push(wallA); PARTS.cytoplasm.anchors.push(cytA);
+
+  /* the route of one protein (step 3), worked out from the animal layout */
+  var dirUp = dirG.clone().add(new T.Vector3(0, 0.3, 0)).normalize(), dirSide = dirG.clone().applyAxisAngle(Y, -0.3);
+  var exitDir = GA.clone().addScaledVector(ax, 1.0).normalize();
+  var C0 = NA.clone().add(new T.Vector3(-0.05, 0.05, 0.3)), PORE = NA.clone().add(dirG), R1 = NA.clone().add(erPoint(dirUp, ER_R[0])).addScaledVector(dirUp, -0.05);
+  var KEY = [C0, C0, PORE, R1, R1, NA.clone().add(erPoint(dirSide, ER_R[0])), NA.clone().addScaledVector(dirG, 1.85), GA.clone().addScaledVector(ax, -0.28), GA.clone().addScaledVector(ax, 0.3), GA.clone().addScaledVector(ax, 0.68).add(new T.Vector3(0, -0.15, 0.2)), exitDir.clone().multiplyScalar(animalR(exitDir)), exitDir.clone().multiplyScalar(animalR(exitDir) * 1.3)];
+  var KU = [0, 0.1, 0.2, 0.3, 0.42, 0.5, 0.56, 0.63, 0.75, 0.84, 0.93, 1];
+  var curve = new T.CatmullRomCurve3(KEY, false, 'centripetal');
+  function pathAt(u, out) {
+    for (var k = 0; k < KU.length - 1; k++) if (u <= KU[k + 1]) break;
+    k = Math.min(k, KU.length - 2);
+    if (KEY[k].distanceTo(KEY[k + 1]) < 1e-6) return out.copy(KEY[k]);
+    var s = (u - KU[k]) / (KU[k + 1] - KU[k]); return out.copy(curve.getPoint((k + s) / (KEY.length - 1)));
+  }
+  var route = new T.Line(new T.BufferGeometry().setFromPoints(curve.getPoints(240)), new T.LineDashedMaterial({ color: LIME, dashSize: 0.12, gapSize: 0.08, transparent: true, opacity: 0.45, depthTest: false }));
+  route.computeLineDistances(); route.renderOrder = 9; g.add(route);
+  function flat(c, r) { var m = new T.Mesh(sphere(r, 20, 14), new T.MeshBasicMaterial({ color: c, transparent: true, depthTest: false, depthWrite: false })); m.renderOrder = 11; g.add(m); return m; }
+  var mrna = flat(LIME, 0.075), prot = flat(CORAL, 0.085), vesT = flat('#ffd38a', 0.18); vesT.material.opacity = 0.32;
+  var worker = new T.Mesh(sphere(0.07, 16, 12), mat('ribosomes', '#ffe08a', 0.5, null, true)); worker.position.copy(R1); g.add(worker);
+  var pathTag = Tag(g, { size: 0.2, color: '#ffffff' }, 0.5, 0);
+
+  var lastK = -1, lastH = -1, tmp = new T.Vector3(), lp = new T.Vector3();
+  function morph(k) {
+    memOut.set(k); memIn.set(k);
+    var e = ease(k);
+    wall.visible = e > 0.01; wallMatO.opacity = 0.92 * e; wallMatI.opacity = 0.92 * e;
+    movers.forEach(function (m) { m.o.position.lerpVectors(m.a, m.p, e); m.o.scale.setScalar(lerp(1, m.s, e)); m.o.visible = m.s > 0 || e < 0.99; });
+    for (var n = 0; n < NFR; n++) { d.position.lerpVectors(fA[n], fP[n], e); d.quaternion.identity(); d.scale.setScalar(1); d.updateMatrix(); frib.setMatrixAt(n, d.matrix); }
+    frib.instanceMatrix.needsUpdate = true;
+    for (n = 0; n < NL; n++) for (var s = 0; s < NS; s++) {
+      var i0 = n * (NS + 1) + s;
+      tmp.lerpVectors(lineA[i0], lineP[i0], e); lp.lerpVectors(lineA[i0 + 1], lineP[i0 + 1], e);
+      var o = (n * NS + s) * 6; la[o] = tmp.x; la[o + 1] = tmp.y; la[o + 2] = tmp.z; la[o + 3] = lp.x; la[o + 4] = lp.y; la[o + 5] = lp.z;
+    }
+    lgeo.attributes.position.needsUpdate = true; lgeo.computeBoundingSphere();
+    cen.visible = e < 0.99; cen.scale.setScalar(Math.max(1e-3, 1 - e));
+    chl.visible = e > 0.01; chl.children.forEach(function (c) { c.scale.setScalar(Math.max(1e-3, e)); });
+    vac.visible = e > 0.01; vac.scale.set(VRAD.x * Math.max(1e-3, e), VRAD.y * Math.max(1e-3, e), VRAD.z * Math.max(1e-3, e));
+  }
+
+  function anchorOf(key) {
+    var list = PARTS[key].anchors, w = new T.Vector3();
+    for (var n = 0; n < list.length; n++) { list[n].getWorldPosition(w); if (!isCut(w) && list[n].visible) return w; }
+    if (list.length) list[0].getWorldPosition(w); return w;
+  }
+
+  var sub = {
+    group: g, w: 4.1, h: 3.8, base: 2.9,
+    anchorOf: anchorOf,
+    pathAt: function (u) { return pathAt(u, new T.Vector3()); },
+    update: function (t, dt) {
+      var k1 = 1 - Math.exp(-dt * 5);
+      S.openNow += (S.open - S.openNow) * k1;
+      S.k += clamp((S.plant ? 1 : 0) - S.k, -dt * (calm ? 2.5 : 0.8), dt * (calm ? 2.5 : 0.8));
+      var h = S.openNow * OPEN_MAX, e = ease(S.k);
+      setClip(h);
+      if (Math.abs(S.k - lastK) > 1e-4) { morph(S.k); lastK = S.k; lastH = -1; }
+      if (Math.abs(h - lastH) > 1e-4) { faceA.set(Math.sin(h), Math.cos(h), S.k); faceB.set(-Math.sin(h), Math.cos(h), S.k); lastH = h; }
+      faceA.mesh.visible = faceB.mesh.visible = h > 0.02;
+      sub.w = lerp(4.1, 4.8, e); sub.h = lerp(3.8, 5.3, e); sub.base = lerp(2.9, 4.0, e);
+
+      /* light up the picked part, fade the rest */
+      var sel = LOOK.sel, sels = sel ? [sel].concat(PARTS[sel].with || []) : [], kk = Math.min(1, dt * 6);
+      Object.keys(PARTS).forEach(function (key) {
+        var p = PARTS[key], on = sels.indexOf(key) >= 0, tb = sel && !on ? LOOK.dim : 1, tg = (on ? 0.3 + 0.14 * Math.sin(t * 3.2 * motion) : 0) + (LOOK.boost[key] ? LOOK.boost[key] * (0.6 + 0.4 * Math.sin(t * 6 * motion)) : 0);
+        p.b += (tb - p.b) * kk; p.g += (tg - p.g) * kk;
+        p.mats.forEach(function (m) { m.color.copy(m.userData.base).multiplyScalar(p.b); if (m.emissive) m.emissive.copy(m.userData.base).multiplyScalar((m.userData.glow + p.g) * p.b); });
+      });
+
+      /* words */
+      var showBasic = cur === 0;
+      memA.position.copy(memDir).multiplyScalar(shapeR(memDir, S.k) + 0.05); wallA.position.copy(memDir).multiplyScalar(boxR(memDir) * 1.07);
+      cytA.position.set(Math.sin(h) * 1.9, -1.15, Math.cos(h) * 1.9);
+      memTag.pos.copy(memA.position).addScaledVector(memDir, 0.1); memTag.set('cell membrane'); memTag.show(showBasic);
+      cytTag.pos.copy(cytA.position); cytTag.set('cytoplasm'); cytTag.show(showBasic && h > 0.3);
+      ng.getWorldPosition(nucTag.pos); nucTag.pos.y += 1.2; nucTag.set('nucleus'); nucTag.show(showBasic);
+      if (sel && LOOK.label) { selTag.pos.copy(anchorOf(sel)); selTag.pos.y += 0.4; selTag.set(PARTS[sel].name); } else selTag.show(false);
+      cap.position.set(0, -sub.base - 0.15, 1.6);
+
+      /* the protein's route */
+      var onPath = cur === 2; route.visible = worker.visible = onPath;
+      if (onPath) {
+        var u = S.u; pathAt(u, tmp);
+        mrna.visible = u < 0.46; prot.visible = u > 0.3 && u < 0.995;
+        if (u < 0.3) { mrna.position.copy(tmp); mrna.scale.setScalar(u < 0.1 ? lerp(0.25, 1, u / 0.1) : 1); }
+        else { mrna.position.copy(R1).add(new T.Vector3(-0.1, 0.06, 0)); mrna.scale.setScalar(clamp((0.46 - u) / 0.04, 0.01, 1)); }
+        prot.position.copy(tmp); prot.scale.setScalar(u < 0.42 ? clamp((u - 0.3) / 0.12, 0.2, 1) : (u > 0.95 ? clamp((1 - u) / 0.05, 0.05, 1) : 1));
+        vesT.visible = (u > 0.56 && u < 0.63) || (u > 0.75 && u < 0.93); vesT.position.copy(tmp);
+        pathTag.pos.copy(tmp); pathTag.pos.y += 0.25; pathTag.set(u < 0.36 ? 'mRNA' : (vesT.visible ? 'protein in a vesicle' : 'protein'));
+      } else { mrna.visible = prot.visible = vesT.visible = false; pathTag.show(false); }
+    }
+  };
+  return sub;
+}
+
+/* ---------- state shared across steps ---------- */
+var S = { open: 0.45, openNow: 0, plant: false, k: 0, part: 'nucleus', look: 'wall', u: 0, playing: !calm, hold: 0 };
+var LOOK = { sel: null, dim: 1, boost: {}, label: false };
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'biology', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok;
+if (!ok) $('loading').style.display = 'none';
+else stage.renderer.localClippingEnabled = true;
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'); wrap.className = 'seg'; wrap.setAttribute('role', 'group'); if (opts.aria) wrap.setAttribute('aria-label', opts.aria);
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.textContent = it.label;
+    b.addEventListener('click', function () { cb(it, i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  return { mark: function (fn) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', fn(items[i]) ? 'true' : 'false'); }); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { if (document.activeElement !== inp) inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.nudge || o.step || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function partItems(keys) { return keys.map(function (k) { return { key: k, label: PARTS[k].name.replace(' apparatus', '').replace('Cell membrane', 'Membrane').replace('Central vacuole', 'Vacuole') }; }); }
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+var PX0 = 44, PX1 = 584;
+function mtext(t, x, y, c, px, al) { mx.font = '400 ' + (px || 13) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = c || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+/* sizes on a log scale, 1 nm to 1 mm: each tick is ten times the last */
+var SIZES = [
+  { t: 'membrane ~5 nm', v: 0.005, row: -1 }, { t: 'ribosome ~25 nm', v: 0.025, row: 1 }, { t: 'mitochondrion ~1 µm', v: 1, row: -1 },
+  { t: 'nucleus ~6 µm', v: 6, row: 1 }, { t: 'human cell ~10–30 µm', v: 20, lo: 10, hi: 30, row: -2, me: true }, { t: 'hair ~50–100 µm', v: 70, row: 2 }
+];
+function sizeChart() {
+  var X = function (v) { return lerp(PX0, PX1, (Math.log(v) / Math.LN10 + 3) / 6); }, AY = 104;
+  mx.strokeStyle = 'rgba(255,255,255,0.22)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(PX0, AY); mx.lineTo(PX1, AY); mx.stroke();
+  for (var e = -3; e <= 3; e++) { var x = X(Math.pow(10, e)); mx.beginPath(); mx.moveTo(x, AY - 4); mx.lineTo(x, AY + 4); mx.stroke(); }
+  mtext('1 nm', X(0.001), 184, '#6f7894', 11, 'center'); mtext('1 µm', X(1), 184, '#6f7894', 11, 'center'); mtext('1 mm', X(1000), 184, '#6f7894', 11, 'center');
+  SIZES.forEach(function (s) {
+    var x = X(s.v), c = s.me ? LIME : '#c4cad6', ly = s.row === -1 ? 72 : s.row === -2 ? 40 : s.row === 1 ? 142 : 166;
+    if (s.lo) { mx.fillStyle = 'rgba(200,240,60,0.35)'; mx.fillRect(X(s.lo), AY - 7, X(s.hi) - X(s.lo), 14); }
+    mx.strokeStyle = s.me ? 'rgba(200,240,60,0.6)' : 'rgba(255,255,255,0.18)'; mx.beginPath(); mx.moveTo(x, AY); mx.lineTo(x, ly + (ly < AY ? 6 : -14)); mx.stroke();
+    mx.beginPath(); mx.arc(x, AY, 5, 0, 7); mx.fillStyle = c; mx.fill();
+    var w = s.t.length * 7.4, cx = clamp(x, PX0 + w / 2, PX1 - w / 2); mtext(s.t, cx, ly, c, 12, 'center');
+  });
+}
+/* share of a liver cell's volume taken by each compartment (Alberts et al., Molecular Biology of the Cell) */
+var VOL = [['Cytosol', 54, ['cytoplasm', 'ribosomes', 'cyto', 'centrioles']], ['Mitochondria', 22, ['mito']], ['Rough ER', 9, ['rough']], ['Smooth ER + Golgi', 6, ['smooth', 'golgi']], ['Nucleus', 6, ['nucleus']], ['Lysosomes', 1, ['lyso']], ['Other', 2, []]];
+function volChart() {
+  var BX = 236, BW = 300;
+  VOL.forEach(function (r, i) {
+    var y = 10 + i * 25, on = r[2].indexOf(LOOK.sel) >= 0, c = on ? LIME : '#c4cad6';
+    mtext(r[0], PX0 - 30, y + 15, c, 12);
+    mx.fillStyle = on ? 'rgba(200,240,60,0.9)' : 'rgba(150,170,200,0.35)'; mx.fillRect(BX, y + 3, Math.max(2, r[1] / 60 * BW), 15);
+    mtext('~' + r[1] + ' %', BX + Math.max(2, r[1] / 60 * BW) + 8, y + 15, c, 12);
+  });
+}
+var STAGES = [
+  { name: 'Copy', u0: 0, u1: 0.1, at: 'nucleus', why: 'Copy: inside the nucleus, one gene is copied into a messenger called <span class="y">mRNA</span>.' },
+  { name: 'Exit', u0: 0.1, u1: 0.3, at: 'nucleus', why: 'Exit: the mRNA leaves the nucleus through a pore and <span class="y">reaches a ribosome</span>.' },
+  { name: 'Build', u0: 0.3, u1: 0.42, at: 'ribosomes', why: 'Build: the ribosome reads the mRNA and joins amino acids into a chain. <span class="y">The mitochondria supply the energy.</span>' },
+  { name: 'Fold', u0: 0.42, u1: 0.63, at: 'rough', why: 'Fold: inside the rough ER the chain folds into shape, then <span class="y">rides a vesicle to the Golgi</span>.' },
+  { name: 'Pack', u0: 0.63, u1: 0.84, at: 'golgi', why: 'Pack: the Golgi finishes the protein and <span class="y">packs it into a new vesicle</span>.' },
+  { name: 'Ship', u0: 0.84, u1: 1.01, at: 'membrane', why: 'Ship: the vesicle merges with the membrane and <span class="y">the protein leaves the cell</span>.' }
+];
+function stageOf(u) { for (var i = 0; i < STAGES.length; i++) if (u < STAGES[i].u1) return i; return STAGES.length - 1; }
+function pathChart() {
+  var n = STAGES.length, gap = 6, bw = (PX1 - PX0 + 30 - gap * (n - 1)) / n, si = stageOf(S.u);
+  STAGES.forEach(function (s, i) {
+    var x = PX0 - 30 + i * (bw + gap), on = i === si, done = i < si;
+    mx.fillStyle = on ? 'rgba(200,240,60,0.9)' : done ? 'rgba(200,240,60,0.22)' : 'rgba(150,170,200,0.2)'; mx.fillRect(x, 30, bw, 44);
+    mtext(s.name, x + bw / 2, 58, on ? '#11160a' : '#c4cad6', 13, 'center');
+    mtext(PARTS[s.at].name.replace(' apparatus', '').replace('Cell membrane', 'Membrane'), x + bw / 2, 96, on ? LIME : '#6f7894', 11, 'center');
+  });
+  var x0 = PX0 - 30, x1 = PX1, px = lerp(x0, x1, clamp(S.u, 0, 1));
+  mx.fillStyle = 'rgba(255,255,255,0.12)'; mx.fillRect(x0, 128, x1 - x0, 6); mx.fillStyle = LIME; mx.fillRect(x0, 128, px - x0, 6);
+  mx.beginPath(); mx.arc(px, 131, 7, 0, 7); mx.fillStyle = S.u < 0.36 ? LIME : CORAL; mx.fill();
+  mtext(S.u < 0.36 ? 'carrying: mRNA (copied instructions)' : 'carrying: the protein', x0, 168, '#9ea8c2', 12);
+}
+var CMP = [['Nucleus', 1, 1, 'nucleus'], ['Mitochondria', 1, 1, 'mito'], ['Cell wall', 0, 1, 'wall'], ['Chloroplasts', 0, 1, 'chloro'], ['Big vacuole', 0, 1, 'vacuole'], ['Centrioles', 1, 0, 'centrioles']];
+function cmpChart() {
+  var XA = 400, XP = 520;
+  mtext('Animal', XA, 18, S.plant ? '#6f7894' : LIME, 12, 'center'); mtext('Plant', XP, 18, S.plant ? LIME : '#6f7894', 12, 'center');
+  CMP.forEach(function (r, i) {
+    var y = 44 + i * 25, on = r[3] === LOOK.sel;
+    if (on) { mx.fillStyle = 'rgba(200,240,60,0.12)'; mx.fillRect(PX0 - 34, y - 17, PX1 - PX0 + 34, 23); }
+    mtext(r[0], PX0 - 24, y, on ? LIME : '#c4cad6', 13);
+    mtext(r[1] ? 'yes' : 'no', XA, y, r[1] ? '#e8eef6' : '#6f7894', 13, 'center'); mtext(r[2] ? 'yes' : 'no', XP, y, r[2] ? '#e8eef6' : '#6f7894', 13, 'center');
+  });
+}
+
+/* ---------- steps ---------- */
+var built = null;
+function getScene() { if (!built) { built = buildCell(); stage.add(built); } return built; }
+function setWhy(html) { if ($('why').innerHTML !== html) $('why').innerHTML = html; }
+function lookAt(key) { LOOK.sel = key; }
+function atLeastOpen(v) { if (S.open < v) S.open = v; }
+var STEPS = [
+  { name: 'Cell', hash: 'cell', explain: { title: 'A cell is a tiny bag of working parts', sections: [
+      { h: 'What you see', p: ['A model of a typical animal cell, such as one from your skin or liver. The pink skin is the cell membrane. Drag the slider to cut a slice out of the cell and look inside. The pale jelly is the cytoplasm, and the purple ball is the nucleus.'] },
+      { h: 'How it works', p: ['A cell is the smallest thing that can stay alive on its own: it takes in food, uses it for energy, and can make copies of itself. Your body is built from roughly 30 trillion cells.', 'Most human cells are about 10 to 30 micrometres (µm) across. A micrometre is a thousandth of a millimetre, so you need a microscope to see one. A human hair is roughly 50 to 100 µm thick.', 'Inside, a cell is split into parts called organelles, meaning small organs. Each one has a job, as your heart and lungs do.'] },
+      { h: 'Common mix-up', p: ['Books often draw cells as flat circles. Real cells are three-dimensional and come in many shapes: long nerve cells, flat skin cells, round egg cells. This model is schematic: its parts are bigger and fewer than in a real cell, which is far more crowded.'] }
+    ], tryit: ['Slide the cell open to 100 %, then drag on the scene to look in from the side.'] },
+    why: 'Slide the cell open. <span class="y">Inside the membrane, the cell is packed with working parts.</span>', hint: 'Drag the slider to open the cell',
+    chart: { t: 'How big things are', k: 'each tick is ×10' },
+    enter: function () { S.plant = false; lookAt(null); LOOK.dim = 1; LOOK.boost = {}; LOOK.label = false; },
+    mount: function (el) {
+      var sl = slider(el, { title: 'Open the cell', keys: '[ ]', min: 0, max: 100, step: 1, nudge: 10, val: Math.round(S.open * 100), fmt: function (v) { return v + ' %'; }, onInput: function (v) { S.open = v / 100; } });
+      return { nudge: function (d) { sl.nudge(d); } };
+    },
+    stats: function () { return [['Opened', Math.round(S.open * 100) + ' %', 'hot'], ['A human cell', '~10–30 µm'], ['Cells in your body', '~30 trillion']]; },
+    draw: sizeChart },
+  { name: 'Parts', hash: 'parts', explain: { title: 'Each organelle has its own job', sections: [
+      { h: 'What you see', p: ['Pick a part in the list, or click it in the model. The chosen part lights up, the rest fade, and the card names its job. The chart shows how much of a liver cell each part fills.'] },
+      { h: 'How it works', p: ['The nucleus holds the DNA, the instructions for building the cell. Ribosomes read copies of those instructions and build proteins, the molecules that do most of the work in a cell.', 'The endoplasmic reticulum (ER) is a folded network of membranes. The rough ER is dotted with ribosomes and handles proteins; the smooth ER makes fats. The Golgi apparatus sorts finished proteins and packs them into small bubbles called vesicles.', 'Mitochondria release the energy in food as ATP, a small molecule that powers the rest of the cell. Lysosomes break down waste, and the cytoskeleton, a mesh of protein fibres, holds the cell in shape.'] },
+      { h: 'In real life', p: ['Cells have more of the parts their work needs. Heart muscle cells are packed with mitochondria, and cells that release a lot of protein, such as those in the pancreas, are full of rough ER.'] }
+    ], tryit: ['Pick Mitochondria, then look at the chart: in a liver cell they fill about a fifth of the space.'] },
+    why: '', hint: 'Pick a part · or click one in the model',
+    chart: { t: 'Share of a liver cell', k: 'by volume, approximate' },
+    enter: function () { S.plant = false; atLeastOpen(0.7); if (TOUR_FLAT.indexOf(S.part) < 0) S.part = 'nucleus'; lookAt(S.part); LOOK.dim = 0.28; LOOK.boost = {}; LOOK.label = true; },
+    mount: function (el) {
+      var segs = TOUR.map(function (row, i) { return seg(el, partItems(row), function (it) { pickPart(it.key); }, { title: i === 0 ? 'Look at' : '', aria: 'Part of the cell' }); });
+      function paint() { segs.forEach(function (s) { s.mark(function (it) { return it.key === S.part; }); }); setWhy(PARTS[S.part].why); }
+      paint();
+      return { paint: paint, nudge: function (d) { var i = TOUR_FLAT.indexOf(S.part); pickPart(TOUR_FLAT[(i + d + TOUR_FLAT.length) % TOUR_FLAT.length]); }, pick: function (key) { if (TOUR_FLAT.indexOf(key) >= 0) { pickPart(key); return true; } if (key === 'centrioles') { pickPart('cyto'); return true; } return false; } };
+    },
+    stats: function () { var p = PARTS[S.part]; return [['Part', p.name, 'hot'], ['Job', p.job]]; },
+    draw: volChart },
+  { name: 'Protein', hash: 'protein', explain: { title: 'The parts work together like a production line', sections: [
+      { h: 'What you see', p: ['Press play, or drag the slider, to follow one protein from start to finish. The green dot is a message copied from DNA, and the coral dot is the protein built from it. The part doing the work lights up.'] },
+      { h: 'How it works', p: ['Copy: in the nucleus, the instructions for one protein, called a gene, are copied into a messenger molecule, mRNA. Exit: the mRNA leaves through a pore in the nucleus. Build: a ribosome on the rough ER reads it and joins building blocks called amino acids into a chain. This takes energy, which the mitochondria supply as ATP.', 'Fold: inside the ER the chain folds into its working shape, then travels to the Golgi in a vesicle. Pack: the Golgi finishes the protein and packs it into a new vesicle. Ship: the vesicle merges with the membrane and releases the protein outside the cell.', 'This route is for proteins that leave the cell. Proteins that stay in the cytoplasm are built by free ribosomes instead.'] },
+      { h: 'In real life', p: ['Cells in your pancreas make the hormone insulin this way, then release it into the blood.'] }
+    ], tryit: ['Pause at Build and look for the mitochondria pulsing as they supply energy.'] },
+    why: '', hint: 'Press play · or drag along the route',
+    chart: { t: 'One protein, six stages', k: 'sped up' },
+    enter: function () { S.plant = false; atLeastOpen(0.55); LOOK.dim = 0.5; LOOK.label = false; },
+    mount: function (el) {
+      var sl = slider(el, { title: 'Follow the protein', keys: '[ ]', min: 0, max: 100, step: 1, nudge: 4, val: Math.round(S.u * 100), fmt: function (v) { return STAGES[stageOf(v / 100)].name; }, onInput: function (v) { S.u = v / 100; S.playing = false; paintPlay(); } });
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.setAttribute('aria-keyshortcuts', 'P');
+      function paintPlay() { b.textContent = S.playing ? 'Pause' : (S.u >= 0.999 ? 'Play again' : 'Play'); }
+      b.addEventListener('click', function () { if (S.u >= 0.999) S.u = 0; S.playing = !S.playing; paintPlay(); sfx('ui'); });
+      el.appendChild(b); paintPlay();
+      var sg = seg(el, STAGES.map(function (s, i) { return { label: s.name, i: i }; }), function (it) { S.u = STAGES[it.i].u0 + 0.001; sl.set(Math.round(S.u * 100)); });
+      var last = -1;
+      return {
+        nudge: function (d) { sl.nudge(d); },
+        play: function () { b.click(); },
+        tick: function () {
+          var si = stageOf(S.u); sl.set(Math.round(S.u * 100)); paintPlay();
+          if (si !== last) { last = si; sg.mark(function (it) { return it.i === si; }); setWhy(STAGES[si].why); }
+        }
+      };
+    },
+    stats: function () { var s = STAGES[stageOf(S.u)]; return [['Stage', (stageOf(S.u) + 1) + ' of 6 · ' + s.name, 'hot'], ['Where', PARTS[s.at].name], ['Carrying', S.u < 0.36 ? 'mRNA' : 'Protein', S.u < 0.36 ? '' : 'coral']]; },
+    draw: pathChart },
+  { name: 'Plant', hash: 'plant', explain: { title: 'Plant cells add a wall, chloroplasts and a big vacuole', sections: [
+      { h: 'What you see', p: ['Switch between an animal cell and a plant cell. The plant cell gains a stiff wall and green chloroplasts, and a large sac of water, the central vacuole, pushes the other parts out to the edges.'] },
+      { h: 'How it works', p: ['The cell wall is made of cellulose, a tough fibre. It gives plant cells their boxy shape and stops them bursting when they take in water.', 'Chloroplasts use the energy in sunlight to turn carbon dioxide and water into sugar. This is photosynthesis, and the green comes from a pigment called chlorophyll.', 'The vacuole stores water and dissolved substances and can fill up to ~90 % of the cell. Pressing out against the wall, it keeps leaves and stems firm, and it also breaks down waste, the job lysosomes do in animal cells. A plant wilts when its vacuoles lose water. Animal cells have centrioles, which most plant cells lack.'] },
+      { h: 'Common mix-up', p: ['Plant cells still have mitochondria. Chloroplasts make sugar, and mitochondria release its energy as ATP, day and night.'] }
+    ], tryit: ['Switch to Plant and pick Mitochondria: they are still there, pushed into the thin layer between the vacuole and the wall.'] },
+    why: '', hint: 'Switch to Plant · pick a part',
+    chart: { t: 'Animal and plant cells', k: 'which has what' },
+    enter: function () { S.plant = true; atLeastOpen(0.7); lookAt(S.look); LOOK.dim = 0.4; LOOK.boost = {}; LOOK.label = true; },
+    mount: function (el) {
+      var cs = seg(el, [{ label: 'Animal', v: false }, { label: 'Plant', v: true }], function (it) { setPlant(it.v); }, { title: 'Cell <em>[ ]</em>', aria: 'Cell type' });
+      var segs = COMPARE.map(function (row, i) { return seg(el, partItems(row), function (it) { pickLook(it.key); }, { title: i === 0 ? 'Look at' : '', aria: 'Part of the cell' }); });
+      function paint() {
+        cs.mark(function (it) { return it.v === S.plant; });
+        segs.forEach(function (s) { s.mark(function (it) { return it.key === S.look; }); });
+        var p = PARTS[S.look]; setWhy(S.look === 'mito' ? p.plantWhy : p.why);
+      }
+      paint();
+      return { paint: paint, nudge: function (d) { setPlant(d > 0); }, pick: function (key) { if (FOUND[key]) { pickLook(key); return true; } return false; } };
+    },
+    stats: function () { return [['Cell', S.plant ? 'Plant' : 'Animal', 'hot'], ['Looking at', PARTS[S.look].name], ['Found in', FOUND[S.look]]]; },
+    draw: cmpChart }
+];
+function pickPart(key) { S.part = key; lookAt(key); if (ctl && ctl.paint) ctl.paint(); }
+function setPlant(v) { if (S.plant !== v) sfx('blip'); S.plant = v; if (!v && FOUND[S.look] === 'Plant only') S.look = 'mito'; if (v && S.look === 'centrioles') S.look = 'mito'; lookAt(S.look); if (ctl && ctl.paint) ctl.paint(); }
+function pickLook(key) { S.look = key; if (FOUND[key] === 'Plant only') S.plant = true; if (FOUND[key] === 'Animal only') S.plant = false; lookAt(key); if (ctl && ctl.paint) ctl.paint(); }
+
+/* ---------- step manager ---------- */
+var cur = -1, ctl = null, hudT = 0;
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) b.textContent = v;
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    if (cur < 0) stage.show(sc);
+    cur = i; s.enter();
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; if (s.why) setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; ctl = s.mount(c) || null;
+    if (ctl && ctl.tick) ctl.tick();
+    renderStats(s.stats());
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* ---------- hover to name a part, click to pick it ---------- */
+var camera = stage.camera, ptr = stage.pointer, tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null, downAt = null;
+function shown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function partAt(x, y) {
+  if (!ok || !built) return null;
+  var r = canvas.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  var hits = ray.intersectObjects(PICK, false), back = null;
+  for (var i = 0; i < hits.length; i++) {
+    var h = hits[i], key = h.object.userData.part;
+    if (!shown(h.object)) continue;
+    if (key === 'cytoplasm') { if (!back) back = key; continue; }
+    if (isCut(h.point)) continue;
+    return key;
+  }
+  return back;
+}
+canvas.addEventListener('pointerdown', function (e) { downAt = { x: e.clientX, y: e.clientY }; tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerup', function (e) {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return; downAt = null;
+  var key = partAt(e.clientX, e.clientY); if (key && ctl && ctl.pick && ctl.pick(key)) sfx('blip');
+});
+function hover() {
+  if (!ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var key = partAt(ptr.x, ptr.y), r = canvas.getBoundingClientRect();
+  if (key) { tipEl.textContent = PARTS[key].name + ' · ' + PARTS[key].job; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = 'pointer'; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- tools + keys ---------- */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Lab backdrop on' : 'Lab backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">Schematic and educational. Sizes and numbers are typical values and vary between cell types.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'lab', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-4]$/.test(k)) go(+k - 1);
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if ((k === 'p' || k === 'P') && ctl && ctl.play) ctl.play();
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  if (cur === 2) {
+    if (S.playing) {
+      var was = S.u;
+      if (S.u >= 1) { S.hold += dt; if (S.hold > 1.6) { S.u = 0; S.hold = 0; } }
+      else S.u = Math.min(1, S.u + dt / 20);
+      if (was < 0.93 && S.u >= 0.93) sfx('pop');
+    }
+    var si = STAGES[stageOf(S.u)]; LOOK.sel = si.at; LOOK.boost = si.name === 'Build' ? { mito: 0.45 } : {};
+  }
+  sc.update(tt, dt);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; if (ctl && ctl.tick) ctl.tick(); renderStats(s.stats()); mx.clearRect(0, 0, MW, MH); s.draw(); hover(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>
