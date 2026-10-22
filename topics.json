@@ -265,6 +265,23 @@
       "status": "live",
       "added": "2026-10-02",
       "preview": "assets/previews/cpu.jpg"
+    },
+    {
+      "id": "inside-a-cell",
+      "category": "biology",
+      "title": "Inside a Cell: The Parts and Their Jobs",
+      "summary": "Cut open a cell, see what each part does, follow one protein from DNA to the outside, then turn it into a plant cell.",
+      "path": "biology/inside-a-cell/",
+      "tags": [
+        "cells",
+        "organelles",
+        "proteins",
+        "plants"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-22",
+      "preview": "assets/previews/inside-a-cell.jpg"
     }
   ]
 }
