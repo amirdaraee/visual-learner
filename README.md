@@ -15,11 +15,11 @@ Every topic is a single self-contained web page: a full-screen 3D scene you can 
 | Physics | [Wave Interference: Two Ripples](physics/wave-interference/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
 | Electronics | [The RC Circuit: Charging a Capacitor](electronics/rc-circuit/), [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
 | Aerospace | [Orbits: The Hohmann Transfer](aerospace/hohmann-transfer/) |
-| Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/) |
+| Chemistry | [Molecular Shapes: Why Molecules Bend](chemistry/molecular-shapes/), [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/), [States of Matter: Solid, Liquid, Gas](materials/states-of-matter/) |
 | Astronomy | [Moon Phases: Why the Moon Changes Shape](astronomy/moon-phases/), [Seasons: Why Summer Is Warm](astronomy/seasons/) |
 | Earth & Environment | [Boiling Point: Why Altitude Lowers It](physics/boiling-altitude/), [Seasons: Why Summer Is Warm](astronomy/seasons/), [The Water Cycle: Sea, Sky and Back](earth/water-cycle/), [Plate Boundaries: Ridges, Mountains and Faults](earth/plate-boundaries/) |
 | Engineering | [Levers and Pulleys: Trading Distance for Force](engineering/levers-pulleys/), [Trusses: Why Bridges Use Triangles](engineering/truss-triangles/) |
-| Materials | coming soon |
+| Materials | [States of Matter: Solid, Liquid, Gas](materials/states-of-matter/) |
 | Computer Science | [Binary Numbers: Counting with Two Digits](computer-science/binary-numbers/), [The CPU: What Is Inside the Chip](computer-science/cpu/) |
 | Statistics & Data | coming soon |
 | Health & Medicine | [Exome Lab: Find the Variant](biology/exome-sequencing/) |

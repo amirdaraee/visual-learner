@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>States of Matter</title>
+<meta name="description" content="Heat a box of particles that attract and repel each other and watch a crystal melt into a liquid and boil into a gas, with a heating curve measured live.">
+<link rel="canonical" href="https://turnscience.com/materials/states-of-matter/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="States of Matter: Solid, Liquid, Gas · Visual Learner">
+<meta property="og:description" content="Heat a box of particles and watch a crystal melt into a liquid and boil into a gas, with the heating curve measured live.">
+<meta property="og:url" content="https://turnscience.com/materials/states-of-matter/">
+<meta property="og:image" content="https://turnscience.com/assets/social/states-of-matter.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="States of Matter: Solid, Liquid, Gas: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="States of Matter: Solid, Liquid, Gas · Visual Learner">
+<meta name="twitter:description" content="Heat a box of particles and watch a crystal melt into a liquid and boil into a gas, with the heating curve measured live.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/states-of-matter.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<script defer src="../../shared/analytics.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D box of particles that can be solid, liquid or gas"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Growing the crystal…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Materials</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>States of <em>matter</em></h1>
+        <p>Solids, liquids and gases are made of the same particles. What changes is how fast they move and how tightly they hold on to each other.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#materials" title="All Materials concepts" aria-label="All Materials concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Materials lab backdrop (B)" aria-label="Materials lab backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="ui-hint" aria-hidden="true"></div>
+  <div id="tip" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>States of matter</h2>
+    <p>Every particle here pulls on its neighbours when they are close and pushes back when they touch. At low temperature they lock into a <b>crystal</b> (solid). With more energy they slide past each other but stay together (<b>liquid</b>). With more still they fly apart and fill the box (<b>gas</b>). Nothing here is drawn by hand: the behaviour comes from computing the forces between every pair of particles many times a second.</p>
+    <h3>What is simplified</h3>
+    <p>This is a <b>model</b>, a small molecular dynamics simulation of 108 particles with the Lennard-Jones force, the standard simple model of atoms such as argon. Temperatures are in the model's own units, not degrees. A light pull of gravity keeps the liquid at the bottom, and a thermostat holds the temperature you set (except in step 4, where heat is added at a steady rate). With so few particles the changes are less sharp than in a real substance, and the state shown on the card is estimated from the average number of close neighbours each particle has.</p>
+    <h3>Sources</h3>
+    <p>Allen and Tildesley, <i>Computer Simulation of Liquids</i> (the Lennard-Jones model and velocity-Verlet method). Melting points of ice (0 °C) and iron (~1,538 °C): CRC Handbook of Chemistry and Physics.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>[</code> <code>]</code> change the main control · <code>P</code> heat steadily · <code>R</code> start as a crystal · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational. A simplified particle model, not a real substance.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/materialslab.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var motion = calm ? 0.3 : 1;
+
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function ease(k) { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* seeded random numbers, so the scene is laid out the same way on every visit */
+function rng(seed) { return function () { seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var soft = VLStage.soft, label = VLStage.label;
+var LIME = '#c8f03c', CORAL = '#ff6b86', CYAN = '#7fe3ff', VIOLET = '#b99cff', AMBER = '#ffc857';
+/* optional hover and click on scene objects: { objects: function () { return [...] }, text: function (hit) {}, click: function (hit) {} } */
+var HOVER = null;
+
+/* a text sprite whose words change: rebuilt only when the text does */
+function Tag(parent, o, cx, cy) {
+  var cur = null, txt = '', pos = new T.Vector3();
+  return {
+    pos: pos,
+    set: function (t) {
+      if (t !== txt) {
+        txt = t; if (cur) { parent.remove(cur); cur.material.map.dispose(); cur.material.dispose(); }
+        cur = label(t, o); if (cur.center) cur.center.set(cx == null ? 0.5 : cx, cy == null ? 0.5 : cy); parent.add(cur);
+      }
+      cur.position.copy(pos); cur.visible = true;
+    },
+    show: function (v) { if (cur) cur.visible = v; }
+  };
+}
+/* many copies of one small mesh, moved every frame */
+function Pool(n, geo, mat) {
+  var m = new T.InstancedMesh(geo, mat, n), d = new T.Object3D(), i;
+  m.instanceMatrix.setUsage(T.DynamicDrawUsage); m.frustumCulled = false;
+  function set(i, x, y, z, s) { d.position.set(x, y, z); d.quaternion.identity(); d.scale.setScalar(Math.max(s, 1e-4)); d.updateMatrix(); m.setMatrixAt(i, d.matrix); }
+  for (i = 0; i < n; i++) set(i, 0, 0, 0, 0);
+  return { mesh: m, set: set, done: function () { m.instanceMatrix.needsUpdate = true; } };
+}
+
+/* ---------- a small molecular dynamics model: particles attract when close and repel when touching (Lennard-Jones) ---------- */
+/* model units: particle size 1, bond energy 1, mass 1; temperature in the same units (no degrees) */
+var NC = 3, LAT = 1.62, N = 4 * NC * NC * NC, BOX = 9.0, BOXH = 14.0, GRAV = 0.03, RC = 2.5, RC2 = RC * RC, DT = 0.004;
+var px = new Float64Array(N), py = new Float64Array(N), pz = new Float64Array(N), vx = new Float64Array(N), vy = new Float64Array(N), vz = new Float64Array(N);
+var fx = new Float64Array(N), fy = new Float64Array(N), fz = new Float64Array(N), nb = new Uint8Array(N);
+var ox = new Float64Array(N), oy = new Float64Array(N), oz = new Float64Array(N);
+var S = { target: 0.2, temp: 0.2, mode: 'hold', power: 0, added: 0, curve: [], hits: 0, hitHist: [], hitT: 0, msd: 0, msdT: 0, coord: 12, gasFrac: 0, state: 'Solid', simT: 0, nbHist: [] };
+var rnd = rng(21);
+
+function gauss() { var u = rnd() || 1e-9, v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+/* start as a face-centred cubic crystal resting on the floor */
+function resetLattice(T0) {
+  var k = 0, off = [[0, 0, 0], [0.5, 0.5, 0], [0.5, 0, 0.5], [0, 0.5, 0.5]], w = NC * LAT;
+  for (var i = 0; i < NC; i++) for (var j = 0; j < NC; j++) for (var l = 0; l < NC; l++) off.forEach(function (o) {
+    px[k] = (i + o[0] + 0.25) * LAT - w / 2; py[k] = (j + o[1] + 0.25) * LAT + 0.45; pz[k] = (l + o[2] + 0.25) * LAT - w / 2; k++;
+  });
+  var mx2 = 0, my2 = 0, mz2 = 0;
+  for (k = 0; k < N; k++) { vx[k] = gauss() * Math.sqrt(T0); vy[k] = gauss() * Math.sqrt(T0); vz[k] = gauss() * Math.sqrt(T0); mx2 += vx[k]; my2 += vy[k]; mz2 += vz[k]; }
+  for (k = 0; k < N; k++) { vx[k] -= mx2 / N; vy[k] -= my2 / N; vz[k] -= mz2 / N; ox[k] = px[k]; oy[k] = py[k]; oz[k] = pz[k]; }
+  forces(); S.temp = T0; S.msd = 0; S.msdT = 0; S.nbHist = [];
+}
+function forces() {
+  var i, j, dx, dy, dz, r2, ir2, ir6, f;
+  for (i = 0; i < N; i++) { fx[i] = 0; fy[i] = -GRAV; fz[i] = 0; nb[i] = 0; }
+  for (i = 0; i < N - 1; i++) for (j = i + 1; j < N; j++) {
+    dx = px[i] - px[j]; dy = py[i] - py[j]; dz = pz[i] - pz[j]; r2 = dx * dx + dy * dy + dz * dz;
+    if (r2 > RC2) continue;
+    if (r2 < 2.25) { nb[i]++; nb[j]++; }
+    if (r2 < 0.64) r2 = 0.64;   /* never closer than 0.8: keeps the model stable */
+    ir2 = 1 / r2; ir6 = ir2 * ir2 * ir2; f = 24 * ir2 * ir6 * (2 * ir6 - 1);
+    fx[i] += f * dx; fy[i] += f * dy; fz[i] += f * dz; fx[j] -= f * dx; fy[j] -= f * dy; fz[j] -= f * dz;
+  }
+}
+function kinetic() { var e = 0; for (var i = 0; i < N; i++) e += vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]; return e / 2; }
+/* one velocity-Verlet step with hard walls; wall hits are counted to measure pressure */
+function stepMD() {
+  var i, h = BOX / 2 - 0.5;
+  for (i = 0; i < N; i++) {
+    vx[i] += 0.5 * DT * fx[i]; vy[i] += 0.5 * DT * fy[i]; vz[i] += 0.5 * DT * fz[i];
+    px[i] += DT * vx[i]; py[i] += DT * vy[i]; pz[i] += DT * vz[i];
+    if (px[i] < -h) { px[i] = -h; vx[i] = Math.abs(vx[i]); S.hits++; } else if (px[i] > h) { px[i] = h; vx[i] = -Math.abs(vx[i]); S.hits++; }
+    if (pz[i] < -h) { pz[i] = -h; vz[i] = Math.abs(vz[i]); S.hits++; } else if (pz[i] > h) { pz[i] = h; vz[i] = -Math.abs(vz[i]); S.hits++; }
+    if (py[i] < 0.45) { py[i] = 0.45; vy[i] = Math.abs(vy[i]); } else if (py[i] > BOXH - 0.5) { py[i] = BOXH - 0.5; vy[i] = -Math.abs(vy[i]); S.hits++; }
+  }
+  forces();
+  for (i = 0; i < N; i++) { vx[i] += 0.5 * DT * fx[i]; vy[i] += 0.5 * DT * fy[i]; vz[i] += 0.5 * DT * fz[i]; }
+  var ke = kinetic(), T = 2 * ke / (3 * N), lam = 1;
+  if (S.mode === 'hold') lam = Math.sqrt(1 + (DT / 0.4) * (S.target / Math.max(T, 1e-6) - 1));
+  else if (S.mode === 'heat') { var dE = S.power * N * DT; S.added += dE / N; lam = Math.sqrt((ke + dE) / Math.max(ke, 1e-6)); }
+  if (lam !== 1) for (i = 0; i < N; i++) { vx[i] *= lam; vy[i] *= lam; vz[i] *= lam; }
+  S.temp += (T * lam * lam - S.temp) * 0.02;
+  S.simT += DT;
+}
+/* what state is it in? judged from the average number of close neighbours: ~9 in this small crystal, ~6 in the liquid, ~1 in the gas */
+function classify() {
+  var c = 0, gas = 0, i; for (i = 0; i < N; i++) { c += nb[i]; if (nb[i] <= 1) gas++; }
+  S.coord += (c / N - S.coord) * 0.1; S.gasFrac += (gas / N - S.gasFrac) * 0.1;
+  S.state = S.coord < 2.4 ? 'Gas' : S.coord < 5 ? 'Liquid and gas' : S.coord < 7.6 ? 'Liquid' : 'Solid';
+}
+resetLattice(0.2);
+
+function buildScene() {
+  var root = new T.Group(), pick = [], i;
+  var SC = 0.29;   /* model units to scene units */
+  var g = new T.Group(); g.scale.setScalar(SC); g.position.y = -1.9; root.add(g);
+  var glass = new T.Mesh(new T.BoxGeometry(BOX, BOXH, BOX), new T.MeshStandardMaterial({ color: '#9fd0ff', transparent: true, opacity: 0.06, depthWrite: false, roughness: 0.2 }));
+  glass.position.y = BOXH / 2; g.add(glass);
+  var edges = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(BOX, BOXH, BOX)), new T.LineBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0.45 })); edges.position.y = BOXH / 2; g.add(edges);
+  var heater = new T.Mesh(new T.BoxGeometry(BOX + 0.4, 0.35, BOX + 0.4), new T.MeshStandardMaterial({ color: '#30353c', roughness: 0.6, emissive: new T.Color('#ff5a1a'), emissiveIntensity: 0 })); heater.position.y = -0.18; g.add(heater);
+  heater.userData.tip = 'Heater · sets the temperature'; glass.userData.tip = 'Closed container'; pick.push(heater);
+  var ball = new T.SphereGeometry(0.42, 14, 10);
+  var parts = new T.InstancedMesh(ball, new T.MeshStandardMaterial({ roughness: 0.5, metalness: 0 }), N); parts.instanceColor = new T.InstancedBufferAttribute(new Float32Array(N * 3), 3); g.add(parts);
+  parts.userData.tip = 'Particles · colour shows speed, blue slow and red fast'; pick.push(parts);
+  var d = new T.Object3D(), col = new T.Color(), slow = new T.Color('#4a8cff'), mid = new T.Color('#f3e35a'), fast = new T.Color('#ff4b3a');
+  var stateTag = Tag(root, { size: 0.26, color: LIME }, 0.5, 0);
+  var cap = label('a simplified particle model', { size: 0.15, color: '#aebbd0', bg: false }); cap.position.set(0, -2.35, 1.6); root.add(cap);
+  var classT = 0;
+  return {
+    group: root, w: 2.5, h: 2.7, base: 2.1, pick: pick,
+    update: function (t, dt) {
+      /* about 1.6 model time units every second, fewer with reduced motion */
+      var n = Math.max(1, Math.round(7 * motion));
+      for (var s = 0; s < n; s++) stepMD();
+      classT += dt; if (classT > 0.1) {
+        classT = 0; classify();
+        /* how far particles have wandered over the last ~1 model time unit */
+        if (S.simT - S.msdT > 1) { var m = 0; for (i = 0; i < N; i++) { var a = px[i] - ox[i], b = py[i] - oy[i], c2 = pz[i] - oz[i]; m += a * a + b * b + c2 * c2; ox[i] = px[i]; oy[i] = py[i]; oz[i] = pz[i]; } S.msd = m / N; S.msdT = S.simT; }
+        S.hitT += 0.1; if (S.hitT >= 0.5) { S.hitHist.push(S.hits / 0.5); S.hits = 0; S.hitT = 0; if (S.hitHist.length > 120) S.hitHist.shift(); }
+        S.nbHist.push(S.coord); if (S.nbHist.length > 200) S.nbHist.shift();
+        if (S.mode === 'heat') { S.curve.push([S.added, S.temp]); if (S.temp > 2.6 || S.curve.length > 1200) { S.mode = 'hold'; S.target = S.temp; } }
+      }
+      for (i = 0; i < N; i++) {
+        d.position.set(px[i], py[i], pz[i]); d.updateMatrix(); parts.setMatrixAt(i, d.matrix);
+        var sp = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]) / 2.6;
+        if (sp < 0.5) col.copy(slow).lerp(mid, sp * 2); else col.copy(mid).lerp(fast, Math.min(1, (sp - 0.5) * 2));
+        parts.setColorAt(i, col);
+      }
+      parts.instanceMatrix.needsUpdate = true; parts.instanceColor.needsUpdate = true;
+      heater.material.emissiveIntensity = clamp(S.temp / 2.5, 0, 1) * 0.9;
+      stateTag.pos.set(0, -1.9 + BOXH * SC + 0.35, 0); stateTag.set(S.state.toLowerCase());
+    }
+  };
+}
+HOVER = { objects: function () { return built ? built.pick : []; }, text: function (h) { return h.object.userData.tip || null; } };
+
+/* ---------- mini charts ---------- */
+function speedChart() {
+  var bins = new Float32Array(24), i, mxb = 1;
+  for (i = 0; i < N; i++) { var sp = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]); bins[Math.min(23, Math.floor(sp / 4 * 24))]++; }
+  for (i = 0; i < 24; i++) mxb = Math.max(mxb, bins[i]);
+  var bw = (PX1 - PX0) / 24;
+  for (i = 0; i < 24; i++) { var h = bins[i] / mxb * 120; bar(PX0 + i * bw + 1, 150 - h, bw - 2, h, i < 8 ? '#4a8cff' : i < 14 ? '#f3e35a' : '#ff4b3a'); }
+  axes(); mtext('speed →', PX1, 176, '#6f7894', 11, 'right'); mtext('number of particles', PX0 + 6, 20, '#6f7894', 11);
+}
+function neighbourChart() {
+  var n = S.nbHist.length, X = function (k) { return lerp(PX0, PX1, k / 199); }, Y = function (v) { return lerp(150, 24, v / 12); };
+  axes(); hline(Y(8), 'rgba(255,255,255,0.12)', true);
+  if (n > 1) { mx.beginPath(); S.nbHist.forEach(function (v, k) { if (k) mx.lineTo(X(k), Y(v)); else mx.moveTo(X(k), Y(v)); }); mx.strokeStyle = LIME; mx.lineWidth = 2.5; mx.stroke(); }
+  mtext('close neighbours per particle', PX0 + 6, 20, '#6f7894', 11); mtext('12', PX0 - 6, Y(12) + 4, '#6f7894', 11, 'right'); mtext('0', PX0 - 6, Y(0) + 4, '#6f7894', 11, 'right');
+  mtext('time →', PX1, 176, '#6f7894', 11, 'right');
+}
+function hitsChart() {
+  var n = S.hitHist.length, X = function (k) { return lerp(PX0, PX1, k / 119); }, m = 50; S.hitHist.forEach(function (v) { m = Math.max(m, v); });
+  var Y = function (v) { return lerp(150, 24, v / m); };
+  axes();
+  if (n > 1) { mx.beginPath(); S.hitHist.forEach(function (v, k) { if (k) mx.lineTo(X(k), Y(v)); else mx.moveTo(X(k), Y(v)); }); mx.strokeStyle = CORAL; mx.lineWidth = 2.5; mx.stroke(); }
+  mtext('hits on the walls and lid, per second', PX0 + 6, 20, '#6f7894', 11); mtext('time →', PX1, 176, '#6f7894', 11, 'right');
+}
+function curveChart() {
+  var c = S.curve, mE = 6; c.forEach(function (p) { mE = Math.max(mE, p[0]); });
+  var X = function (e) { return lerp(PX0, PX1, e / mE); }, Y = function (tt) { return lerp(150, 24, tt / 2.8); };
+  axes();
+  if (c.length > 1) { mx.beginPath(); c.forEach(function (p, k) { if (k) mx.lineTo(X(p[0]), Y(p[1])); else mx.moveTo(X(p[0]), Y(p[1])); }); mx.strokeStyle = AMBER; mx.lineWidth = 2.5; mx.stroke(); }
+  else mtext('Press Heat steadily to draw the curve', PX0 + 20, 90, '#9ea8c2', 12);
+  mtext('temperature', PX0 + 6, 20, '#6f7894', 11); mtext('heat added →', PX1, 176, '#6f7894', 11, 'right');
+}
+
+/* ---------- steps ---------- */
+function tempSlider(el) {
+  return slider(el, { title: 'Temperature', keys: '[ ]', min: 5, max: 250, step: 5, nudge: 5, val: Math.round(S.target * 100), fmt: function (v) { return (v / 100).toFixed(2); }, onInput: function (v) { S.target = v / 100; S.mode = 'hold'; } });
+}
+function holdSteps(T0, keep) { return function () { if (!keep || S.mode !== 'hold') { S.mode = 'hold'; } if (T0 != null) { S.target = T0; } }; }
+var STEPS = [
+  { name: 'Solid', hash: 'solid', explain: { title: 'In a solid, particles shake but stay in place', sections: [
+      { h: 'What you see', p: ['About a hundred particles in a closed box. Each one pulls on its neighbours when they are close and pushes back when they touch. At a low temperature they lock into a neat, repeating pattern, a crystal. The colour shows each particle\'s speed: blue is slow, red is fast.'] },
+      { h: 'How it works', p: ['Temperature is a measure of how fast the particles jiggle. In a solid they do not have enough energy to break free of their neighbours, so each one shakes around a fixed spot. That is why a solid keeps its own shape.', 'Even in the coldest solid the particles are never completely still. Raise the temperature a little and watch them shake harder while the pattern holds.'] }
+    ], tryit: ['Move the temperature between 0.05 and 0.4: the speeds on the chart spread out, but every particle stays in its place.'] },
+    why: 'The particles shake but keep their places. <span class="y">That is why a solid keeps its shape.</span>', hint: 'Drag the temperature, keep it low',
+    chart: { t: 'Particle speeds', k: 'right now' },
+    enter: function () { if (S.state !== 'Solid' || S.mode !== 'hold') resetLattice(0.2); S.mode = 'hold'; S.target = Math.min(S.target, 0.3); },
+    mount: function (el) { var sl = tempSlider(el); var r = button(el, 'Start as a crystal', function () { resetLattice(0.2); S.target = 0.2; S.mode = 'hold'; sl.set(20); }, 'R'); return { nudge: function (d) { sl.nudge(d); }, reset: function () { r.click(); }, tick: function () { sl.set(Math.round(S.target * 100)); } }; },
+    stats: function () { return [['State', S.state, 'hot'], ['Temperature', S.temp.toFixed(2) + ' (model)'], ['Close neighbours', S.coord.toFixed(1)]]; },
+    draw: speedChart },
+  { name: 'Liquid', hash: 'liquid', explain: { title: 'In a liquid, particles stay close but slide past each other', sections: [
+      { h: 'What you see', p: ['Heat the crystal. Past a certain temperature, the melting point, the pattern falls apart. The particles stay in a clump at the bottom of the box but now slide around each other.'] },
+      { h: 'How it works', p: ['With more energy, particles can slip out of their places. They still attract each other, so they stay close together: a liquid keeps the same volume. But they can move past one another, so a liquid flows and takes the shape of its container.', 'The chart counts each particle\'s close neighbours. In this small crystal the average is about 9, because particles at its surface have fewer. When the solid melts the number drops, because the particles pack less neatly.'] },
+      { h: 'In real life', p: ['Ice melts at 0 °C. Each substance has its own melting point; iron, for example, melts at about 1,540 °C.'] }
+    ], tryit: ['Set the temperature to about 0.8 and wait: the crystal melts and the neighbour line drops. Then cool it to 0.2: the particles settle, and the line flattens again.'] },
+    why: 'Heat the crystal past its melting point. <span class="y">The particles stay close but slide past each other.</span>', hint: 'Raise the temperature to about 0.8',
+    chart: { t: 'Close neighbours', k: 'over time' },
+    enter: function () { S.mode = 'hold'; },
+    mount: function (el) { var sl = tempSlider(el); var r = button(el, 'Start as a crystal', function () { resetLattice(0.2); S.target = 0.2; S.mode = 'hold'; sl.set(20); }, 'R'); return { nudge: function (d) { sl.nudge(d); }, reset: function () { r.click(); }, tick: function () { sl.set(Math.round(S.target * 100)); } }; },
+    stats: function () { return [['State', S.state, 'hot'], ['Temperature', S.temp.toFixed(2) + ' (model)'], ['Close neighbours', S.coord.toFixed(1)]]; },
+    draw: neighbourChart },
+  { name: 'Gas', hash: 'gas', explain: { title: 'In a gas, particles fly apart and fill the box', sections: [
+      { h: 'What you see', p: ['Heat further. The particles break away from the liquid and fly freely, filling the whole box. The chart counts how often they hit the walls and the lid.'] },
+      { h: 'How it works', p: ['In a gas the particles move so fast that their pull on each other can no longer hold them together. They spread out to fill any container, and they are far apart, which is why a gas can be squashed and a liquid hardly at all.', 'Every hit on a wall gives it a tiny push. Millions of hits add up to the steady push we call pressure. Hotter particles hit harder and more often, so the pressure of a gas in a closed box rises when you heat it.'] },
+      { h: 'In real life', p: ['Air in a car tyre is at higher pressure after a long drive, because the tyre has warmed up.'] }
+    ], tryit: ['Set the temperature to 2.5 and watch the chart climb; then drop it to 1.2 and watch it fall.'] },
+    why: 'Heat the liquid until the particles fly apart. <span class="y">A gas fills its container and pushes on every wall.</span>', hint: 'Raise the temperature above 2',
+    chart: { t: 'Hits on the walls', k: 'a measure of pressure' },
+    enter: function () { S.mode = 'hold'; if (S.target < 1.5) S.target = 2.0; },
+    mount: function (el) { var sl = tempSlider(el); return { nudge: function (d) { sl.nudge(d); }, tick: function () { sl.set(Math.round(S.target * 100)); } }; },
+    stats: function () { var hh = S.hitHist.length ? S.hitHist[S.hitHist.length - 1] : 0; return [['State', S.state, 'hot'], ['Temperature', S.temp.toFixed(2) + ' (model)'], ['Wall hits', Math.round(hh) + ' per s']]; },
+    draw: hitsChart },
+  { name: 'Heating curve', hash: 'curve', explain: { title: 'While a substance melts or boils, its temperature barely rises', sections: [
+      { h: 'What you see', p: ['Press Heat steadily. The crystal starts cold and the heater adds energy at a steady rate. The chart plots the temperature against the heat added so far.'] },
+      { h: 'How it works', p: ['At first the heat makes the particles jiggle faster, so the temperature climbs quickly. While the crystal melts, and again while particles escape into the gas, the line climbs more slowly: part of the heat now goes into pulling particles apart instead of speeding them up.', 'Heat that changes the state instead of the temperature is called latent heat. With only about a hundred particles the slow parts here are gentle and a little uneven. In a pan of water they are flat: the temperature stays at 0 °C while ice melts and at 100 °C while water boils.'] }
+    ], tryit: ['Press Heat steadily and watch the state on the card: the line climbs fastest while it is still a solid.'] },
+    why: 'Heat at a steady rate. <span class="y">While the state changes, the heat goes into breaking particles apart.</span>', hint: 'Press Heat steadily',
+    chart: { t: 'Heating curve', k: 'measured in the model' },
+    enter: function () {},
+    mount: function (el) {
+      var b = button(el, 'Heat steadily from cold', function () { resetLattice(0.05); S.added = 0; S.curve = []; S.power = 0.11; S.mode = 'heat'; }, 'P');
+      return { play: function () { b.click(); }, tick: function () { b.textContent = S.mode === 'heat' ? 'Heating…' : 'Heat steadily from cold'; } };
+    },
+    stats: function () { return [['State', S.state, 'hot'], ['Temperature', S.temp.toFixed(2) + ' (model)'], ['Heat added', S.added.toFixed(2) + ' per particle']]; },
+    draw: curveChart }
+];
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'materials', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok;
+if (!ok) $('loading').style.display = 'none';
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'); wrap.className = 'seg'; wrap.setAttribute('role', 'group'); if (opts.aria) wrap.setAttribute('aria-label', opts.aria);
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.textContent = it.label;
+    b.addEventListener('click', function () { cb(it, i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  return { mark: function (fn) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', fn(items[i], i) ? 'true' : 'false'); }); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { if (document.activeElement !== inp) inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.nudge || o.step || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function button(el, text, cb, keys) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = text; if (keys) b.setAttribute('aria-keyshortcuts', keys);
+  b.addEventListener('click', function () { cb(b); sfx('ui'); }); el.appendChild(b); return b;
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { if ($('why').innerHTML !== html) $('why').innerHTML = html; }
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+var PX0 = 44, PX1 = 584, CY0 = 162, CY1 = 24;
+function mtext(t, x, y, c, px, al) { mx.font = '400 ' + (px || 13) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = c || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function hline(y, c, dash, x0, x1) { mx.save(); mx.strokeStyle = c; mx.lineWidth = 1.5; if (dash) mx.setLineDash([6, 5]); mx.beginPath(); mx.moveTo(x0 == null ? PX0 : x0, y); mx.lineTo(x1 == null ? PX1 : x1, y); mx.stroke(); mx.restore(); }
+function dot(x, y, c, r) { mx.beginPath(); mx.arc(x, y, r || 6, 0, 7); mx.fillStyle = c; mx.fill(); }
+function axes() { mx.strokeStyle = 'rgba(255,255,255,0.14)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(PX0, CY1); mx.lineTo(PX0, CY0); mx.lineTo(PX1, CY0); mx.stroke(); }
+function bar(x, y, w, h, c) { mx.fillStyle = c; mx.fillRect(x, y, w, h); }
+
+/* ---------- step manager ---------- */
+var built = null, cur = -1, ctl = null, hudT = 0;
+function getScene() { if (!built) { built = buildScene(); stage.add(built); } return built; }
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) b.textContent = v;
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    if (cur < 0) stage.show(sc);
+    cur = i; s.enter();
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; if (s.why) setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; ctl = s.mount(c) || null;
+    if (ctl && ctl.tick) ctl.tick();
+    renderStats(s.stats());
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* ---------- hover to name a thing, click to pick it ---------- */
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null, downAt = null, ptr = stage.pointer;
+function shown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function hitAt(x, y) {
+  if (!ok || !built || !HOVER) return null;
+  var r = canvas.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, stage.camera);
+  var hits = ray.intersectObjects(HOVER.objects(), true);
+  for (var i = 0; i < hits.length; i++) if (shown(hits[i].object) && (!HOVER.accept || HOVER.accept(hits[i]))) return hits[i];
+  return null;
+}
+canvas.addEventListener('pointerdown', function (e) { downAt = { x: e.clientX, y: e.clientY }; tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerup', function (e) {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return; downAt = null;
+  var h = hitAt(e.clientX, e.clientY); if (h && HOVER.click) HOVER.click(h);
+});
+function hover() {
+  if (!HOVER || !ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var h = hitAt(ptr.x, ptr.y), t = h ? HOVER.text(h) : null, r = canvas.getBoundingClientRect();
+  if (t) { tipEl.textContent = t; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = HOVER.click ? 'pointer' : ''; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- tools + keys ---------- */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Materials lab backdrop on' : 'Materials lab backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">A simplified particle model (Lennard-Jones), not a real substance. Temperatures are in model units, not degrees.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-9]$/.test(k) && +k <= STEPS.length) go(+k - 1);
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if ((k === 'p' || k === 'P') && ctl && ctl.play) ctl.play();
+  else if ((k === 'r' || k === 'R') && ctl && ctl.reset) ctl.reset();
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  if (s.tick) s.tick(dt, tt);
+  sc.update(tt, dt);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; if (ctl && ctl.tick) ctl.tick(); renderStats(s.stats()); mx.clearRect(0, 0, MW, MH); s.draw(); hover(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>
