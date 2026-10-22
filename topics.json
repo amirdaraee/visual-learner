@@ -319,6 +319,23 @@
       "also": [
         "earth"
       ]
+    },
+    {
+      "id": "water-cycle",
+      "category": "earth",
+      "title": "The Water Cycle: Sea, Sky and Back",
+      "summary": "Heat the sea, watch vapour form clouds, rain fall on a mountain and water return to the sea by rivers and underground.",
+      "path": "earth/water-cycle/",
+      "tags": [
+        "water",
+        "weather",
+        "clouds",
+        "rain"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-22",
+      "preview": "assets/previews/water-cycle.jpg"
     }
   ]
 }
