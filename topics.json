@@ -353,6 +353,23 @@
       "status": "live",
       "added": "2026-10-23",
       "preview": "assets/previews/plate-boundaries.jpg"
+    },
+    {
+      "id": "levers-pulleys",
+      "category": "engineering",
+      "title": "Levers and Pulleys: Trading Distance for Force",
+      "summary": "Move a lever’s fulcrum, add pulleys and try the three lever classes to see how simple machines trade distance for force.",
+      "path": "engineering/levers-pulleys/",
+      "tags": [
+        "levers",
+        "pulleys",
+        "forces",
+        "simple machines"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-23",
+      "preview": "assets/previews/levers-pulleys.jpg"
     }
   ]
 }

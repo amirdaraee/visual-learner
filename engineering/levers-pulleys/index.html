@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Levers and Pulleys</title>
+<meta name="description" content="Move a lever's fulcrum, push it down, add pulleys and try the three classes of lever to see how simple machines trade distance for force.">
+<link rel="canonical" href="https://turnscience.com/engineering/levers-pulleys/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="Levers and Pulleys: Trading Distance for Force · Visual Learner">
+<meta property="og:description" content="Move a lever's fulcrum, add pulleys and try the three lever classes to see how simple machines trade distance for force.">
+<meta property="og:url" content="https://turnscience.com/engineering/levers-pulleys/">
+<meta property="og:image" content="https://turnscience.com/assets/social/levers-pulleys.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Levers and Pulleys: Trading Distance for Force: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Levers and Pulleys: Trading Distance for Force · Visual Learner">
+<meta name="twitter:description" content="Move a lever's fulcrum, add pulleys and try the three lever classes to see how simple machines trade distance for force.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/levers-pulleys.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<script defer src="../../shared/analytics.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D lever on a fulcrum and a pulley frame lifting a crate"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Setting up the lever…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Engineering</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>Levers and <em>pulleys</em></h1>
+        <p>Simple machines let a small force move a heavy load. The price is distance: you have to move farther.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#engineering" title="All Engineering concepts" aria-label="All Engineering concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Workshop backdrop (B)" aria-label="Workshop backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="ui-hint" aria-hidden="true"></div>
+  <div id="tip" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Levers and pulleys</h2>
+    <p>A <b>lever</b> balances when effort × effort arm = load × load arm, measured from the fulcrum. A <b>pulley</b> system with <i>n</i> rope sections holding the load needs an effort of the load ÷ <i>n</i>. In both, the ratio by which the force shrinks is the <b>mechanical advantage</b>, and you pay for it in distance: the work in (force × distance) equals the work out.</p>
+    <h3>What is simplified</h3>
+    <p>These are <b>ideal</b> machines: no friction, a weightless plank and weightless pulleys. Real ones need somewhat more force. The load is 300 N, about the weight of a 30 kg mass on Earth (30 kg × 9.8 N/kg ≈ 294 N). The lever is drawn about 2 m long, so 1 scene unit is about 25 cm; on the pulley frame 1 unit of rope is about 50 cm. The forearm example uses typical distances, which vary from person to person.</p>
+    <h3>Sources</h3>
+    <p>The law of the lever and pulleys as found in any introductory physics text, for example OpenStax <i>College Physics</i>, chapter 9 (statics and torque) and chapter 7 (work). Forearm lever distances: typical anatomy figures quoted in OpenStax <i>College Physics</i>, section 9.6.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>[</code> <code>]</code> change the main control · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and ideal: no friction, and the plank and pulleys weigh nothing.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/workshop.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var motion = calm ? 0.3 : 1;
+
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function ease(k) { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* seeded random numbers, so the scene is laid out the same way on every visit */
+function rng(seed) { return function () { seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var soft = VLStage.soft, label = VLStage.label;
+var LIME = '#c8f03c', CORAL = '#ff6b86', CYAN = '#7fe3ff', VIOLET = '#b99cff', AMBER = '#ffc857';
+/* optional hover and click on scene objects: { objects: function () { return [...] }, text: function (hit) {}, click: function (hit) {} } */
+var HOVER = null;
+
+/* a text sprite whose words change: rebuilt only when the text does */
+function Tag(parent, o, cx, cy) {
+  var cur = null, txt = '', pos = new T.Vector3();
+  return {
+    pos: pos,
+    set: function (t) {
+      if (t !== txt) {
+        txt = t; if (cur) { parent.remove(cur); cur.material.map.dispose(); cur.material.dispose(); }
+        cur = label(t, o); if (cur.center) cur.center.set(cx == null ? 0.5 : cx, cy == null ? 0.5 : cy); parent.add(cur);
+      }
+      cur.position.copy(pos); cur.visible = true;
+    },
+    show: function (v) { if (cur) cur.visible = v; }
+  };
+}
+/* many copies of one small mesh, moved every frame */
+function Pool(n, geo, mat) {
+  var m = new T.InstancedMesh(geo, mat, n), d = new T.Object3D(), i;
+  m.instanceMatrix.setUsage(T.DynamicDrawUsage); m.frustumCulled = false;
+  function set(i, x, y, z, s) { d.position.set(x, y, z); d.quaternion.identity(); d.scale.setScalar(Math.max(s, 1e-4)); d.updateMatrix(); m.setMatrixAt(i, d.matrix); }
+  for (i = 0; i < n; i++) set(i, 0, 0, 0, 0);
+  return { mesh: m, set: set, done: function () { m.instanceMatrix.needsUpdate = true; } };
+}
+
+/* ---------- simple machines: an ideal lever and an ideal pulley block (no friction, weightless plank and pulleys) ---------- */
+var W = 300, HALF = 4, FH = 1.2, CM_PER_UNIT = 25, PULL_CM = 50;   /* load 300 N; lever: 1 unit ~ 25 cm; pulleys: 1 unit of rope ~ 50 cm */
+var S = { xf: 0.8, push: 0, ropes: 2, pull: 0, cls: 0, move: 0.0, mode: 0 };
+var CLASSES = [
+  { label: 'Class 1', name: 'Fulcrum in the middle', eg: 'seesaw, crowbar, scissors' },
+  { label: 'Class 2', name: 'Load in the middle', eg: 'wheelbarrow, nutcracker' },
+  { label: 'Class 3', name: 'Effort in the middle', eg: 'tweezers, fishing rod, forearm' }
+];
+/* positions along the plank (x from -4 to 4) of the fulcrum, the load and the effort */
+function layout() {
+  if (S.mode === 0 || S.cls === 0) return { f: S.xf, load: 3.4, eff: -3.6, up: false };
+  if (S.cls === 1) return { f: -3.8, load: lerp(-2.8, 2.8, (S.move + 1) / 2), eff: 3.7, up: true };
+  return { f: -3.8, load: 3.4, eff: lerp(-2.8, 2.8, (S.move + 1) / 2), up: true };
+}
+function arms() { var L = layout(); return { e: Math.abs(L.eff - L.f), l: Math.abs(L.load - L.f) }; }
+function effort() { var a = arms(); return W * a.l / a.e; }
+function ma() { var a = arms(); return a.e / a.l; }
+function maxTilt() { var a = arms(); return Math.asin(Math.min(0.99, (FH - 0.15) / a.e)); }
+function n0(x) { return Math.round(x).toLocaleString('en-US'); }
+
+function arrowMesh(color) {
+  var g = new T.Group(), m = new T.MeshBasicMaterial({ color: color });
+  var shaft = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 1, 10).translate(0, 0.5, 0), m), head = new T.Mesh(new T.ConeGeometry(0.17, 0.34, 14), m);
+  g.add(shaft); g.add(head);
+  /* points down from its origin by default; len is the shaft length */
+  return { g: g, set: function (len, up) { len = Math.max(0.05, len); shaft.scale.y = len; if (up) { shaft.position.y = 0; head.position.y = len + 0.17; head.rotation.x = 0; } else { shaft.position.y = -len; head.position.y = -len - 0.17; head.rotation.x = Math.PI; } } };
+}
+
+function buildScene() {
+  var root = new T.Group(), pick = [], i;
+  var wood = soft('#b98a55', 0.04), steel = soft('#6e7a88', 0.04), crate = soft('#c9a26b', 0.04), rope = soft('#a8946c', 0.02);
+
+  /* ===== lever ===== */
+  var lever = new T.Group(); root.add(lever);
+  var wedge = new T.Shape(); wedge.moveTo(-0.6, -FH / 2); wedge.lineTo(0.6, -FH / 2); wedge.lineTo(0, FH / 2); wedge.lineTo(-0.6, -FH / 2);
+  var fg = new T.ExtrudeGeometry(wedge, { depth: 1.0, bevelEnabled: false }); fg.translate(0, 0, -0.5);
+  var fulcrum = new T.Mesh(fg, steel); lever.add(fulcrum); fulcrum.userData.tip = 'Fulcrum · the point the lever turns on'; pick.push(fulcrum);
+  var hinge = new T.Mesh(new T.BoxGeometry(0.5, FH, 1.0), steel); lever.add(hinge); hinge.userData.tip = 'Fulcrum · a hinge at the end'; pick.push(hinge);
+  var pivot = new T.Group(); lever.add(pivot);
+  var plank = new T.Mesh(new T.BoxGeometry(HALF * 2 + 0.3, 0.18, 1.2), wood); plank.position.y = 0.09; pivot.add(plank); plank.userData.tip = 'The lever: a stiff plank'; pick.push(plank);
+  var box = new T.Mesh(new T.BoxGeometry(1.0, 1.0, 1.0), crate); pivot.add(box); box.userData.tip = 'Load · weighs 300 N, about a 30 kg sack'; pick.push(box);
+  var boxTag = label('300 N', { size: 0.22, color: '#ffd0a0' }); box.add(boxTag); boxTag.position.set(0, 0.8, 0);
+  var effA = arrowMesh(LIME), loadA = arrowMesh(CORAL); pivot.add(effA.g); pivot.add(loadA.g);
+  var effTag = Tag(pivot, { size: 0.22, color: LIME }, 0.5, 0.5);
+  /* arm lengths drawn under the plank */
+  function dimLine(color) { var l = new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3()]), new T.LineBasicMaterial({ color: color })); lever.add(l); return l; }
+  var effDim = dimLine(LIME), loadDim = dimLine(CORAL), effDimTag = Tag(lever, { size: 0.18, color: LIME }), loadDimTag = Tag(lever, { size: 0.18, color: '#ffb0b0' });
+  function setDim(l, x0, x1, y) { var p = l.geometry.attributes.position; p.setXYZ(0, x0, y, 0.7); p.setXYZ(1, x1, y, 0.7); p.needsUpdate = true; l.geometry.computeBoundingSphere(); }
+  var floor = new T.Mesh(new T.BoxGeometry(HALF * 2 + 1.5, 0.12, 1.6), soft('#5a5f66', 0.04)); floor.position.y = -FH - 0.06; lever.add(floor);
+
+  /* ===== pulleys ===== */
+  var pul = new T.Group(); root.add(pul);
+  var YT = 3.6, D = 0.5, R = D / 2, GROUND = -FH;
+  var beam = new T.Mesh(new T.BoxGeometry(4.2, 0.3, 0.7), wood); beam.position.y = YT + 0.55; pul.add(beam);
+  [-1.95, 1.95].forEach(function (x) { var post = new T.Mesh(new T.BoxGeometry(0.25, YT + 0.55 - GROUND, 0.25), wood); post.position.set(x, (YT + 0.55 + GROUND) / 2, 0); pul.add(post); });
+  var pfloor = new T.Mesh(new T.BoxGeometry(4.6, 0.12, 1.6), soft('#5a5f66', 0.04)); pfloor.position.y = GROUND - 0.06; pul.add(pfloor);
+  var pbox = new T.Mesh(new T.BoxGeometry(1.0, 0.9, 0.9), crate); pul.add(pbox); pbox.userData.tip = 'Load · weighs 300 N'; pick.push(pbox);
+  var pboxTag = label('300 N', { size: 0.2, color: '#ffd0a0' }); pbox.add(pboxTag); pboxTag.position.set(0, 0, 0.5);
+  var wheelG = new T.CylinderGeometry(R - 0.03, R - 0.03, 0.14, 24); wheelG.rotateX(Math.PI / 2);
+  var segs = [], arcs = [], topW = [], botW = [];
+  for (i = 0; i < 6; i++) { var sg = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 1, 6).translate(0, 0.5, 0), rope); pul.add(sg); segs.push(sg); }
+  for (i = 0; i < 5; i++) { var ar = new T.Mesh(new T.TorusGeometry(R, 0.03, 6, 16, Math.PI), rope); pul.add(ar); arcs.push(ar); }
+  for (i = 0; i < 3; i++) { var tw = new T.Mesh(wheelG, steel); pul.add(tw); topW.push(tw); tw.userData.tip = 'Fixed pulley · stays put'; pick.push(tw); var bw = new T.Mesh(wheelG, steel); pul.add(bw); botW.push(bw); bw.userData.tip = 'Moving pulley · rises with the load'; pick.push(bw); }
+  var block = new T.Mesh(new T.BoxGeometry(1.2, 0.12, 0.3), steel); pul.add(block); var hook = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 1, 6).translate(0, 0.5, 0), steel); pul.add(hook);
+  var hand = new T.Mesh(new T.SphereGeometry(0.17, 16, 12), soft('#e0b08a', 0.1)); pul.add(hand); hand.userData.tip = 'Your hand pulls the rope'; pick.push(hand);
+  var pullA = arrowMesh(LIME); pul.add(pullA.g); var pullTag = Tag(pul, { size: 0.2, color: LIME }, 0, 0.5);
+  function seg(m, x, y0, y1) { m.visible = true; m.position.set(x, Math.min(y0, y1), 0); m.scale.y = Math.max(0.001, Math.abs(y1 - y0)); }
+  function arc(m, xc, y, top) { m.visible = true; m.position.set(xc, y, 0); m.rotation.z = top ? 0 : Math.PI; }
+
+  var cap = label('ideal: no friction, weightless plank and pulleys', { size: 0.16, color: '#aebbd0', bg: false }); cap.position.set(0, -FH - 1.15, 1.0); root.add(cap);
+  var sub = {
+    group: root, w: 4.9, h: 2.4, base: FH + 0.15, pick: pick,
+    update: function (t, dt) {
+      var isPul = cur === 2; lever.visible = !isPul; pul.visible = isPul;
+      sub.w = isPul ? 3.0 : 4.9; sub.h = isPul ? 3.1 : 2.4; root.position.y = isPul ? -1.3 : 0;
+      if (!isPul) {
+        var L = layout(), a = arms(), F = effort(), cls = S.mode === 1 ? S.cls : 0;
+        fulcrum.visible = cls === 0; hinge.visible = cls !== 0;
+        fulcrum.position.set(L.f, -FH / 2, 0); hinge.position.set(L.f, -FH / 2, 0);
+        /* the plank turns about the fulcrum top; only step 2 tilts it */
+        var th = cur === 1 ? S.push * maxTilt() : 0;
+        pivot.position.set(L.f, 0, 0); pivot.rotation.z = th; plank.position.x = -L.f;
+        box.position.set(L.load - L.f, 0.68, 0);
+        loadA.g.position.set(L.load - L.f, -0.2, 0.75); loadA.set(0.9, false);
+        /* forces stay vertical while the plank tilts */
+        loadA.g.rotation.z = effA.g.rotation.z = -th;
+        var len = clamp(F / 300 * 0.9, 0.12, 3.2);
+        /* class 1: you push down on your end; classes 2 and 3: you lift up */
+        if (L.up) { effA.g.position.set(L.eff - L.f, 0.25, 0.75); effA.set(len, true); }
+        else { effA.g.position.set(L.eff - L.f, 0.25 + len + 0.34, 0.75); effA.set(len, false); }
+        effTag.pos.set(L.eff - L.f, 0.6 + len + 0.5, 0.75); effTag.set((L.up ? 'lift ~' : 'push ~') + n0(F) + ' N');
+        var dy = -FH - 0.35;
+        setDim(effDim, L.f, L.eff, dy); setDim(loadDim, L.f, L.load, dy - 0.22);
+        effDim.visible = loadDim.visible = cur !== 1;
+        effDimTag.pos.set((L.f + L.eff) / 2, dy + 0.18, 0.7); effDimTag.set('effort arm ' + n0(a.e * CM_PER_UNIT) + ' cm'); effDimTag.show(cur !== 1);
+        loadDimTag.pos.set((L.f + L.load) / 2, dy - 0.42, 0.7); loadDimTag.set('load arm ' + n0(a.l * CM_PER_UNIT) + ' cm'); loadDimTag.show(cur !== 1);
+        return;
+      }
+      /* pulleys: n rope sections hold the moving block; pulling P of rope lifts the load P / n */
+      var n = S.ropes, lift = S.pull / n, boxY = GROUND + 0.45 + lift, yB = boxY + 0.45 + (n > 1 ? 0.75 : 0.0), xs = [], k;
+      for (k = 0; k <= n; k++) xs.push((k - n / 2) * D);
+      pbox.position.set(n > 1 ? (xs[0] + xs[n - 1]) / 2 : xs[0], boxY, 0);
+      segs.forEach(function (m) { m.visible = false; }); arcs.forEach(function (m) { m.visible = false; }); topW.concat(botW).forEach(function (m) { m.visible = false; });
+      var ti = 0, bi = 0;
+      for (k = 0; k < n; k++) {
+        var up = (n - 1 - k) % 2 === 0, yLow = n === 1 ? boxY + 0.45 : yB, yHigh = YT;
+        if (k === 0 && !up) yHigh = YT + 0.4;   /* anchored to the beam */
+        if (k === 0 && up && n > 1) yLow = yB - R - 0.02;   /* anchored to the moving block */
+        seg(segs[k], xs[k], yLow, yHigh);
+        if (up) { arc(arcs[k], (xs[k] + xs[k + 1]) / 2, YT, true); topW[ti].visible = true; topW[ti++].position.set((xs[k] + xs[k + 1]) / 2, YT, 0); }
+        else { arc(arcs[k], (xs[k] + xs[k + 1]) / 2, yB, false); botW[bi].visible = true; botW[bi++].position.set((xs[k] + xs[k + 1]) / 2, yB, 0); }
+      }
+      var yh = 1.9 - S.pull; seg(segs[n], xs[n], yh, YT); hand.position.set(xs[n], yh - 0.12, 0);
+      pullA.g.position.set(xs[n] + 0.42, yh, 0); var plen = clamp(W / n / 300 * 1.2, 0.2, 1.4); pullA.set(plen, false);
+      pullTag.pos.set(xs[n] + 0.62, yh - plen / 2, 0); pullTag.set('pull ~' + n0(W / n) + ' N');
+      block.visible = hook.visible = n > 1;
+      if (n > 1) { block.position.set((xs[0] + xs[n - 1]) / 2, yB - R - 0.04, 0); block.scale.x = (xs[n - 1] - xs[0] + D) / 1.2; hook.position.set(pbox.position.x, boxY + 0.45, 0); hook.scale.y = yB - R - 0.06 - (boxY + 0.45); }
+    }
+  };
+  return sub;
+}
+HOVER = { objects: function () { return built ? built.pick : []; }, text: function (h) { return h.object.userData.tip || null; } };
+
+/* ---------- mini charts ---------- */
+function effortChart() {
+  var X = function (xf) { return lerp(PX0, PX1, (xf + 3) / 6); }, Y = function (f) { return lerp(150, 26, Math.min(f, 900) / 900); };
+  axes(); hline(Y(W), 'rgba(255,107,134,0.55)', true); mtext('load 300 N', PX1, Y(W) - 6, CORAL, 11, 'right');
+  mx.beginPath(); for (var k = 0; k <= 60; k++) { var xf = -3 + k / 10, f = W * (3.4 - xf) / (xf + 3.6); if (k) mx.lineTo(X(xf), Y(f)); else mx.moveTo(X(xf), Y(f)); }
+  mx.strokeStyle = LIME; mx.lineWidth = 2.5; mx.stroke(); dot(X(S.xf), Y(effort()), '#ffffff');
+  mtext('fulcrum near you', PX0, 176, '#6f7894', 11); mtext('fulcrum near the load', PX1, 176, '#6f7894', 11, 'right');
+  mtext('push needed, N', PX0 + 6, 22, '#6f7894', 11);
+}
+function workChart() {
+  var a = arms(), th = S.push * maxTilt(), handCm = a.e * Math.sin(th) * CM_PER_UNIT, liftCm = a.l * Math.sin(th) * CM_PER_UNIT, F = effort();
+  var rows = [['You: ' + n0(F) + ' N × ' + n0(handCm) + ' cm', F * handCm / 100, LIME], ['Load: 300 N × ' + n0(liftCm) + ' cm', W * liftCm / 100, CORAL]];
+  rows.forEach(function (r, i) { var y = 22 + i * 60, w = Math.max(2, (PX1 - PX0 - 30) * r[1] / 140); mtext(r[0], PX0 - 30, y + 10, '#c4cad6', 12); bar(PX0 - 30, y + 18, w, 18, r[2]); mtext(r[1].toFixed(0) + ' J', PX0 - 30 + w + 8, y + 32, r[2], 12); });
+  mtext('work = force × distance; the two bars match', PX0 - 30, 176, '#9ea8c2', 11);
+}
+function ropeChart() {
+  var bw = 90;
+  for (var n = 1; n <= 4; n++) {
+    var x = PX0 - 20 + (n - 1) * 135, h = (W / n) / 300 * 110, on = n === S.ropes;
+    bar(x, 140 - h, bw, h, on ? 'rgba(200,240,60,0.9)' : 'rgba(150,170,200,0.35)');
+    mtext(n0(W / n) + ' N', x + bw / 2, 132 - h, on ? LIME : '#c4cad6', 12, 'center');
+    mtext(n + (n === 1 ? ' rope' : ' ropes'), x + bw / 2, 158, on ? LIME : '#9ea8c2', 12, 'center');
+  }
+  mtext('pull needed for a 300 N load', PX0 - 20, 182, '#6f7894', 11);
+}
+function classChart() {
+  CLASSES.forEach(function (c, i) {
+    var y = 18 + i * 52, on = i === S.cls, col = on ? LIME : '#c4cad6';
+    if (on) bar(PX0 - 34, y - 4, PX1 - PX0 + 34, 46, 'rgba(200,240,60,0.1)');
+    mtext(c.label + ' · ' + c.name, PX0 - 26, y + 12, col, 12);
+    mtext(['effort arm can be longer or shorter', 'effort arm always longer: less force', 'effort arm always shorter: more force'][i], PX0 - 26, y + 27, '#9ea8c2', 11);
+    mtext('e.g. ' + c.eg, PX0 - 26, y + 41, '#6f7894', 11);
+  });
+}
+
+/* ---------- steps ---------- */
+var STEPS = [
+  { name: 'Lever', hash: 'lever', explain: { title: 'A lever lets a small push balance a big load', sections: [
+      { h: 'What you see', p: ['A plank rests on a pivot called the fulcrum. The box on the right weighs 300 newtons (N), about the weight of a 30 kg sack. Move the fulcrum and watch the green arrow: the push needed on the left end to balance the box.'] },
+      { h: 'How it works', p: ['A lever balances when the push times its distance from the fulcrum equals the load times its distance from the fulcrum. These distances are called the effort arm and the load arm.', 'Move the fulcrum close to the load and the effort arm gets long, so a small push can balance a heavy load. If the effort arm is 3 times the load arm, you need only a third of the weight. That ratio is called the mechanical advantage.'] },
+      { h: 'In real life', p: ['A crowbar works this way: a short end under a heavy stone, a long handle for your hands.'] }
+    ], tryit: ['Slide the fulcrum toward the box until the push drops below 100 N.'] },
+    why: 'Move the fulcrum. <span class="y">The longer your side of the lever, the smaller the push.</span>', hint: 'Drag the fulcrum',
+    chart: { t: 'Push needed', k: 'as the fulcrum moves' },
+    enter: function () { S.mode = 0; },
+    mount: function (el) { var sl = slider(el, { title: 'Fulcrum position', keys: '[ ]', min: -25, max: 25, step: 1, val: Math.round(S.xf * 10), fmt: function (v) { return v < 0 ? 'nearer you' : v > 0 ? 'nearer the load' : 'middle'; }, onInput: function (v) { S.xf = v / 10; } }); return { nudge: function (d) { sl.nudge(d); } }; },
+    stats: function () { return [['Push needed', '~' + n0(effort()) + ' N', 'hot'], ['Load', '300 N'], ['Mechanical advantage', '×' + ma().toFixed(1)]]; },
+    draw: effortChart },
+  { name: 'Distance', hash: 'distance', explain: { title: 'You trade distance for force', sections: [
+      { h: 'What you see', p: ['Drag Push down. Your end of the plank goes down a long way while the box rises only a little. The chart multiplies each force by the distance it moves.'] },
+      { h: 'How it works', p: ['A lever does not give you energy for free. The work you do is your push times the distance your end moves. It equals the work done on the load: its weight times the height it rises. Work is measured in joules (J).', 'With a mechanical advantage of 3, you push with a third of the force but move your end 3 times as far. The same rule, a smaller force over a longer distance, holds for every simple machine: levers, pulleys, ramps and gears. Real machines also lose a little to friction.'] }
+    ], tryit: ['Go back to step 1, move the fulcrum close to the box, then come back and push: your end now travels much farther than the box rises.'] },
+    why: 'Push your end down. <span class="y">It moves much farther than the box rises.</span>', hint: 'Drag Push down',
+    chart: { t: 'Work in and work out', k: 'force × distance' },
+    enter: function () { S.mode = 0; },
+    mount: function (el) { var sl = slider(el, { title: 'Push down', keys: '[ ]', min: 0, max: 100, step: 1, nudge: 10, val: Math.round(S.push * 100), fmt: function (v) { return v + ' %'; }, onInput: function (v) { S.push = v / 100; } }); return { nudge: function (d) { sl.nudge(d); } }; },
+    stats: function () { var a = arms(), th = S.push * maxTilt(); return [['Your end moves', n0(a.e * Math.sin(th) * CM_PER_UNIT) + ' cm', 'hot'], ['The box rises', n0(a.l * Math.sin(th) * CM_PER_UNIT) + ' cm'], ['Push needed', '~' + n0(effort()) + ' N']]; },
+    draw: workChart },
+  { name: 'Pulleys', hash: 'pulleys', explain: { title: 'Each extra rope section shares the load', sections: [
+      { h: 'What you see', p: ['Choose how many rope sections hold the box up, then pull the rope. The pulleys at the bottom rise with the box; the ones at the top stay fixed to the beam.'] },
+      { h: 'How it works', p: ['With one fixed pulley the rope only changes direction: you pull down with the full 300 N to lift the box. Add a pulley that moves with the load and two rope sections hold it up, each carrying half, so you pull with half the force. With four sections you need a quarter.', 'The trade-off is the same as for a lever. To lift the box 10 cm with four sections, each of them must get 10 cm shorter, so you pull 40 cm of rope. Real pulleys also lose some force to friction and to the weight of the moving pulleys.'] },
+      { h: 'In real life', p: ['Cranes and sailing boats use blocks with several pulleys, called a block and tackle.'] }
+    ], tryit: ['Pick 4 ropes and pull all the rope in: the box rises only a quarter as far as your hand moves.'] },
+    why: 'More rope sections hold the box. <span class="y">Each one carries a share, so you pull with less force but pull more rope.</span>', hint: 'Choose the ropes · pull',
+    chart: { t: 'Pull needed', k: 'by number of ropes' },
+    enter: function () { S.mode = 0; },
+    mount: function (el) {
+      var rs = seg(el, [1, 2, 3, 4].map(function (n) { return { label: n + (n === 1 ? ' rope' : ' ropes'), n: n }; }), function (it) { S.ropes = it.n; }, { title: 'Rope sections holding the box', aria: 'Rope sections' });
+      var sl = slider(el, { title: 'Pull the rope', keys: '[ ]', min: 0, max: 100, step: 1, nudge: 10, val: Math.round(S.pull / 2 * 100), fmt: function (v) { return n0(v / 100 * 2 * PULL_CM) + ' cm'; }, onInput: function (v) { S.pull = v / 100 * 2; } });
+      return { nudge: function (d) { sl.nudge(d); }, tick: function () { rs.mark(function (it) { return it.n === S.ropes; }); } };
+    },
+    stats: function () { return [['Pull needed', '~' + n0(W / S.ropes) + ' N', 'hot'], ['Rope pulled', n0(S.pull * PULL_CM) + ' cm'], ['The box rises', n0(S.pull / S.ropes * PULL_CM) + ' cm']]; },
+    draw: ropeChart },
+  { name: 'Classes', hash: 'classes', explain: { title: 'Levers come in three arrangements', sections: [
+      { h: 'What you see', p: ['Choose a class. The order of the fulcrum, the load and the effort changes, and so does what the lever is good for. Slide the middle part along the plank.'] },
+      { h: 'How it works', p: ['Class 1 has the fulcrum between the effort and the load, as in a seesaw, a crowbar or scissors. Class 2 has the load in between, as in a wheelbarrow or a nutcracker; the effort arm is always the longer one, so it always reduces the force you need.', 'Class 3 has the effort in between, as in tweezers or a fishing rod. Its effort arm is shorter, so you push harder than the load weighs, but the load end moves farther and faster than your hand.'] },
+      { h: 'In real life', p: ['Your forearm is a class 3 lever. The biceps attaches about 4 cm from the elbow, while your hand is about 35 to 40 cm away, so the muscle pulls roughly 9 times harder than the weight you hold.'] }
+    ], tryit: ['Choose Class 3 and slide the effort toward the fulcrum: the push needed climbs far above 300 N.'] },
+    why: 'Fulcrum, load or effort can sit in the middle. <span class="y">Each order trades force and distance differently.</span>', hint: 'Choose a class · slide the middle part',
+    chart: { t: 'The three classes', k: 'with examples' },
+    enter: function () { S.mode = 1; },
+    mount: function (el) {
+      var cs = seg(el, CLASSES.map(function (c, i) { return { label: c.label, i: i }; }), function (it) { S.cls = it.i; }, { title: 'Lever class', aria: 'Lever class' });
+      var sl = slider(el, { title: 'Slide the middle part', keys: '[ ]', min: -100, max: 100, step: 1, nudge: 10, val: Math.round(S.move * 100), fmt: function (v) { return v < -30 ? 'near the fulcrum' : v > 30 ? 'far from it' : 'middle'; }, onInput: function (v) { S.move = v / 100; } });
+      return { nudge: function (d) { sl.nudge(d); }, tick: function () { cs.mark(function (it) { return it.i === S.cls; }); sl.el.style.display = S.cls === 0 ? 'none' : ''; } };
+    },
+    stats: function () { return [['Class', CLASSES[S.cls].label, 'hot'], ['In the middle', ['Fulcrum', 'Load', 'Effort'][S.cls]], ['Force needed', '~' + n0(effort()) + ' N'], ['Mechanical advantage', '×' + ma().toFixed(2)]]; },
+    draw: classChart }
+];
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'engineering', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok;
+if (!ok) $('loading').style.display = 'none';
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'); wrap.className = 'seg'; wrap.setAttribute('role', 'group'); if (opts.aria) wrap.setAttribute('aria-label', opts.aria);
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.textContent = it.label;
+    b.addEventListener('click', function () { cb(it, i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  return { mark: function (fn) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', fn(items[i], i) ? 'true' : 'false'); }); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { if (document.activeElement !== inp) inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.nudge || o.step || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function button(el, text, cb, keys) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = text; if (keys) b.setAttribute('aria-keyshortcuts', keys);
+  b.addEventListener('click', function () { cb(b); sfx('ui'); }); el.appendChild(b); return b;
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { if ($('why').innerHTML !== html) $('why').innerHTML = html; }
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+var PX0 = 44, PX1 = 584, CY0 = 162, CY1 = 24;
+function mtext(t, x, y, c, px, al) { mx.font = '400 ' + (px || 13) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = c || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function hline(y, c, dash, x0, x1) { mx.save(); mx.strokeStyle = c; mx.lineWidth = 1.5; if (dash) mx.setLineDash([6, 5]); mx.beginPath(); mx.moveTo(x0 == null ? PX0 : x0, y); mx.lineTo(x1 == null ? PX1 : x1, y); mx.stroke(); mx.restore(); }
+function dot(x, y, c, r) { mx.beginPath(); mx.arc(x, y, r || 6, 0, 7); mx.fillStyle = c; mx.fill(); }
+function axes() { mx.strokeStyle = 'rgba(255,255,255,0.14)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(PX0, CY1); mx.lineTo(PX0, CY0); mx.lineTo(PX1, CY0); mx.stroke(); }
+function bar(x, y, w, h, c) { mx.fillStyle = c; mx.fillRect(x, y, w, h); }
+
+/* ---------- step manager ---------- */
+var built = null, cur = -1, ctl = null, hudT = 0;
+function getScene() { if (!built) { built = buildScene(); stage.add(built); } return built; }
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) b.textContent = v;
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    if (cur < 0) stage.show(sc);
+    cur = i; s.enter();
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; if (s.why) setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; ctl = s.mount(c) || null;
+    if (ctl && ctl.tick) ctl.tick();
+    renderStats(s.stats());
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* ---------- hover to name a thing, click to pick it ---------- */
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null, downAt = null, ptr = stage.pointer;
+function shown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function hitAt(x, y) {
+  if (!ok || !built || !HOVER) return null;
+  var r = canvas.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, stage.camera);
+  var hits = ray.intersectObjects(HOVER.objects(), true);
+  for (var i = 0; i < hits.length; i++) if (shown(hits[i].object) && (!HOVER.accept || HOVER.accept(hits[i]))) return hits[i];
+  return null;
+}
+canvas.addEventListener('pointerdown', function (e) { downAt = { x: e.clientX, y: e.clientY }; tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerup', function (e) {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return; downAt = null;
+  var h = hitAt(e.clientX, e.clientY); if (h && HOVER.click) HOVER.click(h);
+});
+function hover() {
+  if (!HOVER || !ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var h = hitAt(ptr.x, ptr.y), t = h ? HOVER.text(h) : null, r = canvas.getBoundingClientRect();
+  if (t) { tipEl.textContent = t; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = HOVER.click ? 'pointer' : ''; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- tools + keys ---------- */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Workshop backdrop on' : 'Workshop backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">Ideal machines: no friction, and the plank and pulleys weigh nothing. Real machines need a little more force.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-9]$/.test(k) && +k <= STEPS.length) go(+k - 1);
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if ((k === 'p' || k === 'P') && ctl && ctl.play) ctl.play();
+  else if ((k === 'r' || k === 'R') && ctl && ctl.reset) ctl.reset();
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  if (s.tick) s.tick(dt, tt);
+  sc.update(tt, dt);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; if (ctl && ctl.tick) ctl.tick(); renderStats(s.stats()); mx.clearRect(0, 0, MW, MH); s.draw(); hover(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>
