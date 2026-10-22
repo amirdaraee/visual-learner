@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f0d">
+<title>Why Bridges Use Triangles</title>
+<meta name="description" content="Push a square frame and a triangle, brace the square with a diagonal, then drive a truck over a box frame and a truss bridge to see why triangles hold.">
+<link rel="canonical" href="https://turnscience.com/engineering/truss-triangles/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Visual Learner">
+<meta property="og:title" content="Trusses: Why Bridges Use Triangles · Visual Learner">
+<meta property="og:description" content="Push a square and a triangle, brace the square, then drive a truck over a box frame and a truss to see why triangles hold.">
+<meta property="og:url" content="https://turnscience.com/engineering/truss-triangles/">
+<meta property="og:image" content="https://turnscience.com/assets/social/truss-triangles.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Trusses: Why Bridges Use Triangles: a preview of the interactive 3D scene">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Trusses: Why Bridges Use Triangles · Visual Learner">
+<meta name="twitter:description" content="Push a square and a triangle, brace the square, then drive a truck over a box frame and a truss to see why triangles hold.">
+<meta name="twitter:image" content="https://turnscience.com/assets/social/truss-triangles.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230c0e0d'/%3E%3Cpath d='M10 8c8 4 4 12 12 16M22 8c-8 4-4 12-12 16' fill='none' stroke='%23c8f03c' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/ui.css">
+<script defer src="../../shared/analytics.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="world" aria-label="An interactive 3D square frame, triangle and truss bridge with a truck"><canvas id="gl"></canvas><div id="loading" style="pointer-events:none">Bolting the frames…</div></main>
+  <div id="veil"></div>
+  <div id="sweep"></div>
+  <div class="vignette"></div>
+
+  <aside class="side">
+    <div class="sheet">
+      <header class="brand">
+        <div class="tags"><span>Engineering</span><span id="tagStage">Step 1 of 4</span></div>
+        <h1>Why bridges use <em>triangles</em></h1>
+        <p>A triangle cannot change shape without bending or breaking a bar. That makes it the building block of bridges, cranes and roofs.</p>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="trk"><div class="lab"><span id="mini-t"></span> <em id="mini-k"></em></div><canvas id="mini" width="600" height="190" aria-label="Summary chart"></canvas></div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </div>
+  </aside>
+
+  <section class="ctl" aria-label="Controls">
+    <div class="r1" id="r1">
+      <div class="grp"><span class="lab">Step <em>1–4 · ← →</em></span><div class="seg" id="seg-stage" role="group" aria-label="Step"></div></div>
+      <button class="btn ghost" id="explain" type="button" aria-keyshortcuts="E"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>Explain this step <em>E</em></button>
+    </div>
+    <div class="r3" id="sc-ctl"></div>
+  </section>
+
+  <div class="tools">
+    <a class="icb" id="back" href="../../index.html#engineering" title="All Engineering concepts" aria-label="All Engineering concepts"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a>
+    <button class="icb" id="sndb" type="button" aria-pressed="true" title="Sound (M)" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><g class="waves"><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></g><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="icb" id="fxb" type="button" aria-pressed="true" title="Cinematic effects (F)" aria-label="Cinematic effects"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></button>
+    <button class="icb" id="envb" type="button" aria-pressed="true" title="Workshop backdrop (B)" aria-label="Workshop backdrop"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 15.5l5-5 4 4 3-3 6 6"/><circle cx="16.5" cy="9" r="1.3"/></svg></button>
+    <button class="icb" id="cine" type="button" aria-pressed="false" title="Cinematic camera (C)" aria-label="Cinematic camera"><svg viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></svg></button>
+    <button class="icb" id="how" type="button" title="About this page (?)" aria-label="About this page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+    <button class="icb" id="hide" type="button" title="Hide interface (H)" aria-label="Hide interface"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div id="ui-hint" aria-hidden="true"></div>
+  <div id="tip" aria-hidden="true"></div>
+
+  <dialog id="exp"><button id="exp-close" type="button" aria-label="Close">×</button><div id="exp-body"></div></dialog>
+
+  <dialog id="info">
+    <button id="close" type="button" aria-label="Close">×</button>
+    <h2>Why bridges use triangles</h2>
+    <p>A frame of bars joined by pins that turn freely is only stiff if it is made of <b>triangles</b>. A square can lean into a parallelogram without any bar changing length, so it folds; a triangle cannot. In a triangulated frame, a <b>truss</b>, every bar is simply pulled (<b>tension</b>) or pushed (<b>compression</b>) along its length.</p>
+    <h3>What is simplified</h3>
+    <p>The forces on this page are <b>calculated</b>, not drawn by hand: each frame is solved with the direct stiffness method, the standard method for pin-jointed frames, assuming straight steel bars with a cross-section of about 20 cm² (E·A ≈ 400,000 kN), perfect pin joints and no weight of their own. The bridge spans 8.4 m with six panels 1.3 m deep, pinned at one end and on rollers at the other; the truck weighs 50 kN (about 5 tonnes), shared equally by the two trusses and passed to the nearest joints. The sag is drawn 100 times larger than computed. Real bridges also carry their own weight, have stiffer joints, and bars can buckle long before they break.</p>
+    <h3>Sources</h3>
+    <p>Method of joints and the direct stiffness method as in Hibbeler, <i>Structural Analysis</i>. Pratt and Howe trusses and their materials: Historic American Engineering Record (US National Park Service), trusses guide.</p>
+    <h3>Keys</h3>
+    <p><code>1</code>–<code>4</code> or <code>←</code> <code>→</code> step · <code>[</code> <code>]</code> change the main control · <code>P</code> push · <code>R</code> stand the square up · <code>E</code> explain this step · <code>B</code> backdrop · <code>F</code> cinematic effects · <code>M</code> sound · <code>C</code> cinematic camera · <code>H</code> hide interface · <code>?</code> this panel · drag to orbit, scroll to zoom, double-click to reset.</p>
+    <p style="font-size:12px;color:var(--mute)">Educational and schematic. Forces are computed for an idealised pin-jointed frame.</p>
+  </dialog>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="../../shared/environments.js"></script>
+<script src="../../shared/rooms/workshop.js"></script>
+<script src="../../shared/sound.js"></script>
+<script src="../../shared/stage.js"></script>
+<script>
+(function () {
+'use strict';
+var T = window.THREE;
+function $(id) { return document.getElementById(id); }
+var viewEl = $('world'), canvas = $('gl');
+var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var motion = calm ? 0.3 : 1;
+
+function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function ease(k) { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }
+function sfx(n) { if (window.VLSound) window.VLSound.sfx(n); }
+/* seeded random numbers, so the scene is laid out the same way on every visit */
+function rng(seed) { return function () { seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var soft = VLStage.soft, label = VLStage.label;
+var LIME = '#c8f03c', CORAL = '#ff6b86', CYAN = '#7fe3ff', VIOLET = '#b99cff', AMBER = '#ffc857';
+/* optional hover and click on scene objects: { objects: function () { return [...] }, text: function (hit) {}, click: function (hit) {} } */
+var HOVER = null;
+
+/* a text sprite whose words change: rebuilt only when the text does */
+function Tag(parent, o, cx, cy) {
+  var cur = null, txt = '', pos = new T.Vector3();
+  return {
+    pos: pos,
+    set: function (t) {
+      if (t !== txt) {
+        txt = t; if (cur) { parent.remove(cur); cur.material.map.dispose(); cur.material.dispose(); }
+        cur = label(t, o); if (cur.center) cur.center.set(cx == null ? 0.5 : cx, cy == null ? 0.5 : cy); parent.add(cur);
+      }
+      cur.position.copy(pos); cur.visible = true;
+    },
+    show: function (v) { if (cur) cur.visible = v; }
+  };
+}
+/* many copies of one small mesh, moved every frame */
+function Pool(n, geo, mat) {
+  var m = new T.InstancedMesh(geo, mat, n), d = new T.Object3D(), i;
+  m.instanceMatrix.setUsage(T.DynamicDrawUsage); m.frustumCulled = false;
+  function set(i, x, y, z, s) { d.position.set(x, y, z); d.quaternion.identity(); d.scale.setScalar(Math.max(s, 1e-4)); d.updateMatrix(); m.setMatrixAt(i, d.matrix); }
+  for (i = 0; i < n; i++) set(i, 0, 0, 0, 0);
+  return { mesh: m, set: set, done: function () { m.instanceMatrix.needsUpdate = true; } };
+}
+
+/* ---------- pin-jointed frames, solved with the direct stiffness method (1 unit = 1 m, forces in kN) ---------- */
+var EA = 4e5;   /* steel bar, ~20 cm² cross-section: E·A ≈ 200 GPa × 0.002 m² */
+/* returns { u: displacements, N: bar forces (+ pulled, − pushed) } or null if the frame is a mechanism and can fold */
+function solveTruss(nodes, bars, fixed, loads) {
+  var n = nodes.length * 2, K = [], f = loads.slice(), i, j, k;
+  for (i = 0; i < n; i++) { K.push(new Float64Array(n)); }
+  var geo = bars.map(function (b) {
+    var a = nodes[b[0]], c = nodes[b[1]], dx = c[0] - a[0], dy = c[1] - a[1], L = Math.hypot(dx, dy), cs = dx / L, sn = dy / L, kk = EA / L;
+    var m = [cs * cs, cs * sn, sn * sn], idx = [b[0] * 2, b[0] * 2 + 1, b[1] * 2, b[1] * 2 + 1];
+    var ke = [[m[0], m[1], -m[0], -m[1]], [m[1], m[2], -m[1], -m[2]], [-m[0], -m[1], m[0], m[1]], [-m[1], -m[2], m[1], m[2]]];
+    for (var p = 0; p < 4; p++) for (var q = 0; q < 4; q++) K[idx[p]][idx[q]] += kk * ke[p][q];
+    return { cs: cs, sn: sn, kk: kk };
+  });
+  fixed.forEach(function (d) { for (k = 0; k < n; k++) { K[d][k] = 0; K[k][d] = 0; } K[d][d] = 1; f[d] = 0; });
+  /* Gaussian elimination with partial pivoting; a near-zero pivot means the frame can fold */
+  var scale = EA, A = K.map(function (r) { return Array.prototype.slice.call(r); });
+  for (i = 0; i < n; i++) {
+    var piv = i; for (k = i + 1; k < n; k++) if (Math.abs(A[k][i]) > Math.abs(A[piv][i])) piv = k;
+    if (Math.abs(A[piv][i]) < scale * 1e-9) return null;
+    var tr = A[i]; A[i] = A[piv]; A[piv] = tr; var tf = f[i]; f[i] = f[piv]; f[piv] = tf;
+    for (k = i + 1; k < n; k++) { var r = A[k][i] / A[i][i]; if (!r) continue; for (j = i; j < n; j++) A[k][j] -= r * A[i][j]; f[k] -= r * f[i]; }
+  }
+  var u = new Float64Array(n);
+  for (i = n - 1; i >= 0; i--) { var sum = f[i]; for (j = i + 1; j < n; j++) sum -= A[i][j] * u[j]; u[i] = sum / A[i][i]; }
+  var N = bars.map(function (b, bi) { var g = geo[bi]; return g.kk * ((u[b[1] * 2] - u[b[0] * 2]) * g.cs + (u[b[1] * 2 + 1] - u[b[0] * 2 + 1]) * g.sn); });
+  return { u: u, N: N };
+}
+function kN(x) { return Math.abs(x) < 0.05 ? '0 kN' : Math.abs(x).toFixed(1) + ' kN ' + (x > 0 ? 'pulled' : 'pushed'); }
+
+/* ---------- the frames ---------- */
+var SQ = [[-2.9, 0], [-0.9, 0], [-0.9, 2], [-2.9, 2]], SQ_BARS = [[0, 1], [1, 2], [2, 3], [3, 0]], SQ_DIAG = [0, 2];
+var TRI = [[0.9, 0], [2.9, 0], [1.9, 1.73]], TRI_BARS = [[0, 1], [1, 2], [2, 0]];
+/* bridges: 6 panels of 1.4 m, 1.3 m deep, pinned at the left end and on rollers at the right */
+var PAN = 6, DX = 1.4, H = 1.3, X0 = -PAN * DX / 2;
+function bridge(type) {
+  var nodes = [], bars = [], i, b = function (k) { return k; }, top0 = PAN + 1, t;
+  for (i = 0; i <= PAN; i++) nodes.push([X0 + i * DX, 0]);
+  for (i = 0; i < PAN; i++) bars.push([i, i + 1, 'bottom']);
+  if (type === 'warren') {
+    for (i = 0; i < PAN; i++) nodes.push([X0 + (i + 0.5) * DX, H]);
+    for (i = 0; i < PAN - 1; i++) bars.push([top0 + i, top0 + i + 1, 'top']);
+    for (i = 0; i < PAN; i++) { bars.push([i, top0 + i, 'diagonal']); bars.push([top0 + i, i + 1, 'diagonal']); }
+  } else {
+    /* Pratt, Howe and the box frame share the same top nodes, above the inner bottom nodes */
+    var box = type === 'box';
+    for (i = box ? 0 : 1; i <= (box ? PAN : PAN - 1); i++) nodes.push([X0 + i * DX, H]);
+    t = function (k) { return top0 + (box ? k : k - 1); };
+    var first = box ? 0 : 1, last = box ? PAN : PAN - 1;
+    for (i = first; i < last; i++) bars.push([t(i), t(i + 1), 'top']);
+    for (i = first; i <= last; i++) bars.push([i, t(i), 'upright']);
+    if (!box) {
+      bars.push([0, t(1), 'end post']); bars.push([PAN, t(PAN - 1), 'end post']);
+      var mid = PAN / 2;
+      for (i = 1; i < PAN - 1; i++) {
+        if (type === 'pratt') bars.push(i < mid ? [t(i), i + 1, 'diagonal'] : [t(i + 1), i, 'diagonal']);
+        else bars.push(i < mid ? [i, t(i + 1), 'diagonal'] : [i + 1, t(i), 'diagonal']);
+      }
+    }
+  }
+  return { nodes: nodes, bars: bars, fixed: [0, 1, PAN * 2 + 1] };
+}
+var TYPES = [{ label: 'Warren', key: 'warren' }, { label: 'Pratt', key: 'pratt' }, { label: 'Howe', key: 'howe' }];
+var TRUCK = 50;   /* kN, about a 5-tonne truck */
+var S = { push: false, lean: 0, leanSq2: 0, diag: true, pushKN: 5, bridgeKind: 1, truck: 0.15, ttype: 1, fold: 0, folded: false };
+
+function buildScene() {
+  var root = new T.Group(), pick = [], i;
+  var steelM = soft('#8a95a2', 0.03), jointM = soft('#a7b0ba', 0.03), groundM = soft('#4c5157', 0.04);
+  var CT = new T.Color('#4aa3ff'), CC = new T.Color('#ff5a4a'), CZ = new T.Color('#7f8a96');
+  var barGeo = new T.CylinderGeometry(0.055, 0.055, 1, 10).translate(0, 0.5, 0), ballGeo = new T.SphereGeometry(0.1, 14, 10);
+  /* a frame drawn as bars and joint balls; set() moves it to new node positions and colours each bar by its force */
+  function Frame(parent, nBars, nNodes, z) {
+    var bars = [], balls = [], k, up = new T.Vector3(0, 1, 0), v = new T.Vector3();
+    for (k = 0; k < nBars; k++) { var m = new T.Mesh(barGeo, new T.MeshStandardMaterial({ color: CZ.clone(), roughness: 0.7, emissive: new T.Color(0x000000) })); parent.add(m); bars.push(m); pick.push(m); }
+    for (k = 0; k < nNodes; k++) { var bl = new T.Mesh(ballGeo, jointM); parent.add(bl); balls.push(bl); bl.userData.tip = 'Pin joint · free to turn'; pick.push(bl); }
+    return {
+      set: function (nodes, list, forces, fmax) {
+        bars.forEach(function (m, bi) {
+          var b = list[bi]; if (!b) { m.visible = false; return; }
+          var a = nodes[b[0]], c = nodes[b[1]]; m.visible = true;
+          m.position.set(a[0], a[1], z); v.set(c[0] - a[0], c[1] - a[1], 0); m.scale.set(1, v.length(), 1); m.quaternion.setFromUnitVectors(up, v.normalize());
+          var F = forces ? forces[bi] : 0, s = forces && fmax > 0 ? Math.min(1, Math.abs(F) / fmax) : 0;
+          m.material.color.copy(CZ).lerp(F > 0 ? CT : CC, Math.sqrt(s)); m.material.emissive.copy(m.material.color).multiplyScalar(0.2 * s);
+          m.userData.tip = (b[2] ? b[2][0].toUpperCase() + b[2].slice(1) + ' · ' : 'Bar · ') + (forces ? kN(F) : 'can turn freely');
+        });
+        balls.forEach(function (bl, ni) { var p = nodes[ni]; bl.visible = !!p; if (p) bl.position.set(p[0], p[1], z); });
+      }
+    };
+  }
+  function arrow(parent, color) {
+    var g = new T.Group(), m = new T.MeshBasicMaterial({ color: color });
+    var sh = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 0.8, 10), m); sh.rotation.z = Math.PI / 2; sh.position.x = -0.6; g.add(sh);
+    var hd = new T.Mesh(new T.ConeGeometry(0.16, 0.3, 14), m); hd.rotation.z = -Math.PI / 2; hd.position.x = -0.15; g.add(hd);
+    parent.add(g); return g;
+  }
+
+  /* ===== steps 1 and 2: a square and a triangle on the ground ===== */
+  var pair = new T.Group(); root.add(pair);
+  var gnd = new T.Mesh(new T.BoxGeometry(7.2, 0.16, 1.4), groundM); gnd.position.y = -0.18; pair.add(gnd);
+  var sqF = Frame(pair, 5, 4, 0), triF = Frame(pair, 3, 3, 0);
+  var pushSq = arrow(pair, LIME), pushTri = arrow(pair, LIME);
+  var sqTag = Tag(pair, { size: 0.2, color: '#dbe4ee' }, 0.5, 0), triTag = Tag(pair, { size: 0.2, color: '#dbe4ee' }, 0.5, 0);
+  [SQ[0], SQ[1], TRI[0], TRI[1]].forEach(function (p) { var pin = new T.Mesh(new T.CylinderGeometry(0.16, 0.22, 0.12, 16), steelM); pin.position.set(p[0], -0.06, 0); pair.add(pin); });
+
+  /* ===== steps 3 and 4: a bridge with two trusses side by side, a deck and a truck ===== */
+  var br = new T.Group(); root.add(br);
+  var ZS = 0.8, frames = [Frame(br, 30, 15, -ZS), Frame(br, 30, 15, ZS)];
+  var deck = new T.Mesh(new T.BoxGeometry(PAN * DX, 0.06, ZS * 2), soft('#3a3f46', 0.03)); deck.position.y = -0.05; br.add(deck);
+  [X0, -X0].forEach(function (x, k) {
+    var abut = new T.Mesh(new T.BoxGeometry(0.9, 1.4, ZS * 2 + 0.8), soft('#7a7f86', 0.03)); abut.position.set(x + (k ? 0.35 : -0.35), -0.78, 0); br.add(abut);
+    var bearing = new T.Mesh(k ? new T.CylinderGeometry(0.12, 0.12, ZS * 2 + 0.3, 14) : new T.ConeGeometry(0.2, 0.22, 4), steelM);
+    if (k) { bearing.rotation.x = Math.PI / 2; bearing.position.set(x, -0.14, 0); } else bearing.position.set(x, -0.15, 0);
+    bearing.userData.tip = k ? 'Roller support: can slide sideways' : 'Pinned support'; pick.push(bearing); br.add(bearing);
+  });
+  var truck = new T.Group(); br.add(truck);
+  var cab = new T.Mesh(new T.BoxGeometry(0.45, 0.42, 0.9), soft('#e0a43a', 0.06)); cab.position.set(0.55, 0.26, 0); truck.add(cab);
+  var bed = new T.Mesh(new T.BoxGeometry(1.0, 0.36, 0.95), soft('#c98a2c', 0.05)); bed.position.set(-0.2, 0.23, 0); truck.add(bed);
+  cab.userData.tip = bed.userData.tip = 'Truck · ~50 kN, about 5 tonnes'; pick.push(cab); pick.push(bed);
+  var tw = new T.CylinderGeometry(0.1, 0.1, 1.0, 12); tw.rotateX(Math.PI / 2); [-0.45, 0.55].forEach(function (x) { var w = new T.Mesh(tw, soft('#222', 0.02)); w.position.set(x, 0.1, 0); truck.add(w); });
+  var bridgeTag = Tag(br, { size: 0.22, color: '#dbe4ee' }, 0.5, 0);
+
+  var cap = label('blue = pulled (tension) · red = pushed (compression)', { size: 0.17, color: '#aebbd0', bg: false }); cap.position.set(0, -1.75, 1.3); root.add(cap);
+  var sagCap = label('sag drawn 100 times larger', { size: 0.15, color: '#aebbd0', bg: false }); sagCap.position.set(0, -2.05, 1.3); root.add(sagCap);
+
+  function leaned(base, lean) { var s = Math.sin(lean), c = Math.cos(lean), h = 2; return [base[0], base[1], [base[1][0] + h * s, h * c], [base[0][0] + h * s, h * c]]; }
+  var sub = {
+    group: root, w: 4.6, h: 2.2, base: 1.6, pick: pick,
+    result: null,
+    update: function (t, dt) {
+      var isBridge = cur >= 2; pair.visible = !isBridge; br.visible = isBridge; sagCap.visible = isBridge;
+      sub.w = isBridge ? 5.0 : 4.0; root.position.y = isBridge ? -0.2 : -0.8;
+      if (!isBridge) {
+        var P = S.pushKN, withDiag = cur === 1 && S.diag, pushing = S.push;
+        /* the square without a diagonal is a mechanism: once pushed it keeps leaning until it lies over */
+        if (pushing && !withDiag) S.lean = Math.min(1.25, S.lean + dt * (0.25 + S.lean * 2.2) * motion);
+        if (withDiag) S.lean = Math.max(0, S.lean - dt * 3);
+        var sqNodes = leaned([SQ[0], SQ[1]], S.lean), sqBars = SQ_BARS.slice(), sqRes = null;
+        if (withDiag) { sqBars.push(SQ_DIAG); sqRes = pushing ? solveTruss(SQ, sqBars, [0, 1, 2, 3], [0, 0, 0, 0, 0, 0, P, 0]) : null; }
+        sqF.set(sqNodes, sqBars, sqRes ? sqRes.N : null, P * 1.5);
+        var triRes = pushing ? solveTruss(TRI, TRI_BARS, [0, 1, 2, 3], [0, 0, 0, 0, P, 0]) : null;
+        triF.set(TRI, TRI_BARS, triRes ? triRes.N : null, P * 1.5);
+        pushSq.visible = pushTri.visible = pushing; pushSq.position.set(sqNodes[3][0] - 0.12, sqNodes[3][1], 0); pushTri.position.set(TRI[2][0] - 0.12, TRI[2][1], 0);
+        triTag.pos.set(1.9, 2.3, 0); triTag.set(pushing ? 'holds its shape' : 'triangle');
+        sqTag.pos.set(-1.9, 2.3, 0); sqTag.set(withDiag ? (pushing ? 'holds: two triangles' : 'square + diagonal') : (S.lean > 0.05 ? 'folds over' : 'square'));
+        sub.sq = sqRes; sub.tri = triRes;
+        return;
+      }
+      /* bridge: the truck's weight shared between the two bottom joints either side of it, half to each truss */
+      var kind = cur === 2 ? (S.bridgeKind ? 'warren' : 'box') : TYPES[S.ttype].key, B = bridge(kind), x = X0 + 0.6 + S.truck * (PAN * DX - 1.2);
+      truck.position.set(x, 0, 0);
+      var loads = new Array(B.nodes.length * 2).fill(0), seg = clamp(Math.floor((x - X0) / DX), 0, PAN - 1), fr = (x - X0) / DX - seg;
+      loads[seg * 2 + 1] -= TRUCK / 2 * (1 - fr); loads[(seg + 1) * 2 + 1] -= TRUCK / 2 * fr;
+      var res = solveTruss(B.nodes, B.bars, B.fixed, loads), nodes;
+      if (!res) {
+        /* no diagonals: each box leans like a parallelogram and the frame folds */
+        S.fold = Math.min(0.9, S.fold + dt * (0.3 + S.fold * 2) * motion);
+        if (!S.folded && S.fold > 0.3) { S.folded = true; sfx('thump'); }
+        nodes = B.nodes.map(function (p) { return p[1] > 0 ? [p[0] + H * Math.sin(S.fold), H * Math.cos(S.fold)] : p; });
+        bridgeTag.pos.set(0, 2.2, 0); bridgeTag.set('folds: nothing stops the boxes leaning');
+      } else {
+        S.fold = 0; S.folded = false;
+        nodes = B.nodes.map(function (p, k) { return [p[0] + res.u[k * 2] * 100, p[1] + res.u[k * 2 + 1] * 100]; });
+        bridgeTag.pos.set(0, 2.2, 0); bridgeTag.set('holds: every bar is pulled or pushed');
+      }
+      var fmax = 0; if (res) res.N.forEach(function (F) { fmax = Math.max(fmax, Math.abs(F)); });
+      frames.forEach(function (fr2) { fr2.set(nodes, B.bars, res ? res.N : null, fmax); });
+      deck.visible = true;
+      sub.result = res; sub.bridge = B;
+    }
+  };
+  return sub;
+}
+HOVER = { objects: function () { return built ? built.pick : []; }, text: function (h) { return h.object.userData.tip || null; } };
+
+/* ---------- mini charts ---------- */
+function shapesChart() {
+  var lean = S.lean, sx = 120, by = 150, s = 60;
+  mx.lineWidth = 3; mx.strokeStyle = '#c4cad6';
+  mx.beginPath(); mx.moveTo(sx, by); mx.lineTo(sx + s, by); mx.lineTo(sx + s + s * Math.sin(lean), by - s * Math.cos(lean)); mx.lineTo(sx + s * Math.sin(lean), by - s * Math.cos(lean)); mx.closePath(); mx.stroke();
+  if (cur === 1 && S.diag) { mx.beginPath(); mx.moveTo(sx, by); mx.lineTo(sx + s + s * Math.sin(lean), by - s * Math.cos(lean)); mx.stroke(); }
+  mx.beginPath(); mx.moveTo(380, by); mx.lineTo(440, by); mx.lineTo(410, by - 52); mx.closePath(); mx.stroke();
+  mtext('corner angle ' + Math.round(90 - lean * 180 / Math.PI) + '°', sx + 30, 178, lean > 0.05 ? CORAL : '#c4cad6', 12, 'center');
+  mtext('corner angle 60°, fixed', 410, 178, '#c4cad6', 12, 'center');
+  mtext('square', sx + 30, 34, '#9ea8c2', 12, 'center'); mtext('triangle', 410, 34, '#9ea8c2', 12, 'center');
+}
+function barForcesChart() {
+  var r = built && built.sq, names = ['bottom', 'right side', 'top', 'left side', 'diagonal'];
+  if (!r) { mtext(S.diag ? 'Switch the push on to see the forces' : 'No diagonal: the square has nothing to resist the push', PX0 - 30, 100, '#9ea8c2', 12); return; }
+  r.N.forEach(function (F, i) {
+    var y = 14 + i * 32, w = Math.abs(F) / (S.pushKN * 1.5) * 300;
+    mtext(names[i], PX0 - 30, y + 18, '#c4cad6', 12);
+    bar(PX0 + 90, y + 6, Math.max(2, w), 16, Math.abs(F) < 0.05 ? 'rgba(150,170,200,0.4)' : F > 0 ? '#4aa3ff' : '#ff5a4a'); mtext(kN(F), PX0 + 100 + Math.max(2, w), y + 19, '#c4cad6', 11);
+  });
+}
+function sagChart() {
+  var r = built && built.result, B = built && built.bridge;
+  if (!r || !B) { mtext('The box frame folds: there is no sag to draw', PX0 - 30, 100, CORAL, 12); return; }
+  var X = function (x) { return lerp(PX0, PX1, (x - X0) / (PAN * DX)); }, maxd = 0, k;
+  for (k = 0; k <= PAN; k++) maxd = Math.max(maxd, -r.u[k * 2 + 1]);
+  var Y = function (d) { return 50 + d / Math.max(maxd, 1e-6) * 90; };
+  hline(50, 'rgba(255,255,255,0.18)', true);
+  mx.beginPath(); for (k = 0; k <= PAN; k++) { var px = X(B.nodes[k][0]), py = Y(-r.u[k * 2 + 1]); if (k) mx.lineTo(px, py); else mx.moveTo(px, py); }
+  mx.strokeStyle = CYAN; mx.lineWidth = 2.5; mx.stroke();
+  mtext('deepest sag: ~' + (maxd * 1000).toFixed(1) + ' mm', PX0, 178, CYAN, 12);
+  mtext('deck, side on', PX1, 36, '#6f7894', 11, 'right');
+}
+function groupChart() {
+  var r = built && built.result, B = built && built.bridge; if (!r || !B) return;
+  var groups = {}; B.bars.forEach(function (b, i) { var g = groups[b[2]] || (groups[b[2]] = { t: 0, c: 0 }); g.t = Math.max(g.t, r.N[i]); g.c = Math.min(g.c, r.N[i]); });
+  var order = ['top', 'bottom', 'diagonal', 'upright', 'end post'].filter(function (k) { return groups[k]; }), fm = 0;
+  order.forEach(function (k) { fm = Math.max(fm, groups[k].t, -groups[k].c); });
+  var cx = 330;
+  order.forEach(function (k, i) {
+    var y = 18 + i * 32, g = groups[k];
+    mtext(k, PX0 - 30, y + 16, '#c4cad6', 12);
+    var wc = -g.c / fm * 120, wt = g.t / fm * 120;
+    if (wc > 0.5) bar(cx - wc, y + 4, wc, 16, '#ff5a4a'); if (wt > 0.5) bar(cx, y + 4, wt, 16, '#4aa3ff');
+  });
+  mx.fillStyle = 'rgba(255,255,255,0.3)'; mx.fillRect(cx, 14, 1, order.length * 32);
+  mtext('pushed', cx - 10, 182, '#ff8a7a', 11, 'right'); mtext('pulled', cx + 10, 182, '#7fc0ff', 11);
+}
+
+/* ---------- steps ---------- */
+function pushControls(el, withDiag) {
+  var b = button(el, '', function () { S.push = !S.push; paint(); }, 'P');
+  var r = button(el, 'Stand it up', function () { S.lean = 0; S.push = false; paint(); }, 'R');
+  function paint() { b.textContent = S.push ? 'Stop pushing' : 'Push the top'; }
+  var ds = withDiag ? seg(el, [{ label: 'No diagonal', v: false }, { label: 'Add a diagonal', v: true }], function (it) { S.diag = it.v; S.lean = 0; }, { title: 'The square', aria: 'Diagonal' }) : null;
+  var sl = slider(el, { title: 'Push', keys: '[ ]', min: 1, max: 10, step: 1, val: S.pushKN, fmt: function (v) { return v + ' kN'; }, onInput: function (v) { S.pushKN = v; } });
+  paint();
+  return { play: function () { b.click(); }, reset: function () { r.click(); }, nudge: function (d) { sl.nudge(d); }, tick: function () { paint(); if (ds) ds.mark(function (it) { return it.v === S.diag; }); } };
+}
+function truckSlider(el) { return slider(el, { title: 'Truck position', keys: '[ ]', min: 0, max: 100, step: 1, nudge: 10, val: Math.round(S.truck * 100), fmt: function (v) { return v + ' %'; }, onInput: function (v) { S.truck = v / 100; } }); }
+function extremes() { var r = built && built.result, t = 0, c = 0; if (r) r.N.forEach(function (F) { t = Math.max(t, F); c = Math.min(c, F); }); return { t: t, c: c, ok: !!r }; }
+var STEPS = [
+  { name: 'Shapes', hash: 'shapes', explain: { title: 'A triangle cannot change shape; a square can', sections: [
+      { h: 'What you see', p: ['Two frames made of stiff steel bars joined by pins that turn freely. Press Push the top: the square leans over and folds, but the triangle keeps its shape. Its bars turn blue where they are pulled and red where they are pushed.'] },
+      { h: 'How it works', p: ['Three bars of fixed length can only make one triangle, so its angles cannot change unless a bar stretches, squashes or breaks. Four bars can make many shapes: a square can lean into a slanted parallelogram without any bar changing length, and with free joints nothing stops it.', 'So engineers build frames from triangles. The bars in a triangle are only pulled (tension) or pushed (compression) along their length, which is the way a straight bar is strongest.'] }
+    ], tryit: ['Push the top, then press Stand it up and push again with only 1 kN: the square still folds, because nothing resists it at all.'] },
+    why: 'Push both frames sideways. <span class="y">The square folds; the triangle holds its shape.</span>', hint: 'Press Push the top',
+    chart: { t: 'Corner angles', k: 'square and triangle' },
+    enter: function () { S.push = false; S.lean = 0; },
+    mount: function (el) { return pushControls(el, false); },
+    stats: function () { var r = built && built.tri; return [['Push', S.push ? S.pushKN + ' kN' : 'off', 'hot'], ['Square', S.lean > 0.05 ? 'Folding over' : 'Standing'], ['Triangle', r ? 'Holds, bars up to ' + Math.max.apply(null, r.N.map(Math.abs)).toFixed(1) + ' kN' : 'Holds']]; },
+    draw: shapesChart },
+  { name: 'Brace', hash: 'brace', explain: { title: 'One diagonal turns a square into two triangles', sections: [
+      { h: 'What you see', p: ['Add a diagonal bar to the square and push. Now it holds. The colours and the chart show which bars are pulled (blue) and which are pushed (red).'] },
+      { h: 'How it works', p: ['The diagonal splits the square into two triangles, so it can no longer lean. When you push the top sideways, the diagonal carries the push down to the ground. Here it is stretched, carrying about 1.4 times the push, because it runs at 45°.', 'Push from the other side and the same diagonal would be squashed instead. That is why gates and scaffolding often use crossed braces, one for each direction.'] },
+      { h: 'In real life', p: ['Look for diagonal braces in scaffolding, gates and electricity pylons. The thin back panel of a flat-pack bookcase does the same job.'] }
+    ], tryit: ['Switch between No diagonal and Add a diagonal while pushing: one bar is the whole difference.'] },
+    why: 'Add a diagonal and push. <span class="y">Two triangles cannot lean, so the frame holds.</span>', hint: 'Add the diagonal · push',
+    chart: { t: 'Force in each bar', k: 'kN' },
+    enter: function () { S.push = true; S.lean = 0; },
+    mount: function (el) { return pushControls(el, true); },
+    stats: function () { var r = built && built.sq; return [['Push', S.push ? S.pushKN + ' kN' : 'off', 'hot'], ['Square', S.diag ? 'Holds' : (S.lean > 0.05 ? 'Folding over' : 'Standing')], ['Diagonal', r ? kN(r.N[4]) : '–']]; },
+    draw: barForcesChart },
+  { name: 'Bridge', hash: 'bridge', explain: { title: 'A truss bridge is made of triangles', sections: [
+      { h: 'What you see', p: ['Drive a truck of about 5 tonnes across two bridges of the same size. The box frame has no diagonals; the truss is all triangles. The sag is drawn 100 times larger so you can see it.'] },
+      { h: 'How it works', p: ['With pinned joints the boxes lean and the frame folds under the first load. The truss cannot fold, so the weight travels through the bars as pulls and pushes to the supports. In a bridge like this the top bars are pushed, the bottom bars are pulled, and the diagonals take turns.', 'The bars stretch or squash by less than a millimetre, so a light frame of thin bars can carry a heavy load.'] },
+      { h: 'Common mix-up', p: ['A box frame can stand if its corners are made rigid, as in the frame of a building. Then its beams have to bend, which needs much more material for the same load.'] }
+    ], tryit: ['Drive the truck to the middle of the truss and look at the chart: the sag is deepest there.'] },
+    why: 'Drive the truck across. <span class="y">The box frame folds; the triangles carry the load to the supports.</span>', hint: 'Choose a bridge · move the truck',
+    chart: { t: 'How much the deck sags', k: 'millimetres' },
+    enter: function () { S.fold = 0; S.folded = false; },
+    mount: function (el) {
+      var ks = seg(el, [{ label: 'Box frame', v: 0 }, { label: 'Triangle truss', v: 1 }], function (it) { S.bridgeKind = it.v; S.fold = 0; S.folded = false; }, { title: 'Bridge', aria: 'Bridge' });
+      var sl = truckSlider(el);
+      return { nudge: function (d) { sl.nudge(d); }, tick: function () { ks.mark(function (it) { return it.v === S.bridgeKind; }); } };
+    },
+    stats: function () { var e = extremes(); return e.ok ? [['Bridge', 'Holds', 'hot'], ['Biggest pull', e.t.toFixed(1) + ' kN'], ['Biggest push', (-e.c).toFixed(1) + ' kN']] : [['Bridge', 'Folds', 'coral'], ['Biggest pull', '–'], ['Biggest push', '–']]; },
+    draw: sagChart },
+  { name: 'Truss types', hash: 'types', explain: { title: 'Different trusses put the pull and the push in different bars', sections: [
+      { h: 'What you see', p: ['Choose a truss type and move the truck. Watch the diagonals and the upright bars, and the chart of the biggest pull and push in each kind of bar.'] },
+      { h: 'How it works', p: ['In a Pratt truss the diagonals slope down toward the middle, so under a load they are pulled while the uprights are pushed. Long thin bars pulled tight cannot buckle, so this suits steel bridges.', 'A Howe truss has its diagonals the other way: they are pushed and the uprights are pulled. It was designed for timber diagonals with iron rods as uprights. The Warren truss has no uprights at all, and its diagonals alternate between pulled and pushed.'] }
+    ], tryit: ['Compare Pratt and Howe with the truck in the middle: the colours of the diagonals and the uprights swap.'] },
+    why: 'Switch truss types. <span class="y">The same load can pull or push the diagonals, depending on which way they slope.</span>', hint: 'Choose a truss · move the truck',
+    chart: { t: 'Biggest pull and push', k: 'by kind of bar' },
+    enter: function () {},
+    mount: function (el) {
+      var ts = seg(el, TYPES.map(function (t, i) { return { label: t.label, i: i }; }), function (it) { S.ttype = it.i; }, { title: 'Truss type', aria: 'Truss type' });
+      var sl = truckSlider(el);
+      return { nudge: function (d) { sl.nudge(d); }, tick: function () { ts.mark(function (it) { return it.i === S.ttype; }); } };
+    },
+    stats: function () {
+      var r = built && built.result, B = built && built.bridge, d = { t: 0, c: 0 }, u = { t: 0, c: 0 };
+      if (r && B) B.bars.forEach(function (b, i) { var g = b[2] === 'diagonal' ? d : b[2] === 'upright' ? u : null; if (g) { if (r.N[i] > 0.05) g.t++; else if (r.N[i] < -0.05) g.c++; } });
+      function word(g, has) { return !has ? 'none' : g.t && g.c ? 'mixed' : g.t ? 'pulled' : g.c ? 'pushed' : 'unloaded'; }
+      return [['Truss', TYPES[S.ttype].label, 'hot'], ['Diagonals', word(d, true)], ['Uprights', word(u, S.ttype !== 0)]];
+    },
+    draw: groupChart }
+];
+
+/* ---------- stage: renderer, camera, environment, effects (shared/stage.js) ---------- */
+var stage = VLStage.create({ canvas: canvas, view: viewEl, category: 'engineering', fallbackText: 'This page needs WebGL, which is unavailable here.', onFirstFrame: function () { $('loading').style.opacity = 0; } });
+var ok = stage.ok;
+if (!ok) $('loading').style.display = 'none';
+
+/* ---------- UI helpers ---------- */
+function seg(el, items, cb, opts) {
+  opts = opts || {};
+  var wrap = document.createElement('div'); wrap.className = 'seg'; wrap.setAttribute('role', 'group'); if (opts.aria) wrap.setAttribute('aria-label', opts.aria);
+  var bs = items.map(function (it, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.textContent = it.label;
+    b.addEventListener('click', function () { cb(it, i); sfx('ui'); });
+    wrap.appendChild(b); return b;
+  });
+  var group = document.createElement('div'); group.className = 'grp';
+  if (opts.title) { var lb = document.createElement('span'); lb.className = 'lab'; lb.innerHTML = opts.title; group.appendChild(lb); }
+  group.appendChild(wrap); el.appendChild(group);
+  return { mark: function (fn) { bs.forEach(function (b, i) { b.setAttribute('aria-pressed', fn(items[i], i) ? 'true' : 'false'); }); } };
+}
+function slider(el, o) {
+  var group = document.createElement('div'); group.className = 'grp sl';
+  group.innerHTML = '<span class="lab"></span><input type="range">'; var lab = group.firstChild, inp = group.lastChild;
+  lab.innerHTML = o.title + (o.keys ? ' <em>' + o.keys + '</em>' : '') + ' <span class="v"></span>'; var vEl = lab.querySelector('.v');
+  inp.min = o.min; inp.max = o.max; inp.step = o.step || 1; inp.value = o.val; inp.setAttribute('aria-label', o.title);
+  function paint() { inp.style.setProperty('--p', ((inp.value - o.min) / (o.max - o.min) * 100) + '%'); vEl.textContent = o.fmt ? o.fmt(+inp.value) : inp.value; }
+  inp.addEventListener('input', function () { paint(); o.onInput(+inp.value); });
+  el.appendChild(group); paint();
+  return { el: group, set: function (v) { if (document.activeElement !== inp) inp.value = v; paint(); }, nudge: function (dir) { inp.value = clamp(+inp.value + dir * (o.nudge || o.step || 1), o.min, o.max); paint(); o.onInput(+inp.value); } };
+}
+function button(el, text, cb, keys) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = text; if (keys) b.setAttribute('aria-keyshortcuts', keys);
+  b.addEventListener('click', function () { cb(b); sfx('ui'); }); el.appendChild(b); return b;
+}
+function hint(t) { var h = $('ui-hint'); h.textContent = t; h.classList.add('on'); clearTimeout(hint.t); hint.t = setTimeout(function () { h.classList.remove('on'); }, 4200); }
+function setWhy(html) { if ($('why').innerHTML !== html) $('why').innerHTML = html; }
+
+/* ---------- mini chart (2D canvas) ---------- */
+var mini = $('mini'), mx = mini.getContext('2d'), MW = 600, MH = 190, DPR = Math.min(window.devicePixelRatio || 1, 2);
+mini.width = MW * DPR; mini.height = MH * DPR; mx.scale(DPR, DPR);
+var PX0 = 44, PX1 = 584, CY0 = 162, CY1 = 24;
+function mtext(t, x, y, c, px, al) { mx.font = '400 ' + (px || 13) + 'px "Martian Mono", ui-monospace, monospace'; mx.fillStyle = c || '#9ea8c2'; mx.textAlign = al || 'left'; mx.textBaseline = 'alphabetic'; mx.fillText(t, x, y); }
+function hline(y, c, dash, x0, x1) { mx.save(); mx.strokeStyle = c; mx.lineWidth = 1.5; if (dash) mx.setLineDash([6, 5]); mx.beginPath(); mx.moveTo(x0 == null ? PX0 : x0, y); mx.lineTo(x1 == null ? PX1 : x1, y); mx.stroke(); mx.restore(); }
+function dot(x, y, c, r) { mx.beginPath(); mx.arc(x, y, r || 6, 0, 7); mx.fillStyle = c; mx.fill(); }
+function axes() { mx.strokeStyle = 'rgba(255,255,255,0.14)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(PX0, CY1); mx.lineTo(PX0, CY0); mx.lineTo(PX1, CY0); mx.stroke(); }
+function bar(x, y, w, h, c) { mx.fillStyle = c; mx.fillRect(x, y, w, h); }
+
+/* ---------- step manager ---------- */
+var built = null, cur = -1, ctl = null, hudT = 0;
+function getScene() { if (!built) { built = buildScene(); stage.add(built); } return built; }
+function renderStats(rows) {
+  var el = $('stats');
+  if (el.children.length !== rows.length) el.innerHTML = rows.map(function () { return '<div class="stat"><i></i><b></b></div>'; }).join('');
+  rows.forEach(function (r, i) {
+    var c = el.children[i], b = c.lastChild, v = String(r[1]);
+    c.className = 'stat ' + (r[2] || ''); c.firstChild.textContent = r[0];
+    if (b.textContent !== v) b.textContent = v;
+  });
+}
+var stageBtns = STEPS.map(function (s, i) {
+  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<i>' + (i + 1) + '</i><span>' + s.name + '</span>';
+  b.addEventListener('click', function () { go(i); }); $('seg-stage').appendChild(b); return b;
+});
+function go(i, instant) {
+  i = clamp(i, 0, STEPS.length - 1); if (i === cur) return;
+  var sw = $('sweep'); sw.classList.remove('on'); void sw.offsetWidth; sw.classList.add('on');
+  if (!instant && cur >= 0 && window.VLSound) window.VLSound.level(i, i > cur ? 1 : -1, Math.abs(i - cur));
+  var swap = function () {
+    var s = STEPS[i], sc = getScene();
+    if (cur < 0) stage.show(sc);
+    cur = i; s.enter();
+    $('tagStage').textContent = 'Step ' + (i + 1) + ' of ' + STEPS.length; if (s.why) setWhy(s.why); $('mini-t').textContent = s.chart.t; $('mini-k').textContent = s.chart.k;
+    var c = $('sc-ctl'); c.innerHTML = ''; ctl = s.mount(c) || null;
+    if (ctl && ctl.tick) ctl.tick();
+    renderStats(s.stats());
+    stageBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    hint(s.hint);
+    try { history.replaceState(null, '', '#' + s.hash); } catch (e) {}
+  };
+  if (instant || cur < 0) { swap(); return; }
+  var v = $('veil'); v.style.opacity = 0.85; setTimeout(function () { swap(); v.style.opacity = 0; }, 190);
+}
+
+/* ---------- hover to name a thing, click to pick it ---------- */
+var tipEl = $('tip'), ray = ok ? new T.Raycaster() : null, ndc = ok ? new T.Vector2() : null, downAt = null, ptr = stage.pointer;
+function shown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function hitAt(x, y) {
+  if (!ok || !built || !HOVER) return null;
+  var r = canvas.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, stage.camera);
+  var hits = ray.intersectObjects(HOVER.objects(), true);
+  for (var i = 0; i < hits.length; i++) if (shown(hits[i].object) && (!HOVER.accept || HOVER.accept(hits[i]))) return hits[i];
+  return null;
+}
+canvas.addEventListener('pointerdown', function (e) { downAt = { x: e.clientX, y: e.clientY }; tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerleave', function () { tipEl.classList.remove('on'); });
+canvas.addEventListener('pointerup', function (e) {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return; downAt = null;
+  var h = hitAt(e.clientX, e.clientY); if (h && HOVER.click) HOVER.click(h);
+});
+function hover() {
+  if (!HOVER || !ptr.in || stage.dragging()) { tipEl.classList.remove('on'); return; }
+  var h = hitAt(ptr.x, ptr.y), t = h ? HOVER.text(h) : null, r = canvas.getBoundingClientRect();
+  if (t) { tipEl.textContent = t; tipEl.style.left = (ptr.x - r.left) + 'px'; tipEl.style.top = (ptr.y - r.top) + 'px'; tipEl.classList.add('on'); canvas.style.cursor = HOVER.click ? 'pointer' : ''; }
+  else { tipEl.classList.remove('on'); canvas.style.cursor = ''; }
+}
+
+/* ---------- tools + keys ---------- */
+$('cine').addEventListener('click', function () { var on = stage.setCine(!stage.cine); $('cine').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic camera on' : 'Cinematic camera off'); });
+$('envb').setAttribute('aria-pressed', stage.envOn ? 'true' : 'false');
+$('fxb').setAttribute('aria-pressed', stage.fxOn ? 'true' : 'false');
+$('fxb').addEventListener('click', function () { var on = stage.setFx(!stage.fxOn); $('fxb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Cinematic effects on' : 'Cinematic effects off'); });
+$('envb').addEventListener('click', function () {
+  if (!stage.hasEnv) { hint('Backdrop unavailable'); return; }
+  var on = stage.setEnv(!stage.envOn); $('envb').setAttribute('aria-pressed', on ? 'true' : 'false'); hint(on ? 'Workshop backdrop on' : 'Workshop backdrop off');
+});
+var info = $('info'); $('how').addEventListener('click', function () { if (info.showModal) info.showModal(); }); $('close').addEventListener('click', function () { info.close(); });
+info.addEventListener('click', function (e) { if (e.target === info) info.close(); });
+
+var exp = $('exp');
+function openExplain() {
+  if (!exp.showModal || cur < 0) return; var s = STEPS[cur], x = s.explain;
+  $('exp-body').innerHTML = '<h3 style="margin-top:4px">Step ' + (cur + 1) + ' of ' + STEPS.length + ' · ' + s.name + '</h3><h2>' + x.title + '</h2>' + x.sections.map(function (sec) { return '<h3>' + sec.h + '</h3>' + sec.p.map(function (p) { return '<p>' + p + '</p>'; }).join(''); }).join('') + '<p class="try"><b>Try this.</b> ' + x.tryit.join(' ') + '</p><p style="font-size:12px;color:var(--mute)">Forces are computed for an idealised frame: pin joints, straight steel bars, weightless structure. Real bridges add their own weight and stiffer joints.</p>';
+  exp.showModal(); exp.scrollTop = 0;
+}
+$('explain').addEventListener('click', openExplain); $('exp-close').addEventListener('click', function () { exp.close(); });
+exp.addEventListener('click', function (e) { if (e.target === exp) exp.close(); });
+$('hide').addEventListener('click', function () { $('app').classList.toggle('ui-off'); });
+
+var sndOn = true; try { sndOn = localStorage.getItem('vl-snd') !== '0'; } catch (e) {}
+function paintSnd() { $('sndb').setAttribute('aria-pressed', sndOn ? 'true' : 'false'); }
+paintSnd();
+if (window.VLSound) VLSound.arm(stage.environmentName || 'studio', sndOn);
+$('sndb').addEventListener('click', function () {
+  if (!window.VLSound) return; sndOn = !sndOn; paintSnd(); VLSound.setEnabled(sndOn);
+  try { localStorage.setItem('vl-snd', sndOn ? '1' : '0'); } catch (e) {}
+  hint(sndOn ? 'Sound on' : 'Sound off');
+});
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.icb:not(#sndb), #explain')) sfx('ui'); });
+setTimeout(function () { if (window.VLSound && sndOn && !VLSound.running()) hint('Click anywhere to start sound · M mutes'); }, 4800);
+window.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || info.open || exp.open) return;
+  var k = e.key, onRange = e.target && e.target.type === 'range';
+  if (k === 'ArrowRight' && !onRange) { go(cur + 1); e.preventDefault(); } else if (k === 'ArrowLeft' && !onRange) { go(cur - 1); e.preventDefault(); }
+  else if (/^[1-9]$/.test(k) && +k <= STEPS.length) go(+k - 1);
+  else if (k === '[' && ctl && ctl.nudge) ctl.nudge(-1); else if (k === ']' && ctl && ctl.nudge) ctl.nudge(1);
+  else if ((k === 'p' || k === 'P') && ctl && ctl.play) ctl.play();
+  else if ((k === 'r' || k === 'R') && ctl && ctl.reset) ctl.reset();
+  else if (k === 'e' || k === 'E') openExplain();
+  else if (k === 'b' || k === 'B') $('envb').click();
+  else if (k === 'f' || k === 'F') $('fxb').click();
+  else if (k === 'm' || k === 'M') $('sndb').click();
+  else if (k === 'c' || k === 'C') $('cine').click(); else if (k === 'h' || k === 'H') $('hide').click(); else if (k === '?' && info.showModal) info.showModal();
+});
+
+/* ---------- loop ---------- */
+var soundT = 0, last = performance.now(), tt = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ok || cur < 0) return;
+  var dt = Math.min(0.05, (now - last) / 1000); last = now; tt += dt;
+  var s = STEPS[cur], sc = getScene();
+  if (s.tick) s.tick(dt, tt);
+  sc.update(tt, dt);
+  hudT += dt; if (hudT > 0.1) { hudT = 0; if (ctl && ctl.tick) ctl.tick(); renderStats(s.stats()); mx.clearRect(0, 0, MW, MH); s.draw(); hover(); }
+  stage.frame(dt, tt);
+  soundT += dt; if (soundT > 0.15) { soundT = 0; if (window.VLSound) window.VLSound.setYaw(stage.yaw); }
+}
+var hashes = STEPS.map(function (s) { return s.hash; }), i0 = hashes.indexOf((location.hash || '').slice(1));
+go(i0 >= 0 ? i0 : 0, true);
+requestAnimationFrame(function (n) { last = n; frame(n); });
+})();
+</script>
+</body>
+</html>

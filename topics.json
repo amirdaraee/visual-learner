@@ -370,6 +370,23 @@
       "status": "live",
       "added": "2026-10-23",
       "preview": "assets/previews/levers-pulleys.jpg"
+    },
+    {
+      "id": "truss-triangles",
+      "category": "engineering",
+      "title": "Trusses: Why Bridges Use Triangles",
+      "summary": "Push a square and a triangle, brace the square, then drive a truck over a box frame and a truss to see why triangles hold.",
+      "path": "engineering/truss-triangles/",
+      "tags": [
+        "bridges",
+        "trusses",
+        "structures",
+        "forces"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-23",
+      "preview": "assets/previews/truss-triangles.jpg"
     }
   ]
 }
