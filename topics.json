@@ -387,6 +387,26 @@
       "status": "live",
       "added": "2026-10-23",
       "preview": "assets/previews/truss-triangles.jpg"
+    },
+    {
+      "id": "states-of-matter",
+      "category": "materials",
+      "title": "States of Matter: Solid, Liquid, Gas",
+      "summary": "Heat a box of particles and watch a crystal melt into a liquid and boil into a gas, with the heating curve measured live.",
+      "path": "materials/states-of-matter/",
+      "tags": [
+        "matter",
+        "melting",
+        "boiling",
+        "particles"
+      ],
+      "level": "Beginner",
+      "status": "live",
+      "added": "2026-10-23",
+      "preview": "assets/previews/states-of-matter.jpg",
+      "also": [
+        "chemistry"
+      ]
     }
   ]
 }
